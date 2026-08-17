@@ -5,6 +5,7 @@ on:
   push:
     branches: [main]
     paths:
+      - .github/workflows/regenerate_current_figures.yml
       - tools/build_phase2j_presentation_suite.py
       - tools/build_phase2j_ideal_beam_profile_figure.py
       - tools/build_phase2i_presentation_figures.py
@@ -51,13 +52,13 @@ jobs:
           from pathlib import Path
           import csv
           import shutil
+          import subprocess
 
           root = Path.cwd()
           src = root / 'outputs/figures/presentation_phase2j'
           dst = root / 'figures/presentation'
           dst.mkdir(parents=True, exist_ok=True)
 
-          # This is the current renderer's complete intended presentation set.
           wanted = [
               '00_phase2j_visual_audit_contact_sheet.jpg',
               '01_computational_route_phase2j.png',
@@ -71,7 +72,6 @@ jobs:
               'presentation_phase2j_manifest.json',
           ]
 
-          # Keep canonical destination clean rather than accumulating renamed generations.
           for p in list(dst.iterdir()):
               if p.is_file():
                   p.unlink()
@@ -80,8 +80,6 @@ jobs:
           for name in wanted:
               p = src / name
               if not p.exists():
-                  # The ideal-profile builder historically changed its exact filename;
-                  # use the single numbered-02 PNG if needed.
                   if name.startswith('02_'):
                       candidates = sorted(src.glob('02_*.png'))
                       if len(candidates) == 1:
@@ -103,9 +101,8 @@ jobs:
           if manifest.exists():
               with manifest.open(newline='', encoding='utf-8') as f:
                   rows = list(csv.DictReader(f))
-          # Remove any previous presentation rows before appending this exact current set.
           rows = [r for r in rows if not r.get('path','').startswith('figures/presentation/')]
-          head = __import__('subprocess').check_output(['git','rev-parse','HEAD'], text=True).strip()
+          head = subprocess.check_output(['git','rev-parse','HEAD'], text=True).strip()
           for p in copied:
               if p.suffix.lower() not in {'.png','.jpg','.jpeg'}:
                   continue
