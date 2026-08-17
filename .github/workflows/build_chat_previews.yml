@@ -1,0 +1,69 @@
+name: Build chat preview figures
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/build_chat_previews.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  previews:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Pillow
+        run: python -m pip install pillow
+
+      - name: Build compact JPEG previews
+        shell: python
+        run: |
+          from pathlib import Path
+          from PIL import Image
+
+          root = Path.cwd()
+          out = root / 'figures/chat_previews'
+          out.mkdir(parents=True, exist_ok=True)
+
+          files = {
+              '01_B0_V1_V3.jpg': root / 'figures/presentation/02_beam_profile_shaping_B0_V1_V3_thermal_tight.png',
+              '02_axicon_decentre.jpg': root / 'figures/presentation/04_V1_axicon_decentre_fixed_lab_thermal_tight.png',
+              '03_nonideal_tip.jpg': root / 'figures/presentation/05_V1_nonideal_tip_fixed_lab_thermal_tight.png',
+              '04_q20_reconstruction.jpg': root / 'figures/experimental/q20_aberration/reconstruction/polar_measured_fit_corrected.png',
+              '05_q20_xz_yz.jpg': root / 'figures/experimental/q20_aberration/validation/all_z_full_signed_xz_yz_maps.png',
+          }
+
+          for name, src in files.items():
+              im = Image.open(src).convert('RGB')
+              max_w = 900
+              if im.width > max_w:
+                  h = round(im.height * max_w / im.width)
+                  im = im.resize((max_w, h), Image.Resampling.LANCZOS)
+              dst = out / name
+              im.save(dst, 'JPEG', quality=38, optimize=True, progressive=True)
+              print(name, dst.stat().st_size)
+
+      - name: Commit previews
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add figures/chat_previews
+          if git diff --cached --quiet; then
+            echo 'Preview figures already current.'
+            exit 0
+          fi
+          git commit -m 'Build compact chat preview figures'
+          git pull --rebase origin main
+          git push origin main
