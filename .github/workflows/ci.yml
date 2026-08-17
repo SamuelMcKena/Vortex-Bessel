@@ -35,6 +35,9 @@ jobs:
       - name: Audit standalone repository layout
         run: python tools/audit_clean_layout.py
 
+      - name: Audit notebook runtime paths
+        run: python tools/audit_notebook_runtime_paths.py
+
       - name: Validate workspace bootstrap
         shell: bash
         run: |
