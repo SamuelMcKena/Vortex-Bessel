@@ -45,12 +45,12 @@ jobs:
 
           for name, src in files.items():
               im = Image.open(src).convert('RGB')
-              max_w = 420
+              max_w = 300
               if im.width > max_w:
                   h = round(im.height * max_w / im.width)
                   im = im.resize((max_w, h), Image.Resampling.LANCZOS)
               dst = out / name
-              im.save(dst, 'JPEG', quality=18, optimize=True, progressive=True)
+              im.save(dst, 'JPEG', quality=7, optimize=True, progressive=False)
               print(name, dst.stat().st_size)
 
       - name: Commit previews
@@ -64,6 +64,6 @@ jobs:
             echo 'Preview figures already current.'
             exit 0
           fi
-          git commit -m 'Shrink chat preview figures for in-chat rendering'
+          git commit -m 'Make chat preview figures tiny for direct rendering'
           git pull --rebase origin main
           git push origin main
