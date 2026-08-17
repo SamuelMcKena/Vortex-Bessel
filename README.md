@@ -86,6 +86,7 @@ vortex-bessel --stage experimental
 - `tools/` — specialist validation, reproducibility, error-study and figure utilities.
 - `calibration/` and `configs/` — bench-calibration contracts and study configuration.
 - `outputs/validation/` — governed machine-readable validation evidence retained from the audited codebase.
+- `figures/` — curated canonical figure library with provenance/status manifest.
 
 Compatibility modules such as `bessel_twin_core.py`, `publication_diagnostics.py`, `interface_correction_diagnosis.py` and `run_publication_study.py` remain so older notebooks/scripts can still resolve established imports, but new work should start from `vbb_study/` and `run_study.py`.
 
