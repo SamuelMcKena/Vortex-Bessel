@@ -1,0 +1,97 @@
+name: Repair active paths once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/repair_active_paths_once.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Canonicalise standalone paths
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace(path: str, pairs: list[tuple[str, str]]) -> None:
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              original = text
+              for old, new in pairs:
+                  if old not in text:
+                      print(f'NOTE {path}: pattern not present: {old[:80]!r}')
+                  text = text.replace(old, new)
+              if text != original:
+                  p.write_text(text, encoding='utf-8')
+                  print(f'updated {path}')
+              else:
+                  print(f'no change {path}')
+
+          replace('interface_correction_diagnosis.py', [
+              (
+                  'import bessel_twin_core as bt\nimport Publication_Study.bessel_twin_core as bt_impl\nfrom Publication_Study.finalize_publication_outputs import finalize_outputs',
+                  'import bessel_twin_core as bt\nbt_impl = bt\nfrom finalize_publication_outputs import finalize_outputs',
+              ),
+              ('Publication_Study/outputs/', 'outputs/'),
+          ])
+
+          replace('publication_diagnostics.py', [
+              ('Publication_Study/outputs', 'outputs'),
+          ])
+
+          replace('vbb_study/vbb_train_viz.py', [
+              ('Publication_Study/outputs/figures/stage_c', 'outputs/figures/stage_c'),
+          ])
+
+          replace('vbb_study/publication/quicklook.py', [
+              ('Publication_Study/outputs/', 'outputs/'),
+              ('Path("Publication_Study") / "outputs"', 'Path(__file__).resolve().parents[2] / "outputs"'),
+          ])
+
+          registry = Path('vbb_study/publication/figure_registry.py')
+          text = registry.read_text(encoding='utf-8')
+          text = text.replace('Publication_Study/outputs/', 'outputs/')
+          text = text.replace('Publication_Study/archive/', 'archive/')
+          old_normalise = '''def _normalise_path(path: str | Path) -> str:\n    text = str(path).replace("\\\\", "/").strip()\n    while text.startswith("./"):\n        text = text[2:]\n    if text.startswith("outputs/"):\n        text = f"Publication_Study/{text}"\n    if text.startswith("figures/") or text.startswith("csv/") or text.startswith("holograms/") or text.startswith("json/"):\n        text = f"Publication_Study/outputs/{text}"\n    return text\n'''
+          new_normalise = '''def _normalise_path(path: str | Path) -> str:\n    """Normalise current and legacy artifact paths to the clean repository layout."""\n\n    text = str(path).replace("\\\\", "/").strip()\n    while text.startswith("./"):\n        text = text[2:]\n    if text.startswith("Publication_Study/"):\n        text = text[len("Publication_Study/"):]\n    if text.startswith("figures/") or text.startswith("csv/") or text.startswith("holograms/") or text.startswith("json/"):\n        text = f"outputs/{text}"\n    return text\n'''
+          if old_normalise not in text:
+              raise SystemExit('figure_registry _normalise_path block did not match expected source')
+          text = text.replace(old_normalise, new_normalise)
+          registry.write_text(text, encoding='utf-8')
+          print('updated vbb_study/publication/figure_registry.py')
+
+      - name: Compile repaired files
+        run: |
+          python -m py_compile \
+            interface_correction_diagnosis.py \
+            publication_diagnostics.py \
+            vbb_study/vbb_train_viz.py \
+            vbb_study/publication/quicklook.py \
+            vbb_study/publication/figure_registry.py
+
+      - name: Commit repairs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            interface_correction_diagnosis.py \
+            publication_diagnostics.py \
+            vbb_study/vbb_train_viz.py \
+            vbb_study/publication/quicklook.py \
+            vbb_study/publication/figure_registry.py
+          if git diff --cached --quiet; then
+            echo "No active path repairs required."
+            exit 0
+          fi
+          git commit -m "Canonicalise active output paths for standalone repository"
+          git push origin main
