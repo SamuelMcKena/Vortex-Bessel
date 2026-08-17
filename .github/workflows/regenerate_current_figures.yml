@@ -1,0 +1,169 @@
+name: Regenerate current canonical figures
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - tools/build_phase2j_presentation_suite.py
+      - tools/build_phase2j_ideal_beam_profile_figure.py
+      - tools/build_phase2i_presentation_figures.py
+      - tools/build_presentation_extended_evidence.py
+      - tools/build_presentation_extended_evidence_v2.py
+      - tools/presentation_phase2j_style.py
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install numerical environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-report.txt
+          python -m pip install -e . --no-deps
+
+      - name: Regenerate current Phase 2J visual suite
+        env:
+          MPLBACKEND: Agg
+        run: |
+          rm -rf outputs/figures/presentation_phase2j
+          python tools/build_phase2j_presentation_suite.py \
+            --grid-n 2048 \
+            --inverse-grid-n 512 \
+            --output-dir outputs/figures/presentation_phase2j
+
+      - name: Promote current outputs into canonical figure library
+        shell: python
+        run: |
+          from pathlib import Path
+          import csv
+          import shutil
+
+          root = Path.cwd()
+          src = root / 'outputs/figures/presentation_phase2j'
+          dst = root / 'figures/presentation'
+          dst.mkdir(parents=True, exist_ok=True)
+
+          # This is the current renderer's complete intended presentation set.
+          wanted = [
+              '00_phase2j_visual_audit_contact_sheet.jpg',
+              '01_computational_route_phase2j.png',
+              '02_ideal_B0_V1_V3_xy_xz_profiles_thermal_tight.png',
+              '04_V1_axicon_decentre_fixed_lab_thermal_tight.png',
+              '05_V1_nonideal_tip_fixed_lab_thermal_tight.png',
+              '06_simulation_experiment_closure_phase2j.png',
+              '08_V1_real_error_fingerprints_thermal_tight.png',
+              '09_tip_avoidance_planning_proxy_thermal.png',
+              '10_synthetic_zstack_inverse_recovery_thermal.png',
+              'presentation_phase2j_manifest.json',
+          ]
+
+          # Keep canonical destination clean rather than accumulating renamed generations.
+          for p in list(dst.iterdir()):
+              if p.is_file():
+                  p.unlink()
+
+          copied = []
+          for name in wanted:
+              p = src / name
+              if not p.exists():
+                  # The ideal-profile builder historically changed its exact filename;
+                  # use the single numbered-02 PNG if needed.
+                  if name.startswith('02_'):
+                      candidates = sorted(src.glob('02_*.png'))
+                      if len(candidates) == 1:
+                          p = candidates[0]
+                      else:
+                          raise SystemExit(f'Missing canonical figure {name}; candidates={candidates}')
+                  else:
+                      raise SystemExit(f'Missing canonical figure {name}')
+              target = dst / p.name
+              shutil.copy2(p, target)
+              copied.append(target)
+
+          manifest = root / 'figures/manifest.csv'
+          rows = []
+          fields = [
+              'id','path','topic','status','evidence_type','generator','source_repo','source_ref',
+              'source_path','supersedes','presentation_preferred','notes'
+          ]
+          if manifest.exists():
+              with manifest.open(newline='', encoding='utf-8') as f:
+                  rows = list(csv.DictReader(f))
+          # Remove any previous presentation rows before appending this exact current set.
+          rows = [r for r in rows if not r.get('path','').startswith('figures/presentation/')]
+          head = __import__('subprocess').check_output(['git','rev-parse','HEAD'], text=True).strip()
+          for p in copied:
+              if p.suffix.lower() not in {'.png','.jpg','.jpeg'}:
+                  continue
+              name = p.name
+              evidence = 'model_visualisation'
+              notes = 'Generated from the current Phase 2J renderer on this Vortex-Bessel commit.'
+              if 'decentre' in name or 'nonideal_tip' in name or 'real_error' in name:
+                  evidence = 'model_sensitivity_example'
+                  notes += ' Perturbation magnitude is a sensitivity example unless independently calibrated.'
+              if 'tip_avoidance' in name:
+                  evidence = 'planning_proxy'
+                  notes += ' Planning proxy; not calibrated SLM efficiency evidence.'
+              if 'synthetic_zstack' in name:
+                  evidence = 'synthetic_inverse_validation'
+                  notes += ' Synthetic model-to-model validation; not a fit to measured camera data.'
+              rows.append({
+                  'id': p.stem,
+                  'path': p.relative_to(root).as_posix(),
+                  'topic': 'presentation',
+                  'status': 'canonical',
+                  'evidence_type': evidence,
+                  'generator': 'tools/build_phase2j_presentation_suite.py',
+                  'source_repo': 'SamuelMcKena/Vortex-Bessel',
+                  'source_ref': head,
+                  'source_path': p.relative_to(root).as_posix(),
+                  'supersedes': 'older presentation/Publication_Study visual variants',
+                  'presentation_preferred': 'yes',
+                  'notes': notes,
+              })
+          manifest.parent.mkdir(parents=True, exist_ok=True)
+          with manifest.open('w', newline='', encoding='utf-8') as f:
+              writer = csv.DictWriter(f, fieldnames=fields)
+              writer.writeheader()
+              writer.writerows(sorted(rows, key=lambda r: r['path']))
+          print('Promoted', len(copied), 'current presentation outputs')
+
+      - name: Verify current visual standard
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f figures/presentation/04_V1_axicon_decentre_fixed_lab_thermal_tight.png
+          test -f figures/presentation/05_V1_nonideal_tip_fixed_lab_thermal_tight.png
+          test -f figures/presentation/08_V1_real_error_fingerprints_thermal_tight.png
+          test -f figures/presentation/10_synthetic_zstack_inverse_recovery_thermal.png
+          count=$(find figures/presentation -type f \( -name '*.png' -o -name '*.jpg' \) | wc -l)
+          echo "Current presentation images: $count"
+          test "$count" -ge 9
+
+      - name: Commit regenerated canonical figures
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add figures/presentation figures/manifest.csv
+          if git diff --cached --quiet; then
+            echo 'Canonical presentation figures already current.'
+            exit 0
+          fi
+          git commit -m 'Regenerate current canonical presentation figures'
+          git push origin main
