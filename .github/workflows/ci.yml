@@ -61,6 +61,8 @@ jobs:
         run: |
           python run_study.py --list
           vortex-bessel --list
+          python run_study.py --stage publication --dry-run
+          python run_publication_study.py --dry-run
           python run_study.py --stage all --dry-run
           python run_study.py --stage experimental --dry-run
 
