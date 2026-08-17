@@ -20,8 +20,8 @@ import pandas as pd
 from vbb_study import setup_study, vbb_metrics, vbb_style
 
 import bessel_twin_core as bt
-import Publication_Study.bessel_twin_core as bt_impl
-from Publication_Study.finalize_publication_outputs import finalize_outputs
+bt_impl = bt
+from finalize_publication_outputs import finalize_outputs
 
 
 REFERENCE_KEYS = [
@@ -511,7 +511,7 @@ Verdict: **{verdict}**
 
 I used the Cr:ZnSe `ell=3`, 300 um write-depth reference and kept the PHAROS
 PH2 / SLM configuration unchanged. The uncorrected reference snapshot is
-`Publication_Study/outputs/interface_correction/reference_uncorrected_metrics_prechange.json`.
+`outputs/interface_correction/reference_uncorrected_metrics_prechange.json`.
 
 ## A. Energy Conservation
 

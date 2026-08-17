@@ -270,7 +270,7 @@ def _build_vector_diagnostic_case(
 def publication_output_tree(base: str | Path | None = None, folder_name: str = "publication_study") -> Dict[str, Path]:
     """Return the publication output folders inside this study workspace.
 
-    I default to `Publication_Study/outputs` so running notebooks from the repo
+    I default to `outputs` so running notebooks from the repo
     root or from the notebook folder writes to the same visible place.
     """
 

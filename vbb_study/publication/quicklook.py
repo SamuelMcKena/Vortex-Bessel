@@ -1592,7 +1592,7 @@ def _row_from_metrics(
         "parameter_metadata_json": json.dumps(asdict(config), sort_keys=True),
         "caveats": caveat or QUICKLOOK_CAVEAT,
         "final_export_allowed": False,
-        "registry_status": figure_registry.classify_path("Publication_Study/outputs/csv/quicklook/quicklook_metric_summary.csv").status,
+        "registry_status": figure_registry.classify_path("outputs/csv/quicklook/quicklook_metric_summary.csv").status,
     }
     for key, value in metrics.items():
         if isinstance(value, (np.integer,)):
@@ -1671,9 +1671,9 @@ def write_quicklook_outputs(
             "four_condition_phase_comparison": list(FOUR_CONDITION_PHASE_COMPARISON_PRESETS),
         },
         "registry": {
-            "csv": asdict(figure_registry.classify_path("Publication_Study/outputs/csv/quicklook/quicklook_metric_summary.csv")),
-            "json": asdict(figure_registry.classify_path("Publication_Study/outputs/json/quicklook/quicklook_config.json")),
-            "figures": asdict(figure_registry.classify_path("Publication_Study/outputs/figures/quicklook/example.png")),
+            "csv": asdict(figure_registry.classify_path("outputs/csv/quicklook/quicklook_metric_summary.csv")),
+            "json": asdict(figure_registry.classify_path("outputs/json/quicklook/quicklook_config.json")),
+            "figures": asdict(figure_registry.classify_path("outputs/figures/quicklook/example.png")),
         },
         "extra": dict(extra_config or {}),
     }
@@ -1963,7 +1963,7 @@ def save_four_condition_phase_comparison(
 def run_quicklook_pipeline(
     config: QuicklookConfig,
     *,
-    output_root: str | Path = Path("Publication_Study") / "outputs",
+    output_root: str | Path = Path(__file__).resolve().parents[2] / "outputs",
     save_outputs: bool | None = None,
 ) -> dict[str, Any]:
     """Run the live quick-look workflow and optionally write diagnostic outputs."""
@@ -2012,7 +2012,7 @@ def run_quicklook_pipeline(
 def run_quicklook(
     config: QuicklookConfig | None = None,
     *,
-    output_root: str | Path = Path("Publication_Study") / "outputs",
+    output_root: str | Path = Path(__file__).resolve().parents[2] / "outputs",
     run_id: str | None = None,
 ) -> dict[str, Any]:
     """Execute the Stage 8.7 quick-look simulator and write outputs."""
@@ -2292,7 +2292,7 @@ def run_quicklook(
                 "rows_written": len(metric_rows),
                 "figures_requested": len(figures),
                 "quicklook_registry_status": figure_registry.classify_path(
-                    "Publication_Study/outputs/figures/quicklook/four_condition_phase_comparison_phase_masks.png"
+                    "outputs/figures/quicklook/four_condition_phase_comparison_phase_masks.png"
                 ).status,
             },
         },

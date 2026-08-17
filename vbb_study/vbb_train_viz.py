@@ -314,7 +314,7 @@ def plot_train_visualiser(
     config: TwinConfig,
     *,
     method: Method = "holographic",
-    output_dir: str | Path = "Publication_Study/outputs/figures/stage_c",
+    output_dir: str | Path = "outputs/figures/stage_c",
     charge_label: str | None = None,
 ) -> Path:
     vbb_style.apply_style()
@@ -375,7 +375,7 @@ def plot_train_visualiser(
 def plot_air_axial_trace(
     result: dict[str, Any],
     *,
-    output_dir: str | Path = "Publication_Study/outputs/figures/stage_c",
+    output_dir: str | Path = "outputs/figures/stage_c",
     subject: str | None = None,
 ) -> Path:
     vbb_style.apply_style()
@@ -495,7 +495,7 @@ def plot_holographic_carrier_filter_tradeoff(
     table: pd.DataFrame,
     config: TwinConfig,
     *,
-    output_dir: str | Path = "Publication_Study/outputs/figures/stage_c",
+    output_dir: str | Path = "outputs/figures/stage_c",
     zero_order_leakage_threshold: float = 1.0e-4,
 ) -> Path:
     """Plot carrier/filter efficiency, zero-order leakage, and zone length."""
@@ -607,7 +607,7 @@ def method_comparison_table(
 def plot_sampling_qa(
     config: TwinConfig,
     *,
-    output_dir: str | Path = "Publication_Study/outputs/figures/stage_c",
+    output_dir: str | Path = "outputs/figures/stage_c",
 ) -> Path:
     """Rebuild of the sampling-QA plot showing a continuous per-cell sampling margin.
 
