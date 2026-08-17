@@ -1,0 +1,44 @@
+name: Vortex-Bessel CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install audited numerical environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-report.txt
+          python -m pip install -r notebooks/experimental/axicon_aberration_correction/requirements.txt
+
+      - name: Compile current source
+        run: python -m compileall -q vbb_study tools tests bessel_twin_core.py publication_diagnostics.py interface_correction_diagnosis.py run_study.py run_publication_study.py
+
+      - name: Check canonical runner registry
+        run: |
+          python run_study.py --list
+          python run_study.py --stage all --dry-run
+          python run_study.py --stage experimental --dry-run
+
+      - name: Run numerical and physics regression tests
+        run: python -m pytest tests -q
+
+      - name: Run axicon correction controller tests
+        run: python -m pytest notebooks/experimental/axicon_aberration_correction/test_iterative_correction_controller.py -q
