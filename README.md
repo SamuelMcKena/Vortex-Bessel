@@ -8,48 +8,55 @@ It is built from the Phase 2K mathematical/physics-audited codebase and includes
 
 ## Start here
 
-Install the audited numerical environment:
+Install the audited numerical environment and editable command-line entry point:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -r requirements-report.txt
+python -m pip install -e . --no-deps
 ```
 
-See the current runnable study map:
+See everything that is currently runnable:
 
 ```powershell
-python run_study.py --list
+vortex-bessel --list
 ```
 
 Run a topic directly:
 
 ```powershell
-python run_study.py --stage scalar
-python run_study.py --stage lab_realism
-python run_study.py --stage vector
-python run_study.py --stage materials
-python run_study.py --stage advanced
-python run_study.py --stage digital_twin
+vortex-bessel --stage scalar
+vortex-bessel --stage lab_realism
+vortex-bessel --stage vector
+vortex-bessel --stage materials
+vortex-bessel --stage advanced
+vortex-bessel --stage digital_twin
 ```
 
 Run every numerical/model stage:
 
 ```powershell
-python run_study.py --stage all
+vortex-bessel --stage all
 ```
 
 The measured experimental stage is intentionally separate because the raw camera/BeamGage data are local:
 
 ```powershell
 $env:BESSEL_ZSCAN_DATA_DIR = 'D:\path\to\z-scan'
-python run_study.py --stage experimental
+vortex-bessel --stage experimental
 ```
 
-Executed notebooks are written under `outputs/executed_notebooks/`; the source notebooks are left untouched.
+`python run_study.py ...` remains equivalent if you do not want to install the editable command. Executed notebooks are written under `outputs/executed_notebooks/`; source notebooks are left untouched.
 
-See **`docs/RUN_GUIDE.md`** for the full run instructions and **`docs/PUBLICATION_STUDY_MAP.md`** for a direct map from the old numbered Publication_Study notebooks and `NB_*` workflows to their current locations.
+## Navigation
+
+- `docs/CURRENT_CODE_INDEX.md` — practical “I want to do X — which code do I run?” index, including ideal beams, system errors, lateral axicon decentre, rounded tips, vector beams, materials, digital twin, q=20 correction and presentation figures.
+- `docs/RUN_GUIDE.md` — environment and execution instructions.
+- `docs/PUBLICATION_STUDY_MAP.md` — maps the old numbered Publication_Study and `NB_*` workflows to their current replacements.
+- `docs/TOOLS_GUIDE.md` — specialist validation/error-study/figure utilities.
+- `CLEANROOM_PROVENANCE.md` — source branches and migration/claim-boundary decisions.
 
 ## Repository layout
 
@@ -63,35 +70,33 @@ See **`docs/RUN_GUIDE.md`** for the full run instructions and **`docs/PUBLICATIO
 - `notebooks/experimental/axicon_aberration_correction/` — measured z-scan analysis, q=20 modal retrieval, inverse-error validation and correction proposal work.
 - `tests/` — numerical, physics-contract and regression tests.
 - `reference_kernels/` — independent numerical/reference implementations.
-- `tools/` — validation, reproducibility and evidence utilities.
+- `tools/` — specialist validation, reproducibility, error-study and figure utilities.
 - `calibration/` and `configs/` — bench-calibration contracts and study configuration.
 - `outputs/validation/` — governed machine-readable validation evidence retained from the audited codebase.
 
-Compatibility modules such as `bessel_twin_core.py`, `publication_diagnostics.py`, `interface_correction_diagnosis.py` and `run_publication_study.py` remain so older notebooks/scripts can still resolve their established imports, but new work should start from `vbb_study/` and `run_study.py`.
+Compatibility modules such as `bessel_twin_core.py`, `publication_diagnostics.py`, `interface_correction_diagnosis.py` and `run_publication_study.py` remain so older notebooks/scripts can still resolve established imports, but new work should start from `vbb_study/` and `run_study.py`.
 
 ## Publication_Study cleanup
 
-The useful Publication_Study functionality has been carried forward, but the duplicate `vbb_study - Copy`, dated `backups/`, Python caches, `run_* - Copy.py` files and bulk historical generated-output tree are not treated as competing current implementations.
+The useful Publication_Study functionality has been carried forward, but duplicate `vbb_study - Copy`, dated `backups/`, Python caches, `run_* - Copy.py` files and the bulk historical generated-output tree are not treated as competing current implementations.
 
-The original numbered workflows are mapped here:
+If an old note names a previous notebook/script, use `docs/PUBLICATION_STUDY_MAP.md`. If a useful old calculation is genuinely missing here, migrate and test it here rather than resurrecting a backup as a second current implementation.
 
-`docs/PUBLICATION_STUDY_MAP.md`
-
-The historical `phd-structured-beam-study` repository should be kept as the provenance/history store; routine development and analysis should happen here.
+The historical `phd-structured-beam-study` repository remains the provenance/history store; routine development and analysis should happen here.
 
 ## Scientific claim boundary
 
 The repository separates analytic/numerical reference calculations, nominal optical-system prediction, measured experimental evidence and hardware-validated correction.
 
-For the q=20 aberration work, the measured z-stack is experimental evidence, while the recovered modal phase and proposed SLM correction remain model inference.  Files marked `UNCALIBRATED_DO_NOT_APPLY` or `NOMINAL_PREVIEW_NOT_FOR_DISPLAY` are not hardware-ready until the SLM LUT/phase stroke, illuminated footprint, coordinate parity/rotation and camera-to-SLM transform are calibrated and a fresh post-correction z-scan verifies the result.
+For the q=20 aberration work, the measured z-stack is experimental evidence, while the recovered modal phase and proposed SLM correction remain model inference. Files marked `UNCALIBRATED_DO_NOT_APPLY` or `NOMINAL_PREVIEW_NOT_FOR_DISPLAY` are not hardware-ready until the SLM LUT/phase stroke, illuminated footprint, coordinate parity/rotation and camera-to-SLM transform are calibrated and a fresh post-correction z-scan verifies the result.
 
 ## Checks
 
 ```powershell
 python -m compileall -q vbb_study tools tests
+python tools\audit_clean_layout.py
+python tools\audit_notebook_runtime_paths.py
 python -m pytest tests -q
-python run_study.py --list
-python run_study.py --stage scalar --dry-run
+vortex-bessel --list
+vortex-bessel --stage scalar --dry-run
 ```
-
-See `CLEANROOM_PROVENANCE.md` for the source branches and migration/claim-boundary decisions.
