@@ -31,6 +31,25 @@ jobs:
       - name: Compile current source
         run: python -m compileall -q vbb_study tools tests bessel_twin_core.py publication_diagnostics.py interface_correction_diagnosis.py run_study.py run_publication_study.py
 
+      - name: Audit standalone repository layout
+        run: python tools/audit_clean_layout.py
+
+      - name: Validate workspace bootstrap
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from vbb_study import setup_study
+
+          root = Path.cwd().resolve()
+          paths = setup_study.bootstrap(root, apply_plot_style=False)
+          assert Path(paths['root']).resolve() == root
+          assert Path(paths['publication']).resolve() == root
+          report = setup_study.validate_workspace(paths, strict=False)
+          assert not any(report.values()), report
+          print('workspace bootstrap: clean standalone layout OK')
+          PY
+
       - name: Check canonical runner registry
         run: |
           python run_study.py --list
