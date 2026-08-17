@@ -1,0 +1,78 @@
+name: Repair clean layout once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/repair_clean_layout_once.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Repair remaining root-level legacy path assumptions
+        shell: python
+        run: |
+          from pathlib import Path
+
+          replacements = {
+              Path('publication_diagnostics.py'): [
+                  (
+                      'setup_study.code_version(Path(__file__).resolve().parent.parent)',
+                      'setup_study.code_version(Path(__file__).resolve().parent)',
+                  ),
+              ],
+              Path('finalize_outputs.py'): [
+                  ('python Publication_Study/finalize_outputs.py', 'python finalize_outputs.py'),
+                  (
+                      'while the underlying implementation stays in\n``finalize_publication_outputs.py``',
+                      'while the underlying implementation stays in\n``finalize_publication_outputs.py``',
+                  ),
+              ],
+              Path('finalize_publication_outputs.py'): [
+                  ('The ``Publication_Study/outputs`` folder.', 'The repository ``outputs`` folder.'),
+                  ('Publication_Study.finalize_publication_outputs', 'Vortex-Bessel.finalize_publication_outputs'),
+              ],
+          }
+
+          for path, pairs in replacements.items():
+              text = path.read_text(encoding='utf-8')
+              original = text
+              for old, new in pairs:
+                  text = text.replace(old, new)
+              if text != original:
+                  path.write_text(text, encoding='utf-8')
+                  print(f'updated {path}')
+              else:
+                  print(f'no change needed {path}')
+
+      - name: Show remaining legacy-name references in active Python
+        shell: bash
+        run: |
+          set +e
+          grep -R -n --include='*.py' 'Publication_Study' \
+            run_study.py run_publication_study.py bessel_twin_core.py \
+            publication_diagnostics.py interface_correction_diagnosis.py \
+            finalize_outputs.py finalize_publication_outputs.py vbb_study \
+            notebooks/experimental | head -200
+          exit 0
+
+      - name: Commit repairs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add publication_diagnostics.py finalize_outputs.py finalize_publication_outputs.py
+          if git diff --cached --quiet; then
+            echo "No repair changes required."
+            exit 0
+          fi
+          git commit -m "Repair remaining standalone-layout path assumptions"
+          git push origin main
