@@ -36,7 +36,7 @@ def _json_detail(data: dict[str, Any]) -> str:
 
 
 def _validation_git_commit() -> str:
-    commit = setup_study.code_version(Path(__file__).resolve().parents[2])
+    commit = setup_study.code_version(Path(__file__).resolve().parents[1])
     return str(commit or "")
 
 

@@ -73,7 +73,7 @@ DEFAULT_WALL_CONTINUITY_LEVEL = 0.25
 DEFAULT_WALL_CONTINUITY_MIN_FRACTION = 0.55
 VISUAL_LADDER_STATUS = "visual_gate_only_no_route_ranking"
 DEFAULT_NATHAN_FIGURE4_REFERENCE = (
-    Path(__file__).resolve().parents[3] / "outputs" / "reference" / "nathan_marco_report_figure4_page7_crop.png"
+    Path(__file__).resolve().parents[2] / "outputs" / "reference" / "nathan_marco_report_figure4_page7_crop.png"
 )
 V0_ALLOWED_VISUAL_VERDICTS = ("PASS", "PARTIAL", "FAIL", "UNRESOLVED")
 FOCUS_VALIDATION_UNRESOLVED_STATEMENT = (
@@ -3471,7 +3471,7 @@ def _mode1_git_commit_short() -> str:
     import subprocess
 
     try:
-        root = str(Path(__file__).resolve().parents[3])
+        root = str(Path(__file__).resolve().parents[2])
         return subprocess.check_output(
             ["git", "rev-parse", "--short", "HEAD"], cwd=root, stderr=subprocess.DEVNULL, text=True
         ).strip()
