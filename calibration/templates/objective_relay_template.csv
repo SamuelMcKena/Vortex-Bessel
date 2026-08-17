@@ -1,0 +1,6 @@
+measurement_id,timestamp_utc,parameter,value,uncertainty,unit,method,source_file_sha256,operator,data_classification
+,,objective_numerical_aperture,,,1,,,,laboratory_measurement
+,,objective_focal_length,,,m,,,,laboratory_measurement
+,,effective_pupil_radius,,,m,,,,laboratory_measurement
+,,pupil_fill_fraction,,,1,,,,laboratory_measurement
+,,relay_magnification,,,1,,,,laboratory_measurement

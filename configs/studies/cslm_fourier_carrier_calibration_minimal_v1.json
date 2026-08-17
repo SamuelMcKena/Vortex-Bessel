@@ -1,0 +1,78 @@
+{
+  "study_name": "cslm_fourier_carrier_calibration_minimal_v1",
+  "study_status": [
+    "diagnostic_command_domain_calibration",
+    "not_physical_4f_model",
+    "not_measured_bench_calibration"
+  ],
+  "claim_boundary": "command-domain carrier cycles across the displayed SLM area; NOT physical spatial frequency; no physical 4F model, no camera model, no material model; final_export_allowed=False",
+  "slm1_mode": "flat_phase",
+  "slm2_mode": "command_domain_carrier_ramp_only",
+  "command_display_resolution_source": "placeholder_unknown_or_unverified",
+  "command_display_width_pixels": 1920,
+  "command_display_height_pixels": 1200,
+  "phase_export_format": "phase_npy+quantised_npy+gray_png+metadata_json",
+  "phase_quantisation_levels": 256,
+  "phase_response_calibration_status": "unknown_or_unverified",
+  "calibration_mode": "direct_fourier_plane_access",
+  "camera_plane_label": "fourier_plane_or_accessible_equivalent",
+  "camera_access_status": "requires_temporary_fourier_plane_or_conjugate_diagnostic_access",
+  "camera_coordinate_status": "pixel_only_uncalibrated",
+  "physical_axicon_state": "removed_or_bypassed_not_in_active_path",
+  "fourier_stop_state": "record_actual_state_do_not_assume",
+  "carrier_sweep_definition": {
+    "carrier_cycles": [
+      -24,
+      -16,
+      -8,
+      0,
+      8,
+      16,
+      24
+    ],
+    "command_axes": [
+      "x",
+      "y"
+    ],
+    "optional_diagonal_cases": [
+      {
+        "x": 8,
+        "y": 8
+      },
+      {
+        "x": 8,
+        "y": -8
+      },
+      {
+        "x": -8,
+        "y": 8
+      },
+      {
+        "x": -8,
+        "y": -8
+      }
+    ],
+    "units": "command_cycles_across_displayed_area",
+    "physical_frequency_status": "uncalibrated_command_domain"
+  },
+  "minimum_pixels_per_carrier_cycle": 8,
+  "capture_repeats": 1,
+  "dark_frame_repeats": 5,
+  "flat_reference_repeats": 3,
+  "operator_setup_requirements": [
+    "SLM1 displays the flat mask",
+    "SLM2 displays only the command-domain carrier mask",
+    "physical axicon removed/bypassed/not in active path",
+    "temporary diagnostic camera/profiler/IR card/power meter at or conjugate to the Fourier plane",
+    "installed downstream final-focus camera is not direct Fourier-plane access",
+    "record the Fourier-stop state (do not assume)",
+    "do not move camera/SLMs/lenses without logging"
+  ],
+  "governance": {
+    "physical_4f_filter_modelled": false,
+    "camera_model_enabled": false,
+    "material_model_enabled": false,
+    "diagnostic_only": true,
+    "final_export_allowed": false
+  }
+}

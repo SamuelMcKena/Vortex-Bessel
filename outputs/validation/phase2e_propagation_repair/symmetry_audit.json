@@ -1,0 +1,14 @@
+{
+  "route": "ideal_optical_route",
+  "xz_yz_correlation": 0.9999999987044722,
+  "required_minimum": 0.9999,
+  "pass": true,
+  "meshgrid_indexing": "xy",
+  "centre_pixel_policy": "even grid; matched positive half-pixel centre slices",
+  "pupil_offset_m": [
+    0.0,
+    0.0
+  ],
+  "pupil_centred": true,
+  "transpose_or_axis_swap_detected": false
+}

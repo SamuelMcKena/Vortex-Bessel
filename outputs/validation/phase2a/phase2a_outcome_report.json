@@ -1,0 +1,72 @@
+{
+  "phase": "PHASE 2A",
+  "outcome": "PHASE2A-B",
+  "outcome_statement": "Core fixed-bench, SLM, error-plane, energy and fluence contracts are unified and numerically validated. Absolute energy, sample-plane scale and SLM LUT/stroke claims remain calibration-limited.",
+  "canonical_case_count": 25,
+  "canonical_family_count": 5,
+  "route_variants_per_family": 5,
+  "quantitative_valid_case_count": 25,
+  "maximum_propagation_power_drift_fraction": 1.8615531605251502e-09,
+  "energy_ledger_count": 25,
+  "energy_ledger_closure_pass_count": 25,
+  "maximum_energy_ledger_closure_residual": 1.694065894508601e-16,
+  "first_order_efficiency_source": "simulated selected spectrum for every filtered route",
+  "configured_first_order_efficiency_reapplied": false,
+  "slm_fill_factor_model": "throughput_only",
+  "blocked_or_calibration_limited_claims": [
+    "P2A-C9",
+    "P2A-C10",
+    "P2A-C11"
+  ],
+  "hardware_values_requiring_calibration": [
+    "input_pulse_energy_J",
+    "pulse_duration_s",
+    "beam_radius_on_slm_m",
+    "slm_model",
+    "slm_phase_stroke_rad",
+    "slm_phase_lut",
+    "fourf_focal_length_m",
+    "fourier_iris_radius_m",
+    "objective_NA",
+    "objective_focal_length_m",
+    "relay_effective_focal_length_m",
+    "relay_magnification_to_sample",
+    "axicon_base_angle_deg",
+    "axicon_clear_aperture_radius_m",
+    "slm_reflectivity",
+    "relay_transmission",
+    "objective_transmission",
+    "axicon_transmission",
+    "sample_surface_transmission",
+    "camera_pixel_scale_m"
+  ],
+  "changed_existing_numerical_outputs": [],
+  "nathan_outputs_changed": false,
+  "phase1_contracts_reopened": false,
+  "regression_summary": {
+    "phase2a_slm_energy_fluence": "86 passed in 8.22s",
+    "phase1_phase1r_vortex": "35 passed in 45.11s",
+    "nathan_mode2_16_modules": "195 passed in 367.86s",
+    "active_test_collection": "1053 tests collected in 9.65s"
+  },
+  "source_files_changed": [
+    "vbb_study/slm_model.py",
+    "vbb_study/vector_arm_config.py",
+    "vbb_study/vector_arm_chain.py",
+    "vbb_study/digital_twin/phase2a_contracts.py",
+    "vbb_study/digital_twin/phase2a_canonical.py",
+    "tools/run_phase2a_canonical.py",
+    "tests/test_phase2a_canonical_lab_realism.py"
+  ],
+  "generated_files": [
+    "docs/90_phase2a_canonical_lab_realism.md",
+    "docs/90_phase2a_error_injection_registry.md",
+    "outputs/validation/phase2a/canonical_hardware_manifest.json",
+    "outputs/validation/phase2a/canonical_case_summary.csv",
+    "outputs/validation/phase2a/canonical_power_ledgers.csv",
+    "outputs/validation/phase2a/slm_model_comparison.csv",
+    "outputs/validation/phase2a/error_injection_registry.csv",
+    "outputs/validation/phase2a/phase2a_claim_registry.csv",
+    "outputs/validation/phase2a/phase2a_outcome_report.json"
+  ]
+}

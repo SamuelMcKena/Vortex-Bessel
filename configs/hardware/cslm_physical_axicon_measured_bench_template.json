@@ -1,0 +1,469 @@
+{
+  "profile_name": "cslm_physical_axicon_measured_bench_template",
+  "profile_status": "measured_bench_template_unfilled",
+  "claim_boundary": "blank measured-bench template; fill from real measurements only; no invented values; n=1.0 free-space; final_export_allowed=False",
+  "controls": {
+    "route_mode": {
+      "value": null,
+      "unit": "",
+      "status": "physics_active",
+      "provenance": "unknown",
+      "config_field": "route_mode"
+    },
+    "order_handoff_mode": {
+      "value": null,
+      "unit": "",
+      "status": "physics_active",
+      "provenance": "unknown",
+      "config_field": "order_handoff_mode"
+    },
+    "physical_axicon_enabled_for_benchmark": {
+      "value": null,
+      "unit": "",
+      "status": "benchmark_only",
+      "provenance": "unknown",
+      "config_field": "physical_axicon_enabled_for_benchmark"
+    },
+    "wavelength_nm": {
+      "value": null,
+      "unit": "nm",
+      "status": "physics_active",
+      "provenance": "unknown",
+      "config_field": "wavelength_nm"
+    },
+    "n_medium": {
+      "value": null,
+      "unit": "",
+      "status": "physics_active",
+      "provenance": "unknown",
+      "config_field": "n_medium"
+    },
+    "diagnostic_only": {
+      "value": true,
+      "unit": "",
+      "status": "derived_read_only",
+      "provenance": "derived",
+      "config_field": ""
+    },
+    "final_export_allowed": {
+      "value": false,
+      "unit": "",
+      "status": "derived_read_only",
+      "provenance": "derived",
+      "config_field": ""
+    },
+    "fourier_filter_physics_available": {
+      "value": false,
+      "unit": "",
+      "status": "derived_read_only",
+      "provenance": "derived",
+      "config_field": ""
+    },
+    "input_pulse_energy_uJ": {
+      "value": null,
+      "unit": "uJ",
+      "status": "physics_active",
+      "provenance": "unknown",
+      "config_field": "input_pulse_energy_uJ"
+    },
+    "input_beam_radius_um": {
+      "value": null,
+      "unit": "um",
+      "status": "physics_active",
+      "provenance": "unknown",
+      "config_field": "input_beam_radius_um"
+    },
+    "input_beam_ellipticity": {
+      "value": null,
+      "unit": "ratio",
+      "status": "future_not_implemented",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "input_beam_rotation_deg": {
+      "value": null,
+      "unit": "deg",
+      "status": "future_not_implemented",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "input_beam_centre_x_um": {
+      "value": null,
+      "unit": "um",
+      "status": "future_not_implemented",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "input_beam_centre_y_um": {
+      "value": null,
+      "unit": "um",
+      "status": "future_not_implemented",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "input_aperture_radius_um": {
+      "value": null,
+      "unit": "um",
+      "status": "future_not_implemented",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "slm1_phase_mode": {
+      "value": null,
+      "unit": "",
+      "status": "physics_active",
+      "provenance": "unknown",
+      "config_field": "slm1_phase_mode"
+    },
+    "slm1_topological_charge": {
+      "value": null,
+      "unit": "",
+      "status": "physics_active",
+      "provenance": "unknown",
+      "config_field": "slm1_topological_charge"
+    },
+    "slm1_linear_ramp_cpm": {
+      "value": null,
+      "unit": "cycles/m",
+      "status": "physics_active",
+      "provenance": "unknown",
+      "config_field": "slm1_linear_ramp_cpm"
+    },
+    "slm1_to_slm2_distance_mm": {
+      "value": null,
+      "unit": "mm",
+      "status": "physics_active",
+      "provenance": "unknown",
+      "config_field": "slm1_to_slm2_distance_mm"
+    },
+    "slm1_pixel_pitch_um": {
+      "value": null,
+      "unit": "um",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "slm1_active_area_mm": {
+      "value": null,
+      "unit": "mm",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "slm1_resolution_px": {
+      "value": null,
+      "unit": "px",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "slm1_fill_factor": {
+      "value": null,
+      "unit": "ratio",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "slm1_phase_calibration_status": {
+      "value": null,
+      "unit": "",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "slm2_conjugate_mode": {
+      "value": null,
+      "unit": "",
+      "status": "physics_active",
+      "provenance": "unknown",
+      "config_field": "slm2_conjugate_mode"
+    },
+    "slm2_to_pre_4f_diagnostic_distance_mm": {
+      "value": null,
+      "unit": "mm",
+      "status": "physics_active",
+      "provenance": "unknown",
+      "config_field": "slm2_to_pre_4f_diagnostic_distance_mm"
+    },
+    "slm2_carrier_frequency_cpm": {
+      "value": null,
+      "unit": "cycles/m",
+      "status": "physics_active",
+      "provenance": "unknown",
+      "config_field": "slm2_carrier_frequency_cpm"
+    },
+    "slm2_correction_phase_rad": {
+      "value": null,
+      "unit": "rad",
+      "status": "physics_active",
+      "provenance": "unknown",
+      "config_field": "slm2_correction_phase_rad"
+    },
+    "slm_phase_quantisation_levels": {
+      "value": null,
+      "unit": "levels",
+      "status": "physics_active",
+      "provenance": "unknown",
+      "config_field": "slm_phase_quantisation_levels"
+    },
+    "slm2_active_area_mm": {
+      "value": null,
+      "unit": "mm",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "slm2_resolution_px": {
+      "value": null,
+      "unit": "px",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "slm2_pixel_pitch_um": {
+      "value": null,
+      "unit": "um",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "slm2_fill_factor": {
+      "value": null,
+      "unit": "ratio",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "slm2_phase_calibration_status": {
+      "value": null,
+      "unit": "",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "spatial_correction_map_source": {
+      "value": null,
+      "unit": "",
+      "status": "future_not_implemented",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "slm2_to_lens1_distance_mm": {
+      "value": null,
+      "unit": "mm",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": "slm2_to_lens1_distance_mm"
+    },
+    "fourier_lens1_focal_length_mm": {
+      "value": null,
+      "unit": "mm",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": "fourier_lens1_focal_length_mm"
+    },
+    "fourier_lens1_clear_aperture_mm": {
+      "value": null,
+      "unit": "mm",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "lens1_to_fourier_plane_distance_mm": {
+      "value": null,
+      "unit": "mm",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": "lens1_to_fourier_plane_distance_mm"
+    },
+    "fourier_filter_centre_x_um": {
+      "value": null,
+      "unit": "um",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": "fourier_filter_centre_x_um"
+    },
+    "fourier_filter_centre_y_um": {
+      "value": null,
+      "unit": "um",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": "fourier_filter_centre_y_um"
+    },
+    "fourier_filter_radius_um": {
+      "value": null,
+      "unit": "um",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": "fourier_filter_radius_um"
+    },
+    "fourier_filter_shape": {
+      "value": null,
+      "unit": "",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": "fourier_filter_shape"
+    },
+    "fourier_plane_to_lens2_distance_mm": {
+      "value": null,
+      "unit": "mm",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": "fourier_plane_to_lens2_distance_mm"
+    },
+    "fourier_lens2_focal_length_mm": {
+      "value": null,
+      "unit": "mm",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": "fourier_lens2_focal_length_mm"
+    },
+    "fourier_lens2_clear_aperture_mm": {
+      "value": null,
+      "unit": "mm",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "lens2_to_output_plane_distance_mm": {
+      "value": null,
+      "unit": "mm",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": "lens2_to_output_plane_distance_mm"
+    },
+    "physical_axicon_cone_parameter_rad_per_um": {
+      "value": null,
+      "unit": "rad/um",
+      "status": "benchmark_only",
+      "provenance": "unknown",
+      "config_field": "physical_axicon_cone_parameter_rad_per_um"
+    },
+    "physical_axicon_clear_aperture_radius_um": {
+      "value": null,
+      "unit": "um",
+      "status": "benchmark_only",
+      "provenance": "unknown",
+      "config_field": "physical_axicon_clear_aperture_radius_um"
+    },
+    "physical_axicon_centre_x_um": {
+      "value": null,
+      "unit": "um",
+      "status": "benchmark_only",
+      "provenance": "unknown",
+      "config_field": "physical_axicon_centre_x_um"
+    },
+    "physical_axicon_centre_y_um": {
+      "value": null,
+      "unit": "um",
+      "status": "benchmark_only",
+      "provenance": "unknown",
+      "config_field": "physical_axicon_centre_y_um"
+    },
+    "physical_axicon_to_benchmark_reference_distance_mm": {
+      "value": null,
+      "unit": "mm",
+      "status": "benchmark_only",
+      "provenance": "unknown",
+      "config_field": "physical_axicon_to_benchmark_reference_distance_mm"
+    },
+    "physical_axicon_axial_offset_um": {
+      "value": null,
+      "unit": "um",
+      "status": "future_not_implemented",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "physical_axicon_mechanical_tip_tilt_mrad": {
+      "value": null,
+      "unit": "mrad",
+      "status": "future_not_implemented",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "camera_model": {
+      "value": null,
+      "unit": "",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "camera_pixel_pitch_um": {
+      "value": null,
+      "unit": "um",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "camera_sensor_resolution_px": {
+      "value": null,
+      "unit": "px",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "camera_magnification": {
+      "value": null,
+      "unit": "x",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "camera_plane_location_mm": {
+      "value": null,
+      "unit": "mm",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "reference_plane_definition": {
+      "value": null,
+      "unit": "",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "camera_calibration_status": {
+      "value": null,
+      "unit": "",
+      "status": "warning_only",
+      "provenance": "unknown",
+      "config_field": ""
+    },
+    "grid_N": {
+      "value": null,
+      "unit": "px",
+      "status": "numerical_advanced",
+      "provenance": "unknown",
+      "config_field": "grid_N"
+    },
+    "dx_um": {
+      "value": null,
+      "unit": "um",
+      "status": "numerical_advanced",
+      "provenance": "unknown",
+      "config_field": "dx_um"
+    },
+    "n_z": {
+      "value": null,
+      "unit": "planes",
+      "status": "numerical_advanced",
+      "provenance": "unknown",
+      "config_field": "n_z"
+    },
+    "z_max_um": {
+      "value": null,
+      "unit": "um",
+      "status": "numerical_advanced",
+      "provenance": "unknown",
+      "config_field": "z_max_um"
+    },
+    "bandlimit": {
+      "value": null,
+      "unit": "",
+      "status": "numerical_advanced",
+      "provenance": "unknown",
+      "config_field": "bandlimit"
+    }
+  }
+}

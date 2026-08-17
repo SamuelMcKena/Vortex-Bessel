@@ -1,0 +1,289 @@
+{
+  "schema_version": "1.0.0",
+  "power_drift_limit_fraction": 0.05,
+  "predeclared_metric_tolerances": {
+    "ring_or_feature_radius": 0.03,
+    "canonical_zone": 0.05,
+    "strict_region": 0.05,
+    "side_lobe_ratio": 0.05,
+    "peak_intensity": 0.05
+  },
+  "selected_case_count": 10,
+  "recovered_case_count": 3,
+  "blocked_case_count": 7,
+  "cases": [
+    {
+      "case_id": "general_holographic_ideal",
+      "rationale": "canonical ideal scalar route",
+      "resolutions": [
+        384,
+        512,
+        768,
+        1024
+      ],
+      "adequate_resolutions": [
+        768,
+        1024
+      ],
+      "final_adequate_pair": [
+        768,
+        1024
+      ],
+      "metric_relative_deltas": {
+        "ring_or_feature_radius": 0.0,
+        "canonical_zone": 0.0007239003688810774,
+        "strict_region": 1.3780222754135276e-16,
+        "side_lobe_ratio": 0.0009352589125404968,
+        "peak_intensity": 0.0008337270505823948
+      },
+      "convergence_pass": true,
+      "quantitative_status": "recovered",
+      "likely_cause": "insufficient_spatial_window_causing_z_dependent_bl_asm_bandlimit_clipping"
+    },
+    {
+      "case_id": "general_holographic_realistic",
+      "rationale": "canonical current holographic device route",
+      "resolutions": [
+        {
+          "N": 1024,
+          "device_downsample": 2
+        },
+        {
+          "N": 1536,
+          "device_downsample": 2
+        },
+        {
+          "N": 2048,
+          "device_downsample": 2
+        }
+      ],
+      "adequate_resolutions": [
+        1024,
+        1536,
+        2048
+      ],
+      "final_adequate_pair": [
+        1536,
+        2048
+      ],
+      "metric_relative_deltas": {
+        "ring_or_feature_radius": 0.09650438027006304,
+        "canonical_zone": 0.1748171833586863,
+        "strict_region": 0.0,
+        "side_lobe_ratio": 0.1977831931978168,
+        "peak_intensity": 0.03791944087909925
+      },
+      "convergence_pass": false,
+      "quantitative_status": "invalid_unconverged",
+      "likely_cause": "persistent_bandlimit_or_retained_window_loss",
+      "window_repair": "device_downsample 4 -> 2 doubles the focal-plane side length; N then tests resolution at the repaired window"
+    },
+    {
+      "case_id": "general_physical_ideal",
+      "rationale": "repaired normal physical-axicon route",
+      "resolutions": [
+        384,
+        512,
+        768,
+        1024
+      ],
+      "adequate_resolutions": [
+        768,
+        1024
+      ],
+      "final_adequate_pair": [
+        768,
+        1024
+      ],
+      "metric_relative_deltas": {
+        "ring_or_feature_radius": 0.0,
+        "canonical_zone": 0.00017698441198196554,
+        "strict_region": 2.7560445508270553e-16,
+        "side_lobe_ratio": 0.0005151038665400504,
+        "peak_intensity": 0.00020160031206142265
+      },
+      "convergence_pass": true,
+      "quantitative_status": "recovered",
+      "likely_cause": "insufficient_spatial_window_causing_z_dependent_bl_asm_bandlimit_clipping"
+    },
+    {
+      "case_id": "limits_holographic_ideal",
+      "rationale": "limits-regime high-k_r/long-zone control",
+      "resolutions": [
+        512,
+        768,
+        1024,
+        1536
+      ],
+      "adequate_resolutions": [],
+      "final_adequate_pair": [],
+      "metric_relative_deltas": {},
+      "convergence_pass": false,
+      "quantitative_status": "invalid_unconverged",
+      "likely_cause": "high_kr_or_long_zone_requires_window_beyond_practical_phase1r_limit"
+    },
+    {
+      "case_id": "limits_physical_ideal",
+      "rationale": "limits-regime repaired physical route",
+      "resolutions": [
+        512,
+        768,
+        1024,
+        1536
+      ],
+      "adequate_resolutions": [],
+      "final_adequate_pair": [],
+      "metric_relative_deltas": {},
+      "convergence_pass": false,
+      "quantitative_status": "invalid_unconverged",
+      "likely_cause": "high_kr_or_long_zone_requires_window_beyond_practical_phase1r_limit"
+    },
+    {
+      "case_id": "shortlist_ell0_core3_L150_realistic",
+      "rationale": "historical scalar shortlist ell=0 control",
+      "resolutions": [
+        {
+          "N": 1024,
+          "device_downsample": 2
+        },
+        {
+          "N": 1536,
+          "device_downsample": 2
+        },
+        {
+          "N": 2048,
+          "device_downsample": 2
+        }
+      ],
+      "adequate_resolutions": [
+        1024,
+        1536,
+        2048
+      ],
+      "final_adequate_pair": [
+        1536,
+        2048
+      ],
+      "metric_relative_deltas": {
+        "ring_or_feature_radius": 0.043465059007968015,
+        "canonical_zone": 0.12800923695128139,
+        "strict_region": 0.0,
+        "side_lobe_ratio": 0.08613431759156064,
+        "peak_intensity": 0.1731379182184589
+      },
+      "convergence_pass": false,
+      "quantitative_status": "invalid_unconverged",
+      "likely_cause": "persistent_bandlimit_or_retained_window_loss",
+      "window_repair": "device_downsample 4 -> 2 doubles the focal-plane side length; N then tests resolution at the repaired window"
+    },
+    {
+      "case_id": "shortlist_ell5_core4_L200_realistic",
+      "rationale": "historical scalar shortlist ell=5 control",
+      "resolutions": [
+        {
+          "N": 1024,
+          "device_downsample": 2
+        },
+        {
+          "N": 1536,
+          "device_downsample": 2
+        },
+        {
+          "N": 2048,
+          "device_downsample": 2
+        }
+      ],
+      "adequate_resolutions": [
+        1024,
+        1536,
+        2048
+      ],
+      "final_adequate_pair": [
+        1536,
+        2048
+      ],
+      "metric_relative_deltas": {
+        "ring_or_feature_radius": 0.008006115123309296,
+        "canonical_zone": 0.005032430290576241,
+        "strict_region": 0.0,
+        "side_lobe_ratio": 0.03989719134578893,
+        "peak_intensity": 0.13976804211221747
+      },
+      "convergence_pass": false,
+      "quantitative_status": "invalid_unconverged",
+      "likely_cause": "persistent_bandlimit_or_retained_window_loss",
+      "window_repair": "device_downsample 4 -> 2 doubles the focal-plane side length; N then tests resolution at the repaired window"
+    },
+    {
+      "case_id": "near_threshold_D8_L150_ideal",
+      "rationale": "near-threshold wide-core sweep point",
+      "resolutions": [
+        384,
+        512,
+        768,
+        1024
+      ],
+      "adequate_resolutions": [
+        512,
+        768,
+        1024
+      ],
+      "final_adequate_pair": [
+        768,
+        1024
+      ],
+      "metric_relative_deltas": {
+        "ring_or_feature_radius": 0.0,
+        "canonical_zone": 0.0004447890004576945,
+        "strict_region": 0.0,
+        "side_lobe_ratio": 0.0006028668583096016,
+        "peak_intensity": 0.00021102067080010545
+      },
+      "convergence_pass": true,
+      "quantitative_status": "recovered",
+      "likely_cause": "insufficient_spatial_window_causing_z_dependent_bl_asm_bandlimit_clipping"
+    },
+    {
+      "case_id": "extreme_D1_L800_ideal",
+      "rationale": "extreme high-k_r and long-zone stress point",
+      "resolutions": [
+        512,
+        768,
+        1024,
+        1536
+      ],
+      "adequate_resolutions": [],
+      "final_adequate_pair": [],
+      "metric_relative_deltas": {},
+      "convergence_pass": false,
+      "quantitative_status": "invalid_unconverged",
+      "likely_cause": "high_kr_or_long_zone_requires_window_beyond_practical_phase1r_limit"
+    },
+    {
+      "case_id": "long_D3_L800_ideal",
+      "rationale": "long-zone stress point at canonical transverse scale",
+      "resolutions": [
+        512,
+        768,
+        1024,
+        1536
+      ],
+      "adequate_resolutions": [],
+      "final_adequate_pair": [],
+      "metric_relative_deltas": {},
+      "convergence_pass": false,
+      "quantitative_status": "invalid_unconverged",
+      "likely_cause": "high_kr_or_long_zone_requires_window_beyond_practical_phase1r_limit"
+    }
+  ],
+  "sas_comparison": {
+    "case_id": "general_holographic_ideal",
+    "method": "sas",
+    "N": 768,
+    "status": "error",
+    "error_type": "ValueError",
+    "error": "SAS propagation distance exceeds the reference z-limit: |z|=600 um, limit=430 um. Set sas_allow_invalid=True to override.",
+    "runtime_seconds": 0.04296399999293499
+  },
+  "runs_csv": "outputs/validation/phase1_reconciliation/phase1r_convergence_runs.csv"
+}

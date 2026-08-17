@@ -1,0 +1,303 @@
+{
+  "debye": {
+    "predeclared_convergence_requirements": {
+      "normalised_intensity_correlation_change_max": 0.001,
+      "feature_radius_relative_change_max": 0.01,
+      "longitudinal_power_fraction_absolute_change_max": 0.001
+    },
+    "uniform_x_mirror_residual": 2.5389229667065574e-16,
+    "uniform_xy_rotation_correlation": 1.0,
+    "radial_rotation_correlation": 0.9999999999999998,
+    "radial_longitudinal_power_fraction": 0.09899962788005837,
+    "radial_on_axis_longitudinal_to_peak_ratio": 0.3749879378172965,
+    "azimuthal_longitudinal_power_fraction": 8.199132108385657e-11,
+    "azimuthal_on_axis_longitudinal_to_peak_ratio": 1.394563670995084e-37,
+    "azimuthal_on_axis_total_to_peak_ratio": 2.8020254613954385e-08,
+    "low_na_sequence": [
+      {
+        "numerical_aperture": 0.45,
+        "scalar_airy_correlation": 0.999124299761186,
+        "longitudinal_power_fraction": 0.04781518229192501
+      },
+      {
+        "numerical_aperture": 0.2,
+        "scalar_airy_correlation": 0.9999534616102392,
+        "longitudinal_power_fraction": 0.009312745772586116
+      },
+      {
+        "numerical_aperture": 0.1,
+        "scalar_airy_correlation": 0.9999901415192258,
+        "longitudinal_power_fraction": 0.002322667328460451
+      },
+      {
+        "numerical_aperture": 0.05,
+        "scalar_airy_correlation": 0.9999941924939969,
+        "longitudinal_power_fraction": 0.0005803275706539375
+      }
+    ],
+    "low_na_scalar_airy_correlation": 0.9999941924939969,
+    "low_na_longitudinal_power_fraction": 0.0005803275706539375,
+    "high_na_x_longitudinal_power_fraction": 0.04781518229192501,
+    "global_phase_intensity_residual": 1.80656347644711e-15,
+    "linear_scaling_intensity_residual": 1.678788981726793e-15,
+    "quadrature_convergence_rows": [
+      {
+        "level": "low",
+        "quadrature_order_r": 24,
+        "quadrature_order_phi": 72,
+        "angular_sample_count": 1728,
+        "intensity_correlation_to_high": 0.999999574302697,
+        "feature_radius_um": 0.6562499999999997,
+        "longitudinal_power_fraction": 0.04938534472358634,
+        "correlation_change_from_previous": null,
+        "feature_radius_relative_change_from_previous": null,
+        "longitudinal_absolute_change_from_previous": null,
+        "meets_predeclared_change_limits": null
+      },
+      {
+        "level": "medium",
+        "quadrature_order_r": 32,
+        "quadrature_order_phi": 96,
+        "angular_sample_count": 3072,
+        "intensity_correlation_to_high": 0.999999592948098,
+        "feature_radius_um": 0.6562499999999997,
+        "longitudinal_power_fraction": 0.04938372815538499,
+        "correlation_change_from_previous": 4.8536780261621004e-08,
+        "feature_radius_relative_change_from_previous": 0.0,
+        "longitudinal_absolute_change_from_previous": 1.6165682013499771e-06,
+        "meets_predeclared_change_limits": true
+      },
+      {
+        "level": "high",
+        "quadrature_order_r": 48,
+        "quadrature_order_phi": 144,
+        "angular_sample_count": 6912,
+        "intensity_correlation_to_high": 1.0,
+        "feature_radius_um": 0.6562499999999997,
+        "longitudinal_power_fraction": 0.04947044849664054,
+        "correlation_change_from_previous": 4.0705190196277385e-07,
+        "feature_radius_relative_change_from_previous": 0.0,
+        "longitudinal_absolute_change_from_previous": 8.672034125555006e-05,
+        "meets_predeclared_change_limits": true
+      }
+    ],
+    "convergence_base_order": [
+      32,
+      96
+    ],
+    "convergence_refined_order": [
+      48,
+      144
+    ],
+    "convergence_correlation_change": 4.0705190196277385e-07,
+    "convergence_feature_radius_relative_change": 0.0,
+    "convergence_longitudinal_absolute_change": 8.672034125555006e-05,
+    "checks": {
+      "uniform_x_mirror_symmetry": true,
+      "uniform_y_rotation_consistency": true,
+      "radial_total_intensity_cylindrical": true,
+      "radial_longitudinal_exceeds_azimuthal": true,
+      "azimuthal_on_axis_longitudinal_negligible": true,
+      "low_na_approaches_scalar_airy": true,
+      "low_na_longitudinal_decreases": true,
+      "global_phase_invariant": true,
+      "linear_amplitude_scaling": true,
+      "quadrature_intensity_converged": true,
+      "quadrature_feature_converged": true,
+      "quadrature_longitudinal_converged": true,
+      "angular_integrand_transverse": true
+    },
+    "all_passed": true
+  },
+  "fresnel": {
+    "synthetic_lossless_tolerances": {
+      "R_plus_T_absolute_max": 1e-10,
+      "relative_transversality_max": 1e-10,
+      "snell_residual_max": 1e-12
+    },
+    "normal_incidence_t_s": 0.5813953488372093,
+    "normal_incidence_t_p": 0.5813953488372093,
+    "normal_incidence_x_field_residual": 1.1102230246251565e-16,
+    "normal_incidence_y_field_residual": 0.0,
+    "normal_incidence_basis_independence_residual": 1.9095836023552692e-16,
+    "brewster_angle_deg": 67.71441235316725,
+    "brewster_abs_r_p": 1.1998453031744135e-16,
+    "analytic_oblique_s_R_plus_T": 0.9999999999999999,
+    "analytic_oblique_p_R_plus_T": 1.0,
+    "spectral_plane_wave_R_plus_T": 1.0000000000000002,
+    "spectral_transversality_residual": 6.824610556714782e-18,
+    "spectral_incidence_angle_deg": 20.000000000000004,
+    "equal_index_identity_residual": 0.0,
+    "glass_to_air_evanescent_bin_count": 4059,
+    "checks": {
+      "normal_s_p_equal": true,
+      "normal_coefficient_exact": true,
+      "normal_basis_independent": true,
+      "brewster_p_reflection_zero": true,
+      "analytic_s_energy_conserved": true,
+      "analytic_p_energy_conserved": true,
+      "snell_law": true,
+      "spectral_transverse_wavevector_preserved": true,
+      "spectral_energy_conserved": true,
+      "transmitted_field_transverse": true,
+      "air_to_glass_has_no_false_tir": true,
+      "glass_to_air_tir_classified": true,
+      "equal_index_identity": true
+    },
+    "all_passed": true
+  },
+  "canonical_grid_convergence": {
+    "base_grid_n": 512,
+    "refined_grid_n": 1024,
+    "requirements": {
+      "normalised_intensity_correlation_change_max": 0.001,
+      "feature_radius_relative_change_max": 0.01,
+      "longitudinal_power_fraction_absolute_change_max": 0.001
+    },
+    "rows": [
+      {
+        "case_id": "G0",
+        "base_grid_n": 512,
+        "refined_grid_n": 1024,
+        "scalar_vector_intensity_correlation_change": 4.3234323932050955e-07,
+        "vector_plane_cross_grid_correlation": 0.9999999718140289,
+        "feature_radius_relative_change": 0.0,
+        "longitudinal_power_fraction_absolute_change": 1.4778901992966442e-05,
+        "passed": true
+      },
+      {
+        "case_id": "B0",
+        "base_grid_n": 512,
+        "refined_grid_n": 1024,
+        "scalar_vector_intensity_correlation_change": 5.6076311439112736e-05,
+        "vector_plane_cross_grid_correlation": 0.9990964775185758,
+        "feature_radius_relative_change": 0.0,
+        "longitudinal_power_fraction_absolute_change": 1.3143605132090452e-05,
+        "passed": true
+      },
+      {
+        "case_id": "V1",
+        "base_grid_n": 512,
+        "refined_grid_n": 1024,
+        "scalar_vector_intensity_correlation_change": 5.253076292677239e-05,
+        "vector_plane_cross_grid_correlation": 0.9956177251307333,
+        "feature_radius_relative_change": 0.0,
+        "longitudinal_power_fraction_absolute_change": 6.586987944642853e-05,
+        "passed": true
+      },
+      {
+        "case_id": "V3",
+        "base_grid_n": 512,
+        "refined_grid_n": 1024,
+        "scalar_vector_intensity_correlation_change": 2.6023570621536152e-05,
+        "vector_plane_cross_grid_correlation": 0.9953913728844841,
+        "feature_radius_relative_change": 0.0,
+        "longitudinal_power_fraction_absolute_change": 1.5710299462637356e-05,
+        "passed": true
+      },
+      {
+        "case_id": "H1",
+        "base_grid_n": 512,
+        "refined_grid_n": 1024,
+        "scalar_vector_intensity_correlation_change": 0.0001783695888040171,
+        "vector_plane_cross_grid_correlation": 0.993318921059526,
+        "feature_radius_relative_change": 0.0,
+        "longitudinal_power_fraction_absolute_change": 0.00011399654731621134,
+        "passed": true
+      }
+    ],
+    "all_passed": true
+  },
+  "all_passed": true,
+  "performance": {
+    "cpu_implementation_authoritative": true,
+    "benchmark_runtime_s": 166.75540960000944,
+    "figure_generation_runtime_s": 256.34871750000457,
+    "total_generation_runtime_s": 423.3982139,
+    "peak_estimated_memory_bytes": 1288175616,
+    "peak_estimated_memory_gib": 1.19970703125,
+    "native_input_resolution": [
+      1024,
+      1024
+    ],
+    "canonical_objective_backend": "native Cartesian sine-condition vector Debye FFT",
+    "canonical_quadrature_orders": "not applicable to Cartesian backend; polar controls listed separately",
+    "polar_quadrature_levels": [
+      {
+        "level": "low",
+        "quadrature_order_r": 24,
+        "quadrature_order_phi": 72,
+        "angular_sample_count": 1728,
+        "intensity_correlation_to_high": 0.999999574302697,
+        "feature_radius_um": 0.6562499999999997,
+        "longitudinal_power_fraction": 0.04938534472358634,
+        "correlation_change_from_previous": null,
+        "feature_radius_relative_change_from_previous": null,
+        "longitudinal_absolute_change_from_previous": null,
+        "meets_predeclared_change_limits": null
+      },
+      {
+        "level": "medium",
+        "quadrature_order_r": 32,
+        "quadrature_order_phi": 96,
+        "angular_sample_count": 3072,
+        "intensity_correlation_to_high": 0.999999592948098,
+        "feature_radius_um": 0.6562499999999997,
+        "longitudinal_power_fraction": 0.04938372815538499,
+        "correlation_change_from_previous": 4.8536780261621004e-08,
+        "feature_radius_relative_change_from_previous": 0.0,
+        "longitudinal_absolute_change_from_previous": 1.6165682013499771e-06,
+        "meets_predeclared_change_limits": true
+      },
+      {
+        "level": "high",
+        "quadrature_order_r": 48,
+        "quadrature_order_phi": 144,
+        "angular_sample_count": 6912,
+        "intensity_correlation_to_high": 1.0,
+        "feature_radius_um": 0.6562499999999997,
+        "longitudinal_power_fraction": 0.04947044849664054,
+        "correlation_change_from_previous": 4.0705190196277385e-07,
+        "feature_radius_relative_change_from_previous": 0.0,
+        "longitudinal_absolute_change_from_previous": 8.672034125555006e-05,
+        "meets_predeclared_change_limits": true
+      }
+    ],
+    "native_output_resolution": {
+      "G0_B0_V1_V3": [
+        128,
+        128
+      ],
+      "H1": [
+        320,
+        320
+      ]
+    },
+    "H1_display_resolution": [
+      385,
+      385
+    ],
+    "H1_display_interpolation_method": "local complex-field Fourier synthesis x8; metrics remain native",
+    "output_point_chunking": {
+      "polar_direct_quadrature_maximum_points": 512,
+      "forbidden_four_dimensional_allocation_used": false
+    },
+    "presets": {
+      "validation": {
+        "pupil_grid_n": 256,
+        "output_grid_n": 64,
+        "h1_output_grid_n": 128,
+        "quadrature_order_r": 32,
+        "quadrature_order_phi": 96
+      },
+      "high_resolution_hero": {
+        "pupil_grid_n": 1024,
+        "output_grid_n": 128,
+        "h1_output_grid_n": 320,
+        "objective_fft_pad_factor": 2,
+        "h1_objective_fft_pad_factor": 4,
+        "h1_surface_resample_factor": 8
+      }
+    }
+  }
+}

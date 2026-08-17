@@ -1,0 +1,4163 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at_utc": "2026-07-15T19:00:44.215167+00:00",
+  "source_file_count": 57,
+  "source_row_count_above_limit": 415,
+  "unique_physical_case_count": 119,
+  "power_drift_limit_fraction": 0.05,
+  "deduplication_fields": [
+    "path",
+    "generation_method",
+    "model_level",
+    "beam_family",
+    "vector_mode",
+    "vector_program",
+    "vector_method",
+    "target_symmetry_order",
+    "target_polygon_sides",
+    "ell",
+    "effective_ell",
+    "target_core_diameter_um",
+    "target_bessel_length_um",
+    "objective_NA",
+    "phase_bits",
+    "fill_factor",
+    "blaze_period_px",
+    "beam_radius_on_slm_mm",
+    "propagation_method",
+    "regime",
+    "route_variant",
+    "physical_axicon_base_angle_deg",
+    "equivalent_kr_m_inv",
+    "vortex_phase_on",
+    "flatten_pre_axicon_phase",
+    "comparison_route",
+    "correction",
+    "interface_correction_label",
+    "scalar_reference_case_id"
+  ],
+  "crop_only_excluded_as_power_drift_cause": true,
+  "selected_campaign": {
+    "schema_version": "1.0.0",
+    "power_drift_limit_fraction": 0.05,
+    "predeclared_metric_tolerances": {
+      "ring_or_feature_radius": 0.03,
+      "canonical_zone": 0.05,
+      "strict_region": 0.05,
+      "side_lobe_ratio": 0.05,
+      "peak_intensity": 0.05
+    },
+    "selected_case_count": 10,
+    "recovered_case_count": 3,
+    "blocked_case_count": 7,
+    "cases": [
+      {
+        "case_id": "general_holographic_ideal",
+        "rationale": "canonical ideal scalar route",
+        "resolutions": [
+          384,
+          512,
+          768,
+          1024
+        ],
+        "adequate_resolutions": [
+          768,
+          1024
+        ],
+        "final_adequate_pair": [
+          768,
+          1024
+        ],
+        "metric_relative_deltas": {
+          "ring_or_feature_radius": 0.0,
+          "canonical_zone": 0.0007239003688810774,
+          "strict_region": 1.3780222754135276e-16,
+          "side_lobe_ratio": 0.0009352589125404968,
+          "peak_intensity": 0.0008337270505823948
+        },
+        "convergence_pass": true,
+        "quantitative_status": "recovered",
+        "likely_cause": "insufficient_spatial_window_causing_z_dependent_bl_asm_bandlimit_clipping"
+      },
+      {
+        "case_id": "general_holographic_realistic",
+        "rationale": "canonical current holographic device route",
+        "resolutions": [
+          {
+            "N": 1024,
+            "device_downsample": 2
+          },
+          {
+            "N": 1536,
+            "device_downsample": 2
+          },
+          {
+            "N": 2048,
+            "device_downsample": 2
+          }
+        ],
+        "adequate_resolutions": [
+          1024,
+          1536,
+          2048
+        ],
+        "final_adequate_pair": [
+          1536,
+          2048
+        ],
+        "metric_relative_deltas": {
+          "ring_or_feature_radius": 0.09650438027006304,
+          "canonical_zone": 0.1748171833586863,
+          "strict_region": 0.0,
+          "side_lobe_ratio": 0.1977831931978168,
+          "peak_intensity": 0.03791944087909925
+        },
+        "convergence_pass": false,
+        "quantitative_status": "invalid_unconverged",
+        "likely_cause": "persistent_bandlimit_or_retained_window_loss",
+        "window_repair": "device_downsample 4 -> 2 doubles the focal-plane side length; N then tests resolution at the repaired window"
+      },
+      {
+        "case_id": "general_physical_ideal",
+        "rationale": "repaired normal physical-axicon route",
+        "resolutions": [
+          384,
+          512,
+          768,
+          1024
+        ],
+        "adequate_resolutions": [
+          768,
+          1024
+        ],
+        "final_adequate_pair": [
+          768,
+          1024
+        ],
+        "metric_relative_deltas": {
+          "ring_or_feature_radius": 0.0,
+          "canonical_zone": 0.00017698441198196554,
+          "strict_region": 2.7560445508270553e-16,
+          "side_lobe_ratio": 0.0005151038665400504,
+          "peak_intensity": 0.00020160031206142265
+        },
+        "convergence_pass": true,
+        "quantitative_status": "recovered",
+        "likely_cause": "insufficient_spatial_window_causing_z_dependent_bl_asm_bandlimit_clipping"
+      },
+      {
+        "case_id": "limits_holographic_ideal",
+        "rationale": "limits-regime high-k_r/long-zone control",
+        "resolutions": [
+          512,
+          768,
+          1024,
+          1536
+        ],
+        "adequate_resolutions": [],
+        "final_adequate_pair": [],
+        "metric_relative_deltas": {},
+        "convergence_pass": false,
+        "quantitative_status": "invalid_unconverged",
+        "likely_cause": "high_kr_or_long_zone_requires_window_beyond_practical_phase1r_limit"
+      },
+      {
+        "case_id": "limits_physical_ideal",
+        "rationale": "limits-regime repaired physical route",
+        "resolutions": [
+          512,
+          768,
+          1024,
+          1536
+        ],
+        "adequate_resolutions": [],
+        "final_adequate_pair": [],
+        "metric_relative_deltas": {},
+        "convergence_pass": false,
+        "quantitative_status": "invalid_unconverged",
+        "likely_cause": "high_kr_or_long_zone_requires_window_beyond_practical_phase1r_limit"
+      },
+      {
+        "case_id": "shortlist_ell0_core3_L150_realistic",
+        "rationale": "historical scalar shortlist ell=0 control",
+        "resolutions": [
+          {
+            "N": 1024,
+            "device_downsample": 2
+          },
+          {
+            "N": 1536,
+            "device_downsample": 2
+          },
+          {
+            "N": 2048,
+            "device_downsample": 2
+          }
+        ],
+        "adequate_resolutions": [
+          1024,
+          1536,
+          2048
+        ],
+        "final_adequate_pair": [
+          1536,
+          2048
+        ],
+        "metric_relative_deltas": {
+          "ring_or_feature_radius": 0.043465059007968015,
+          "canonical_zone": 0.12800923695128139,
+          "strict_region": 0.0,
+          "side_lobe_ratio": 0.08613431759156064,
+          "peak_intensity": 0.1731379182184589
+        },
+        "convergence_pass": false,
+        "quantitative_status": "invalid_unconverged",
+        "likely_cause": "persistent_bandlimit_or_retained_window_loss",
+        "window_repair": "device_downsample 4 -> 2 doubles the focal-plane side length; N then tests resolution at the repaired window"
+      },
+      {
+        "case_id": "shortlist_ell5_core4_L200_realistic",
+        "rationale": "historical scalar shortlist ell=5 control",
+        "resolutions": [
+          {
+            "N": 1024,
+            "device_downsample": 2
+          },
+          {
+            "N": 1536,
+            "device_downsample": 2
+          },
+          {
+            "N": 2048,
+            "device_downsample": 2
+          }
+        ],
+        "adequate_resolutions": [
+          1024,
+          1536,
+          2048
+        ],
+        "final_adequate_pair": [
+          1536,
+          2048
+        ],
+        "metric_relative_deltas": {
+          "ring_or_feature_radius": 0.008006115123309296,
+          "canonical_zone": 0.005032430290576241,
+          "strict_region": 0.0,
+          "side_lobe_ratio": 0.03989719134578893,
+          "peak_intensity": 0.13976804211221747
+        },
+        "convergence_pass": false,
+        "quantitative_status": "invalid_unconverged",
+        "likely_cause": "persistent_bandlimit_or_retained_window_loss",
+        "window_repair": "device_downsample 4 -> 2 doubles the focal-plane side length; N then tests resolution at the repaired window"
+      },
+      {
+        "case_id": "near_threshold_D8_L150_ideal",
+        "rationale": "near-threshold wide-core sweep point",
+        "resolutions": [
+          384,
+          512,
+          768,
+          1024
+        ],
+        "adequate_resolutions": [
+          512,
+          768,
+          1024
+        ],
+        "final_adequate_pair": [
+          768,
+          1024
+        ],
+        "metric_relative_deltas": {
+          "ring_or_feature_radius": 0.0,
+          "canonical_zone": 0.0004447890004576945,
+          "strict_region": 0.0,
+          "side_lobe_ratio": 0.0006028668583096016,
+          "peak_intensity": 0.00021102067080010545
+        },
+        "convergence_pass": true,
+        "quantitative_status": "recovered",
+        "likely_cause": "insufficient_spatial_window_causing_z_dependent_bl_asm_bandlimit_clipping"
+      },
+      {
+        "case_id": "extreme_D1_L800_ideal",
+        "rationale": "extreme high-k_r and long-zone stress point",
+        "resolutions": [
+          512,
+          768,
+          1024,
+          1536
+        ],
+        "adequate_resolutions": [],
+        "final_adequate_pair": [],
+        "metric_relative_deltas": {},
+        "convergence_pass": false,
+        "quantitative_status": "invalid_unconverged",
+        "likely_cause": "high_kr_or_long_zone_requires_window_beyond_practical_phase1r_limit"
+      },
+      {
+        "case_id": "long_D3_L800_ideal",
+        "rationale": "long-zone stress point at canonical transverse scale",
+        "resolutions": [
+          512,
+          768,
+          1024,
+          1536
+        ],
+        "adequate_resolutions": [],
+        "final_adequate_pair": [],
+        "metric_relative_deltas": {},
+        "convergence_pass": false,
+        "quantitative_status": "invalid_unconverged",
+        "likely_cause": "high_kr_or_long_zone_requires_window_beyond_practical_phase1r_limit"
+      }
+    ],
+    "sas_comparison": {
+      "case_id": "general_holographic_ideal",
+      "method": "sas",
+      "N": 768,
+      "status": "error",
+      "error_type": "ValueError",
+      "error": "SAS propagation distance exceeds the reference z-limit: |z|=600 um, limit=430 um. Set sas_allow_invalid=True to override.",
+      "runtime_seconds": 0.04296399999293499
+    },
+    "runs_csv": "outputs/validation/phase1_reconciliation/phase1r_convergence_runs.csv"
+  },
+  "recovered_unique_case_count": 3,
+  "blocked_unique_case_count": 116,
+  "unique_cases": [
+    {
+      "case_uid": "HDR-05b71dd649c0",
+      "physical_signature": {
+        "path": "realistic",
+        "generation_method": "holographic_axicon",
+        "model_level": "lab_realistic",
+        "objective_NA": "0.45",
+        "regime": "limits",
+        "route_variant": "lab",
+        "case_family": "limits_holographic_lab",
+        "artifact_family": "stage_c"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/stage_c/holographic_axicon_route_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/stage_c/holographic_axicon_route_summary.csv#4"
+      ],
+      "case_ids": [
+        "limits_holographic_lab"
+      ],
+      "max_inherited_drift_fraction": 0.055528334992891566,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-0bffcf8cdc4c",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 56,
+      "source_artifact_count": 11,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_ell_family_comparison.csv",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv",
+        "outputs/csv/publication_study/03_sweep_device_realism_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_device_realism_publication.csv",
+        "outputs/csv/publication_study/03_sweep_ell_family_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_ell_family_publication.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_ell_family_comparison.csv#4",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#13",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#16",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#17",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#18",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#22",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#23",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#24",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#25",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#26",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#27",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#28",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#29",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#3",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#30",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#41",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#8",
+        "outputs/csv/publication_study/03_sweep_device_realism_atlas.csv#1",
+        "outputs/csv/publication_study/03_sweep_device_realism_publication.csv#1",
+        "outputs/csv/publication_study/03_sweep_ell_family_atlas.csv#4",
+        "outputs/csv/publication_study/03_sweep_ell_family_publication.csv#4",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#13",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#16",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#17",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#18",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#22",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#23",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#24",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#25",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#26",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#27",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#28",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#29",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#3",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#30",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#41",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#8",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#13",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#16",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#17",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#18",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#22",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#23",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#24",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#25",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#26",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#27",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#28",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#29",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#3",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#30",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#41",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#8",
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#15",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#15",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv#2"
+      ],
+      "case_ids": [
+        "D3.0_L150.0",
+        "analytic_ideal",
+        "beam_radius_on_slm_mm_2p0",
+        "ell3_fixed_energy",
+        "ell_3",
+        "objective_NA_0p3",
+        "objective_NA_0p45",
+        "objective_NA_0p65",
+        "pulse_energy_in_uJ_20p0",
+        "pulse_energy_in_uJ_4p0",
+        "pulse_energy_in_uJ_80p0",
+        "quicklook_conical_axicon",
+        "rep_rate_kHz_1000p0",
+        "rep_rate_kHz_100p0",
+        "rep_rate_kHz_200p0",
+        "scan_speed_mm_s_0p1",
+        "scan_speed_mm_s_10p0",
+        "scan_speed_mm_s_1p0",
+        "target_bessel_length_um_150p0",
+        "target_core_diameter_um_3p0"
+      ],
+      "max_inherited_drift_fraction": 1.051364645342765,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-0ccae4227c34",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "6",
+        "target_bessel_length_um": "800",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#30",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#30"
+      ],
+      "case_ids": [
+        "D6.0_L800.0"
+      ],
+      "max_inherited_drift_fraction": 1.5880216519365413,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-0f663931b57f",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "1",
+        "target_bessel_length_um": "300",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#4",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#4"
+      ],
+      "case_ids": [
+        "D1.0_L300.0"
+      ],
+      "max_inherited_drift_fraction": 4.730039144272235,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-0ff2602ca400",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "8",
+        "target_bessel_length_um": "800",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#36",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#36"
+      ],
+      "case_ids": [
+        "D8.0_L800.0"
+      ],
+      "max_inherited_drift_fraction": 1.3982551977677329,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-10faea190f55",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "8",
+        "target_bessel_length_um": "500",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#35",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#35"
+      ],
+      "case_ids": [
+        "D8.0_L500.0"
+      ],
+      "max_inherited_drift_fraction": 0.8082107024665685,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-11f3168f50ed",
+      "physical_signature": {
+        "path": "phase_only_proxy",
+        "generation_method": "phase_only_slm",
+        "model_level": "lab_realistic",
+        "beam_family": "discrete_nfold",
+        "target_symmetry_order": "4",
+        "target_polygon_sides": "4",
+        "ell": "0"
+      },
+      "source_row_count": 7,
+      "source_artifact_count": 7,
+      "source_artifacts": [
+        "outputs/csv/advanced/discrete_nfold_acceptance_summary.csv",
+        "outputs/csv/advanced/discrete_nfold_beam_summary.csv",
+        "outputs/csv/stage10_discrete/10_discrete_acceptance_summary.csv",
+        "outputs/csv/stage10_discrete/10_discrete_cgh_exports.csv",
+        "outputs/csv/stage10_discrete/10_discrete_continuous_limit.csv",
+        "outputs/csv/stage10_discrete/10_discrete_encoding_comparison.csv",
+        "outputs/csv/stage10_discrete/10_discrete_pattern_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/advanced/discrete_nfold_acceptance_summary.csv#4",
+        "outputs/csv/advanced/discrete_nfold_beam_summary.csv#4",
+        "outputs/csv/stage10_discrete/10_discrete_acceptance_summary.csv#4",
+        "outputs/csv/stage10_discrete/10_discrete_cgh_exports.csv#4",
+        "outputs/csv/stage10_discrete/10_discrete_continuous_limit.csv#4",
+        "outputs/csv/stage10_discrete/10_discrete_encoding_comparison.csv#4",
+        "outputs/csv/stage10_discrete/10_discrete_pattern_summary.csv#4"
+      ],
+      "case_ids": [
+        "square_phase_only_approximation"
+      ],
+      "max_inherited_drift_fraction": 0.3121837968407402,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-16bf34f0107f",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "50",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 4,
+      "source_artifact_count": 4,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#12",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#12",
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#13",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#13"
+      ],
+      "case_ids": [
+        "D3.0_L50.0",
+        "target_bessel_length_um_50p0"
+      ],
+      "max_inherited_drift_fraction": 0.766222232404411,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-1894ada0be7e",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "10",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_ell_family_comparison.csv",
+        "outputs/csv/publication_study/03_sweep_ell_family_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_ell_family_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_ell_family_comparison.csv#7",
+        "outputs/csv/publication_study/03_sweep_ell_family_atlas.csv#7",
+        "outputs/csv/publication_study/03_sweep_ell_family_publication.csv#7"
+      ],
+      "case_ids": [
+        "ell10_fixed_energy"
+      ],
+      "max_inherited_drift_fraction": 1.1352146478055238,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-18a954dc3022",
+      "physical_signature": {
+        "path": "realistic",
+        "generation_method": "holographic_axicon",
+        "model_level": "lab_realistic",
+        "objective_NA": "0.45",
+        "regime": "general",
+        "route_variant": "lab",
+        "case_family": "general_holographic_lab",
+        "artifact_family": "stage_c"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/stage_c/holographic_axicon_route_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/stage_c/holographic_axicon_route_summary.csv#2"
+      ],
+      "case_ids": [
+        "general_holographic_lab"
+      ],
+      "max_inherited_drift_fraction": 0.4031126992938065,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-1903d1a2e450",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "2",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary.csv",
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary.csv#3",
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary_publication.csv#3"
+      ],
+      "case_ids": [
+        "ell2_core3_L150"
+      ],
+      "max_inherited_drift_fraction": 0.38666013377632874,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-1b2449a474df",
+      "physical_signature": {
+        "path": "vector_ideal_vs_lab_case1",
+        "generation_method": "qplate_or_vector_converter",
+        "model_level": "ideal_target",
+        "beam_family": "vector",
+        "vector_mode": "radial",
+        "vector_program": "radial",
+        "vector_method": "analytic_reference",
+        "ell": "1",
+        "target_core_diameter_um": "3",
+        "scalar_reference_case_id": "vector_scalar_reference_ell1"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/publication_study/stage6_fidelity_ladder_summary.csv",
+        "outputs/csv/vector/stage6_fidelity_ladder_summary.csv",
+        "outputs/csv/vector/vector_ideal_vs_lab_case1_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/stage6_fidelity_ladder_summary.csv#2",
+        "outputs/csv/vector/stage6_fidelity_ladder_summary.csv#2",
+        "outputs/csv/vector/vector_ideal_vs_lab_case1_summary.csv#2"
+      ],
+      "case_ids": [
+        "ideal_radial_target_ell1"
+      ],
+      "max_inherited_drift_fraction": 1.1210326024895458,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-1c42a7b1d6ca",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "12",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv#37"
+      ],
+      "case_ids": [
+        "blaze_period_px_12"
+      ],
+      "max_inherited_drift_fraction": 0.30703799740837484,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-1cdb7940e2f5",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "6",
+        "target_bessel_length_um": "300",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#28",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#28"
+      ],
+      "case_ids": [
+        "D6.0_L300.0"
+      ],
+      "max_inherited_drift_fraction": 0.13448447146032122,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-1e6c400ffc94",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "4",
+        "target_bessel_length_um": "800",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#24",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#24"
+      ],
+      "case_ids": [
+        "D4.0_L800.0"
+      ],
+      "max_inherited_drift_fraction": 2.302995605559573,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-20f6b2460ca2",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "4",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#33",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#33",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#33"
+      ],
+      "case_ids": [
+        "slm_phase_bits_4"
+      ],
+      "max_inherited_drift_fraction": 0.4022781029369608,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-2853c6961aaf",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "500",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv#14"
+      ],
+      "case_ids": [
+        "target_bessel_length_um_500p0"
+      ],
+      "max_inherited_drift_fraction": 1.3730259913505898,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-2c0ba6eac0d3",
+      "physical_signature": {
+        "path": "ideal",
+        "generation_method": "physical_axicon",
+        "model_level": "hardware_route",
+        "objective_NA": "0.45",
+        "regime": "limits",
+        "route_variant": "lab",
+        "physical_axicon_base_angle_deg": "1.09270411245",
+        "equivalent_kr_m_inv": "2405000"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/stage_c/physical_axicon_design_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/stage_c/physical_axicon_design_summary.csv#4"
+      ],
+      "case_ids": [
+        "limits_physical_lab"
+      ],
+      "max_inherited_drift_fraction": 2.2189665435945938,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-2cc215328684",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "0",
+        "effective_ell": "0",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general",
+        "vortex_phase_on": "false",
+        "flatten_pre_axicon_phase": "true",
+        "comparison_route": "lab_realistic"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/quicklook/four_condition_phase_comparison_metrics.csv",
+        "outputs/csv/quicklook/quicklook_four_condition_phase_comparison_summary.csv",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/quicklook/four_condition_phase_comparison_metrics.csv#4",
+        "outputs/csv/quicklook/quicklook_four_condition_phase_comparison_summary.csv#4",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv#9"
+      ],
+      "case_ids": [
+        "no_vortex_flattened_pre_axicon"
+      ],
+      "max_inherited_drift_fraction": 0.4402367885205893,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-2ea0df274f23",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "0",
+        "effective_ell": "0",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general",
+        "vortex_phase_on": "false",
+        "flatten_pre_axicon_phase": "false",
+        "comparison_route": "lab_realistic"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/quicklook/four_condition_phase_comparison_metrics.csv",
+        "outputs/csv/quicklook/quicklook_four_condition_phase_comparison_summary.csv",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/quicklook/four_condition_phase_comparison_metrics.csv#2",
+        "outputs/csv/quicklook/quicklook_four_condition_phase_comparison_summary.csv#2",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv#7"
+      ],
+      "case_ids": [
+        "no_vortex_standard_axicon"
+      ],
+      "max_inherited_drift_fraction": 0.4402367885205893,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-2ef6e9499b5c",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "0",
+        "target_core_diameter_um": "2",
+        "target_bessel_length_um": "100",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary.csv#7"
+      ],
+      "case_ids": [
+        "ell0_core2_L100"
+      ],
+      "max_inherited_drift_fraction": 0.06257482428239623,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-30bd1e20344f",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "100",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#14",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#14"
+      ],
+      "case_ids": [
+        "D3.0_L100.0"
+      ],
+      "max_inherited_drift_fraction": 0.9090081276931229,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-33b9a5b8a1ac",
+      "physical_signature": {
+        "path": "vector_ideal_vs_lab_case1",
+        "generation_method": "paper_replica_simulation",
+        "model_level": "paper_replica",
+        "beam_family": "vector",
+        "vector_mode": "paper_replica",
+        "vector_program": "radial",
+        "vector_method": "paper_jones_chain",
+        "ell": "1",
+        "target_core_diameter_um": "3",
+        "scalar_reference_case_id": "vector_scalar_reference_ell1"
+      },
+      "source_row_count": 5,
+      "source_artifact_count": 5,
+      "source_artifacts": [
+        "outputs/csv/publication_study/stage6_fidelity_ladder_summary.csv",
+        "outputs/csv/publication_study/stage6_paper_replica_vector_summary.csv",
+        "outputs/csv/vector/stage6_fidelity_ladder_summary.csv",
+        "outputs/csv/vector/stage6_paper_replica_vector_summary.csv",
+        "outputs/csv/vector/vector_ideal_vs_lab_case1_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/stage6_fidelity_ladder_summary.csv#5",
+        "outputs/csv/publication_study/stage6_paper_replica_vector_summary.csv#1",
+        "outputs/csv/vector/stage6_fidelity_ladder_summary.csv#5",
+        "outputs/csv/vector/stage6_paper_replica_vector_summary.csv#1",
+        "outputs/csv/vector/vector_ideal_vs_lab_case1_summary.csv#5"
+      ],
+      "case_ids": [
+        "paper_replica_radial_diagnostic_ell1"
+      ],
+      "max_inherited_drift_fraction": 1.1210326024895458,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-35324642dc62",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "5",
+        "target_core_diameter_um": "4",
+        "target_bessel_length_um": "200",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_shortlist_realistic_summary.csv",
+        "outputs/csv/publication_study/shortlist_realistic_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_shortlist_realistic_summary.csv#3",
+        "outputs/csv/publication_study/shortlist_realistic_summary.csv#3"
+      ],
+      "case_ids": [
+        "ell5_core4_L200"
+      ],
+      "max_inherited_drift_fraction": 0.6136154465755946,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-3a174a621422",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_shortlist_realistic_summary.csv",
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv",
+        "outputs/csv/publication_study/shortlist_realistic_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_shortlist_realistic_summary.csv#2",
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv#10",
+        "outputs/csv/publication_study/shortlist_realistic_summary.csv#2"
+      ],
+      "case_ids": [
+        "ell3_L150_core3_E10",
+        "ell3_core3_L150"
+      ],
+      "max_inherited_drift_fraction": 0.4031126992938065,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-3bf4c7888314",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "4",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 4,
+      "source_artifact_count": 4,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#9",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#9",
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#21",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#21"
+      ],
+      "case_ids": [
+        "D4.0_L150.0",
+        "target_core_diameter_um_4p0"
+      ],
+      "max_inherited_drift_fraction": 0.23872752752784931,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-3e229a8263b2",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "effective_ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general",
+        "vortex_phase_on": "true",
+        "flatten_pre_axicon_phase": "false",
+        "comparison_route": "ideal_conical"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/quicklook/four_condition_phase_comparison_metrics.csv",
+        "outputs/csv/quicklook/quicklook_four_condition_phase_comparison_summary.csv",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/quicklook/four_condition_phase_comparison_metrics.csv#5",
+        "outputs/csv/quicklook/quicklook_four_condition_phase_comparison_summary.csv#5",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv#10"
+      ],
+      "case_ids": [
+        "vortex_standard_axicon"
+      ],
+      "max_inherited_drift_fraction": 1.0611129567607014,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-43dcd8c312c9",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "1",
+        "target_bessel_length_um": "50",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#1",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#1"
+      ],
+      "case_ids": [
+        "D1.0_L50.0"
+      ],
+      "max_inherited_drift_fraction": 3.9494685727662975,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-46b107786e69",
+      "physical_signature": {
+        "path": "vector_ideal_vs_lab_case1",
+        "generation_method": "qplate_or_vector_converter",
+        "model_level": "ideal_target",
+        "beam_family": "vector",
+        "vector_mode": "azimuthal",
+        "vector_program": "azimuthal",
+        "vector_method": "analytic_reference",
+        "ell": "1",
+        "target_core_diameter_um": "3",
+        "scalar_reference_case_id": "vector_scalar_reference_ell1"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/publication_study/stage6_fidelity_ladder_summary.csv",
+        "outputs/csv/vector/stage6_fidelity_ladder_summary.csv",
+        "outputs/csv/vector/vector_ideal_vs_lab_case1_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/stage6_fidelity_ladder_summary.csv#3",
+        "outputs/csv/vector/stage6_fidelity_ladder_summary.csv#3",
+        "outputs/csv/vector/vector_ideal_vs_lab_case1_summary.csv#3"
+      ],
+      "case_ids": [
+        "ideal_azimuthal_target_ell1"
+      ],
+      "max_inherited_drift_fraction": 1.1210326024895458,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-4725f7a6c16e",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "6",
+        "target_bessel_length_um": "500",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#29",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#29"
+      ],
+      "case_ids": [
+        "D6.0_L500.0"
+      ],
+      "max_inherited_drift_fraction": 1.2722933097600895,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-4756429869e0",
+      "physical_signature": {
+        "path": "ideal",
+        "generation_method": "holographic_axicon",
+        "model_level": "ideal_target",
+        "objective_NA": "0.45",
+        "regime": "limits",
+        "route_variant": "ideal",
+        "case_family": "limits_holographic_ideal",
+        "artifact_family": "stage_c"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/stage_c/holographic_axicon_route_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/stage_c/holographic_axicon_route_summary.csv#3"
+      ],
+      "case_ids": [
+        "limits_holographic_ideal"
+      ],
+      "max_inherited_drift_fraction": 2.22289820397018,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-482f65a42473",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "2",
+        "target_bessel_length_um": "800",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#12",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#12"
+      ],
+      "case_ids": [
+        "D2.0_L800.0"
+      ],
+      "max_inherited_drift_fraction": 4.7913941963940765,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-536d6bd6909d",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "1",
+        "target_core_diameter_um": "5",
+        "target_bessel_length_um": "300",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary.csv",
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary.csv#6",
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary_publication.csv#6"
+      ],
+      "case_ids": [
+        "ell1_core5_L300"
+      ],
+      "max_inherited_drift_fraction": 0.893001091201412,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-55a51993c70b",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 36,
+      "source_artifact_count": 11,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv",
+        "outputs/csv/publication_study/03_sweep_device_realism_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_device_realism_publication.csv",
+        "outputs/csv/publication_study/03_sweep_interface_depth_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_interface_depth_publication.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv",
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary.csv",
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary_publication.csv",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv",
+        "outputs/csv/stage_c/stage_c_interface_depth_sweep_sample_study.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#19",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#20",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#21",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#31",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#35",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#38",
+        "outputs/csv/publication_study/03_sweep_device_realism_atlas.csv#2",
+        "outputs/csv/publication_study/03_sweep_device_realism_atlas.csv#3",
+        "outputs/csv/publication_study/03_sweep_device_realism_atlas.csv#4",
+        "outputs/csv/publication_study/03_sweep_device_realism_atlas.csv#5",
+        "outputs/csv/publication_study/03_sweep_device_realism_publication.csv#2",
+        "outputs/csv/publication_study/03_sweep_device_realism_publication.csv#3",
+        "outputs/csv/publication_study/03_sweep_device_realism_publication.csv#4",
+        "outputs/csv/publication_study/03_sweep_device_realism_publication.csv#5",
+        "outputs/csv/publication_study/03_sweep_interface_depth_atlas.csv#7",
+        "outputs/csv/publication_study/03_sweep_interface_depth_atlas.csv#9",
+        "outputs/csv/publication_study/03_sweep_interface_depth_publication.csv#7",
+        "outputs/csv/publication_study/03_sweep_interface_depth_publication.csv#9",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#19",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#20",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#21",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#31",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#35",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#38",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#19",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#20",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#21",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#31",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#35",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#38",
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary.csv#4",
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary_publication.csv#4",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv#3",
+        "outputs/csv/stage_c/stage_c_interface_depth_sweep_sample_study.csv#5",
+        "outputs/csv/stage_c/stage_c_interface_depth_sweep_sample_study.csv#7",
+        "outputs/csv/stage_c/stage_c_interface_depth_sweep_sample_study.csv#9"
+      ],
+      "case_ids": [
+        "blaze_period_px_20",
+        "continuous_phase_no_fill",
+        "ell3_core3_L150",
+        "fill_factor_0p93",
+        "full_device",
+        "quantized_fill",
+        "quantized_only",
+        "quicklook_lab",
+        "slm_phase_bits_8",
+        "write_depth_um_1000p0",
+        "write_depth_um_300p0",
+        "write_depth_um_50p0",
+        "z1000_uncorrected",
+        "z300_uncorrected",
+        "z600_uncorrected"
+      ],
+      "max_inherited_drift_fraction": 0.7938514981660834,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-5669e867a67c",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "0",
+        "target_core_diameter_um": "5",
+        "target_bessel_length_um": "300",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary.csv",
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary.csv#5",
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary_publication.csv#5"
+      ],
+      "case_ids": [
+        "ell0_core5_L300"
+      ],
+      "max_inherited_drift_fraction": 0.9374309908098015,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-56b1e1ec3b9c",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "1",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary.csv",
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary.csv#2",
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary_publication.csv#2"
+      ],
+      "case_ids": [
+        "ell1_core3_L150"
+      ],
+      "max_inherited_drift_fraction": 0.37733593558746725,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-58c4075d5fff",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "1",
+        "target_bessel_length_um": "500",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#5",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#5"
+      ],
+      "case_ids": [
+        "D1.0_L500.0"
+      ],
+      "max_inherited_drift_fraction": 7.814013563707468,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-5b34c48038e3",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "1",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#34",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#34",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#34"
+      ],
+      "case_ids": [
+        "fill_factor_1p0"
+      ],
+      "max_inherited_drift_fraction": 0.4031126992938064,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-5b8bb2ce12b4",
+      "physical_signature": {
+        "case_family": "ell3_core3_l150",
+        "artifact_family": "publication_study"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv#11",
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv#4"
+      ],
+      "case_ids": [
+        "ell3_core3_L150"
+      ],
+      "max_inherited_drift_fraction": 0.4031126992938065,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-64ddc9912315",
+      "physical_signature": {
+        "case_family": "ell0_core5_l300",
+        "artifact_family": "publication_study"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv#12",
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv#5"
+      ],
+      "case_ids": [
+        "ell0_core5_L300"
+      ],
+      "max_inherited_drift_fraction": 0.9374309908098016,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-651b07269add",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "0",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "250",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv#4"
+      ],
+      "case_ids": [
+        "ell0_L250_core3_E10"
+      ],
+      "max_inherited_drift_fraction": 0.07067395366955498,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-682cd81739f7",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.85",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#36",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#36",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#36"
+      ],
+      "case_ids": [
+        "fill_factor_0p85"
+      ],
+      "max_inherited_drift_fraction": 0.40311269929380655,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-6c24baa9e636",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "0",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "100",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv#1"
+      ],
+      "case_ids": [
+        "ell0_L100_core3_E10"
+      ],
+      "max_inherited_drift_fraction": 0.09578639096956364,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-6d7ebcb474e2",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "250",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv#12"
+      ],
+      "case_ids": [
+        "ell3_L250_core3_E10"
+      ],
+      "max_inherited_drift_fraction": 0.1402804282958071,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-7148b85ab025",
+      "physical_signature": {
+        "path": "ideal",
+        "generation_method": "physical_axicon",
+        "model_level": "hardware_route",
+        "objective_NA": "0.45",
+        "regime": "general",
+        "route_variant": "lab",
+        "physical_axicon_base_angle_deg": "0.242851125457",
+        "equivalent_kr_m_inv": "1603333.33333"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/stage_c/physical_axicon_design_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/stage_c/physical_axicon_design_summary.csv#2"
+      ],
+      "case_ids": [
+        "general_physical_lab"
+      ],
+      "max_inherited_drift_fraction": 0.6959323921950901,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-72564b408703",
+      "physical_signature": {
+        "case_family": "unknown_case",
+        "artifact_family": "interface_correction"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/interface_correction/08_interface_ell3_variant_metrics.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/interface_correction/08_interface_ell3_variant_metrics.csv#1",
+        "outputs/csv/interface_correction/08_interface_ell3_variant_metrics.csv#2",
+        "outputs/csv/interface_correction/08_interface_ell3_variant_metrics.csv#3"
+      ],
+      "case_ids": [],
+      "max_inherited_drift_fraction": 0.16888951691664092,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-77f142c4211a",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "10",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_study/ell_family_comparison.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/ell_family_comparison.csv#7"
+      ],
+      "case_ids": [
+        "ell10_fixed_energy"
+      ],
+      "max_inherited_drift_fraction": 0.06361587731029471,
+      "likely_cause": "near_threshold_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-788abd8fb5ed",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "1",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv#34"
+      ],
+      "case_ids": [
+        "fill_factor_1p0"
+      ],
+      "max_inherited_drift_fraction": 0.30701453783520566,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-792a24861c52",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "12",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#37",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#37",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#37"
+      ],
+      "case_ids": [
+        "blaze_period_px_12"
+      ],
+      "max_inherited_drift_fraction": 0.40263930140932136,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-79923fe09760",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "2",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 5,
+      "source_artifact_count": 5,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#7",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#7",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#7",
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#9",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#9"
+      ],
+      "case_ids": [
+        "D2.0_L150.0",
+        "target_core_diameter_um_2p0"
+      ],
+      "max_inherited_drift_fraction": 1.499786962755408,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-7c5860553fcd",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "0",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary.csv",
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary.csv#1",
+        "outputs/csv/publication_study/scalar_shortlist_realistic_summary_publication.csv#1"
+      ],
+      "case_ids": [
+        "ell0_core3_L150"
+      ],
+      "max_inherited_drift_fraction": 0.3937609406052408,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-7e6bd4e1b661",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "32",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv#39"
+      ],
+      "case_ids": [
+        "blaze_period_px_32"
+      ],
+      "max_inherited_drift_fraction": 0.3077243321304108,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-7eeacdc4c929",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "0",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_shortlist_realistic_summary.csv",
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv",
+        "outputs/csv/publication_study/shortlist_realistic_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_shortlist_realistic_summary.csv#1",
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv#2",
+        "outputs/csv/publication_study/shortlist_realistic_summary.csv#1"
+      ],
+      "case_ids": [
+        "ell0_L150_core3_E10",
+        "ell0_core3_L150"
+      ],
+      "max_inherited_drift_fraction": 0.3937609406052408,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-809c7e1e9771",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "6",
+        "target_bessel_length_um": "50",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#25",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#25"
+      ],
+      "case_ids": [
+        "D6.0_L50.0"
+      ],
+      "max_inherited_drift_fraction": 0.21934390174744706,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-8d075759f994",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "4",
+        "target_bessel_length_um": "500",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#23",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#23"
+      ],
+      "case_ids": [
+        "D4.0_L500.0"
+      ],
+      "max_inherited_drift_fraction": 1.541541993496796,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-8f84f4f5c37f",
+      "physical_signature": {
+        "path": "phase_only_proxy",
+        "generation_method": "phase_only_slm",
+        "model_level": "lab_realistic",
+        "beam_family": "discrete_nfold",
+        "target_symmetry_order": "12",
+        "target_polygon_sides": "12",
+        "ell": "0"
+      },
+      "source_row_count": 7,
+      "source_artifact_count": 7,
+      "source_artifacts": [
+        "outputs/csv/advanced/discrete_nfold_acceptance_summary.csv",
+        "outputs/csv/advanced/discrete_nfold_beam_summary.csv",
+        "outputs/csv/stage10_discrete/10_discrete_acceptance_summary.csv",
+        "outputs/csv/stage10_discrete/10_discrete_cgh_exports.csv",
+        "outputs/csv/stage10_discrete/10_discrete_continuous_limit.csv",
+        "outputs/csv/stage10_discrete/10_discrete_encoding_comparison.csv",
+        "outputs/csv/stage10_discrete/10_discrete_pattern_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/advanced/discrete_nfold_acceptance_summary.csv#10",
+        "outputs/csv/advanced/discrete_nfold_beam_summary.csv#10",
+        "outputs/csv/stage10_discrete/10_discrete_acceptance_summary.csv#10",
+        "outputs/csv/stage10_discrete/10_discrete_cgh_exports.csv#10",
+        "outputs/csv/stage10_discrete/10_discrete_continuous_limit.csv#10",
+        "outputs/csv/stage10_discrete/10_discrete_encoding_comparison.csv#10",
+        "outputs/csv/stage10_discrete/10_discrete_pattern_summary.csv#10"
+      ],
+      "case_ids": [
+        "dodecagonal_phase_only_approximation"
+      ],
+      "max_inherited_drift_fraction": 0.23094770263963602,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-902857d3c6dc",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 4,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv#20",
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv#31",
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv#35",
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv#38"
+      ],
+      "case_ids": [
+        "blaze_period_px_20",
+        "fill_factor_0p93",
+        "slm_phase_bits_8",
+        "write_depth_um_300p0"
+      ],
+      "max_inherited_drift_fraction": 0.30701453783520566,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-90d979f9e76d",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "5",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "100",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv#13"
+      ],
+      "case_ids": [
+        "ell5_L100_core3_E10"
+      ],
+      "max_inherited_drift_fraction": 0.08962275339570554,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-93d3da64380f",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "1",
+        "target_bessel_length_um": "800",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#6",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#6"
+      ],
+      "case_ids": [
+        "D1.0_L800.0"
+      ],
+      "max_inherited_drift_fraction": 12.649476304729966,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-94fbb1c514c5",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "5",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "250",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv#16"
+      ],
+      "case_ids": [
+        "ell5_L250_core3_E10"
+      ],
+      "max_inherited_drift_fraction": 0.1674276897280622,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-9598ac941609",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "4",
+        "target_bessel_length_um": "100",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#20",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#20"
+      ],
+      "case_ids": [
+        "D4.0_L100.0"
+      ],
+      "max_inherited_drift_fraction": 0.15675447413922422,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-964ef69d51d3",
+      "physical_signature": {
+        "path": "vector_ideal_vs_lab_case1",
+        "generation_method": "scalar_reference",
+        "model_level": "scalar_reference",
+        "beam_family": "scalar_reference",
+        "vector_mode": "scalar_reference",
+        "vector_program": "scalar_reference",
+        "vector_method": "not_applicable",
+        "ell": "1",
+        "target_core_diameter_um": "3"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/publication_study/stage6_fidelity_ladder_summary.csv",
+        "outputs/csv/vector/stage6_fidelity_ladder_summary.csv",
+        "outputs/csv/vector/vector_ideal_vs_lab_case1_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/stage6_fidelity_ladder_summary.csv#1",
+        "outputs/csv/vector/stage6_fidelity_ladder_summary.csv#1",
+        "outputs/csv/vector/vector_ideal_vs_lab_case1_summary.csv#1"
+      ],
+      "case_ids": [
+        "vector_scalar_reference_ell1"
+      ],
+      "max_inherited_drift_fraction": 1.1210326024895458,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-96d41cbe0198",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "5",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 6,
+      "source_artifact_count": 6,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_ell_family_comparison.csv",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv",
+        "outputs/csv/publication_study/03_sweep_ell_family_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_ell_family_publication.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_ell_family_comparison.csv#5",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#4",
+        "outputs/csv/publication_study/03_sweep_ell_family_atlas.csv#5",
+        "outputs/csv/publication_study/03_sweep_ell_family_publication.csv#5",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#4",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#4"
+      ],
+      "case_ids": [
+        "ell5_fixed_energy",
+        "ell_5"
+      ],
+      "max_inherited_drift_fraction": 1.0681378783017146,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-976ac9c1a665",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "0",
+        "effective_ell": "0",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general",
+        "vortex_phase_on": "false",
+        "flatten_pre_axicon_phase": "true",
+        "comparison_route": "ideal_conical"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/quicklook/four_condition_phase_comparison_metrics.csv",
+        "outputs/csv/quicklook/quicklook_four_condition_phase_comparison_summary.csv",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/quicklook/four_condition_phase_comparison_metrics.csv#3",
+        "outputs/csv/quicklook/quicklook_four_condition_phase_comparison_summary.csv#3",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv#8"
+      ],
+      "case_ids": [
+        "no_vortex_flattened_pre_axicon"
+      ],
+      "max_inherited_drift_fraction": 1.0262509044652939,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-9a8f60a65923",
+      "physical_signature": {
+        "path": "phase_only_proxy",
+        "generation_method": "phase_only_slm",
+        "model_level": "lab_realistic",
+        "beam_family": "nfold_vortex_ring",
+        "target_symmetry_order": "6",
+        "target_polygon_sides": "6",
+        "ell": "1"
+      },
+      "source_row_count": 7,
+      "source_artifact_count": 7,
+      "source_artifacts": [
+        "outputs/csv/advanced/discrete_nfold_acceptance_summary.csv",
+        "outputs/csv/advanced/discrete_nfold_beam_summary.csv",
+        "outputs/csv/stage10_discrete/10_discrete_acceptance_summary.csv",
+        "outputs/csv/stage10_discrete/10_discrete_cgh_exports.csv",
+        "outputs/csv/stage10_discrete/10_discrete_continuous_limit.csv",
+        "outputs/csv/stage10_discrete/10_discrete_encoding_comparison.csv",
+        "outputs/csv/stage10_discrete/10_discrete_pattern_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/advanced/discrete_nfold_acceptance_summary.csv#12",
+        "outputs/csv/advanced/discrete_nfold_beam_summary.csv#12",
+        "outputs/csv/stage10_discrete/10_discrete_acceptance_summary.csv#12",
+        "outputs/csv/stage10_discrete/10_discrete_cgh_exports.csv#12",
+        "outputs/csv/stage10_discrete/10_discrete_continuous_limit.csv#12",
+        "outputs/csv/stage10_discrete/10_discrete_encoding_comparison.csv#12",
+        "outputs/csv/stage10_discrete/10_discrete_pattern_summary.csv#12"
+      ],
+      "case_ids": [
+        "hexagonal_vortex_phase_only_approximation"
+      ],
+      "max_inherited_drift_fraction": 0.16576622013294964,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-9cdedcc7f7e4",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "1",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "100",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv#5"
+      ],
+      "case_ids": [
+        "ell1_L100_core3_E10"
+      ],
+      "max_inherited_drift_fraction": 0.08569970883749362,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-9ee5dcc7d501",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "2",
+        "target_bessel_length_um": "300",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#10",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#10"
+      ],
+      "case_ids": [
+        "D2.0_L300.0"
+      ],
+      "max_inherited_drift_fraction": 1.8312160257667038,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-a28c06d806a7",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "100",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv#9"
+      ],
+      "case_ids": [
+        "ell3_L100_core3_E10"
+      ],
+      "max_inherited_drift_fraction": 0.08108611577352598,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-a3a56241c60f",
+      "physical_signature": {
+        "case_family": "ell0_core2_l100",
+        "artifact_family": "publication_study"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv#7"
+      ],
+      "case_ids": [
+        "ell0_core2_L100"
+      ],
+      "max_inherited_drift_fraction": 0.0625748242823962,
+      "likely_cause": "near_threshold_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-a3d3526bc579",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "5",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv#14"
+      ],
+      "case_ids": [
+        "ell5_L150_core3_E10"
+      ],
+      "max_inherited_drift_fraction": 0.4059889449661636,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-a5deb0c84cb6",
+      "physical_signature": {
+        "path": "ideal",
+        "generation_method": "holographic_axicon",
+        "model_level": "ideal_target",
+        "objective_NA": "0.45",
+        "regime": "general",
+        "route_variant": "ideal",
+        "case_family": "general_holographic_ideal",
+        "artifact_family": "stage_c"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/stage_c/holographic_axicon_route_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/stage_c/holographic_axicon_route_summary.csv#1"
+      ],
+      "case_ids": [
+        "general_holographic_ideal"
+      ],
+      "max_inherited_drift_fraction": 0.7063765218019594,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-a8f2bce1936b",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "4",
+        "target_bessel_length_um": "300",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#22",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#22"
+      ],
+      "case_ids": [
+        "D4.0_L300.0"
+      ],
+      "max_inherited_drift_fraction": 1.1789113010906076,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-aa844fcd466f",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "2",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_ell_family_comparison.csv",
+        "outputs/csv/publication_study/03_sweep_ell_family_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_ell_family_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_ell_family_comparison.csv#3",
+        "outputs/csv/publication_study/03_sweep_ell_family_atlas.csv#3",
+        "outputs/csv/publication_study/03_sweep_ell_family_publication.csv#3"
+      ],
+      "case_ids": [
+        "ell2_fixed_energy"
+      ],
+      "max_inherited_drift_fraction": 1.0353074185767237,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-b210d79fec8f",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "800",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 5,
+      "source_artifact_count": 5,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#15",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#15",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#15",
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#18",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#18"
+      ],
+      "case_ids": [
+        "D3.0_L800.0",
+        "target_bessel_length_um_800p0"
+      ],
+      "max_inherited_drift_fraction": 3.7547248941299514,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-b21b36220b44",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "0",
+        "effective_ell": "0",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general",
+        "vortex_phase_on": "false",
+        "flatten_pre_axicon_phase": "false",
+        "comparison_route": "ideal_conical"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/quicklook/four_condition_phase_comparison_metrics.csv",
+        "outputs/csv/quicklook/quicklook_four_condition_phase_comparison_summary.csv",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/quicklook/four_condition_phase_comparison_metrics.csv#1",
+        "outputs/csv/quicklook/quicklook_four_condition_phase_comparison_summary.csv#1",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv#6"
+      ],
+      "case_ids": [
+        "no_vortex_standard_axicon"
+      ],
+      "max_inherited_drift_fraction": 1.0262509044652939,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-b8e7e8b009b2",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "6",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#32",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#32",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#32"
+      ],
+      "case_ids": [
+        "slm_phase_bits_6"
+      ],
+      "max_inherited_drift_fraction": 0.4029723896257311,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-bae82a5c8ae9",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "1",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 6,
+      "source_artifact_count": 6,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_ell_family_comparison.csv",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv",
+        "outputs/csv/publication_study/03_sweep_ell_family_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_ell_family_publication.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_ell_family_comparison.csv#2",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#2",
+        "outputs/csv/publication_study/03_sweep_ell_family_atlas.csv#2",
+        "outputs/csv/publication_study/03_sweep_ell_family_publication.csv#2",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#2",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#2"
+      ],
+      "case_ids": [
+        "ell1_fixed_energy",
+        "ell_1"
+      ],
+      "max_inherited_drift_fraction": 1.0272783375419339,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-bc5bbd6b18c0",
+      "physical_signature": {
+        "path": "ideal",
+        "generation_method": "physical_axicon",
+        "model_level": "hardware_route",
+        "objective_NA": "0.45",
+        "regime": "limits",
+        "route_variant": "ideal",
+        "physical_axicon_base_angle_deg": "1.09270411245",
+        "equivalent_kr_m_inv": "2405000"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/stage_c/physical_axicon_design_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/stage_c/physical_axicon_design_summary.csv#3"
+      ],
+      "case_ids": [
+        "limits_physical_ideal"
+      ],
+      "max_inherited_drift_fraction": 2.2189399323167636,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-bc8920413fed",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.85",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv#36"
+      ],
+      "case_ids": [
+        "fill_factor_0p85"
+      ],
+      "max_inherited_drift_fraction": 0.307014537835206,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-bfba4ea486ae",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "8",
+        "target_bessel_length_um": "100",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#32",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#32"
+      ],
+      "case_ids": [
+        "D8.0_L100.0"
+      ],
+      "max_inherited_drift_fraction": 0.08733810644000291,
+      "likely_cause": "near_threshold_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-c0b319f45076",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "2",
+        "target_bessel_length_um": "50",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#7",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#7"
+      ],
+      "case_ids": [
+        "D2.0_L50.0"
+      ],
+      "max_inherited_drift_fraction": 1.5103750751112937,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-c5517986dbd7",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "500",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 5,
+      "source_artifact_count": 5,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#14",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#14",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#14",
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#17",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#17"
+      ],
+      "case_ids": [
+        "D3.0_L500.0",
+        "target_bessel_length_um_500p0"
+      ],
+      "max_inherited_drift_fraction": 2.361053003492396,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-c5eddc0d3168",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "1",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv#6"
+      ],
+      "case_ids": [
+        "target_core_diameter_um_1p0"
+      ],
+      "max_inherited_drift_fraction": 1.2497543691505302,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-c659f9def587",
+      "physical_signature": {
+        "case_family": "ell0_core3_l150",
+        "artifact_family": "publication_study"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv#1",
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv#8"
+      ],
+      "case_ids": [
+        "ell0_core3_L150"
+      ],
+      "max_inherited_drift_fraction": 0.3937609406052408,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-c6a8e9803450",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "0",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "200",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv#3"
+      ],
+      "case_ids": [
+        "ell0_L200_core3_E10"
+      ],
+      "max_inherited_drift_fraction": 0.20831673114175897,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-cb53d66a1447",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "6",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv#32"
+      ],
+      "case_ids": [
+        "slm_phase_bits_6"
+      ],
+      "max_inherited_drift_fraction": 0.3072500449480342,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-ce65652bbe9e",
+      "physical_signature": {
+        "case_family": "ell2_core3_l150",
+        "artifact_family": "publication_study"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv#10",
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv#3"
+      ],
+      "case_ids": [
+        "ell2_core3_L150"
+      ],
+      "max_inherited_drift_fraction": 0.3866601337763287,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-cef18a9ca126",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "2",
+        "target_bessel_length_um": "500",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#11",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#11"
+      ],
+      "case_ids": [
+        "D2.0_L500.0"
+      ],
+      "max_inherited_drift_fraction": 3.0099502842037267,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-cf4072350211",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "3",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#42",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#42",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#42"
+      ],
+      "case_ids": [
+        "beam_radius_on_slm_mm_3p0"
+      ],
+      "max_inherited_drift_fraction": 1.04549912365757,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-d07d127b013b",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "1",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "200",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv#7"
+      ],
+      "case_ids": [
+        "ell1_L200_core3_E10"
+      ],
+      "max_inherited_drift_fraction": 0.06283734338954036,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-d29d25ceab8d",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "8",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 6,
+      "source_artifact_count": 6,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_ell_family_comparison.csv",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv",
+        "outputs/csv/publication_study/03_sweep_ell_family_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_ell_family_publication.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_ell_family_comparison.csv#6",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#5",
+        "outputs/csv/publication_study/03_sweep_ell_family_atlas.csv#6",
+        "outputs/csv/publication_study/03_sweep_ell_family_publication.csv#6",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#5",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#5"
+      ],
+      "case_ids": [
+        "ell8_fixed_energy",
+        "ell_8"
+      ],
+      "max_inherited_drift_fraction": 1.1073582422314419,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-d50973f6902b",
+      "physical_signature": {
+        "path": "simulation_z_profile",
+        "generation_method": "amplitude_phase_target",
+        "model_level": "numerical_propagation",
+        "beam_family": "hollow_polygon",
+        "target_symmetry_order": "6",
+        "target_polygon_sides": "6"
+      },
+      "source_row_count": 18,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/hex_outline/16_hex_bessel_like_z_profile.csv",
+        "outputs/csv/polygonal_hex_ring/11_polygonal_hex_ring_z_stability.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/hex_outline/16_hex_bessel_like_z_profile.csv#1",
+        "outputs/csv/hex_outline/16_hex_bessel_like_z_profile.csv#2",
+        "outputs/csv/hex_outline/16_hex_bessel_like_z_profile.csv#3",
+        "outputs/csv/hex_outline/16_hex_bessel_like_z_profile.csv#4",
+        "outputs/csv/hex_outline/16_hex_bessel_like_z_profile.csv#5",
+        "outputs/csv/hex_outline/16_hex_bessel_like_z_profile.csv#6",
+        "outputs/csv/hex_outline/16_hex_bessel_like_z_profile.csv#7",
+        "outputs/csv/hex_outline/16_hex_bessel_like_z_profile.csv#8",
+        "outputs/csv/hex_outline/16_hex_bessel_like_z_profile.csv#9",
+        "outputs/csv/polygonal_hex_ring/11_polygonal_hex_ring_z_stability.csv#1",
+        "outputs/csv/polygonal_hex_ring/11_polygonal_hex_ring_z_stability.csv#2",
+        "outputs/csv/polygonal_hex_ring/11_polygonal_hex_ring_z_stability.csv#3",
+        "outputs/csv/polygonal_hex_ring/11_polygonal_hex_ring_z_stability.csv#4",
+        "outputs/csv/polygonal_hex_ring/11_polygonal_hex_ring_z_stability.csv#5",
+        "outputs/csv/polygonal_hex_ring/11_polygonal_hex_ring_z_stability.csv#6",
+        "outputs/csv/polygonal_hex_ring/11_polygonal_hex_ring_z_stability.csv#7",
+        "outputs/csv/polygonal_hex_ring/11_polygonal_hex_ring_z_stability.csv#8",
+        "outputs/csv/polygonal_hex_ring/11_polygonal_hex_ring_z_stability.csv#9"
+      ],
+      "case_ids": [
+        "propagation_tested_hollow_polygon_candidate_z00",
+        "propagation_tested_hollow_polygon_candidate_z01",
+        "propagation_tested_hollow_polygon_candidate_z02",
+        "propagation_tested_hollow_polygon_candidate_z03",
+        "propagation_tested_hollow_polygon_candidate_z04",
+        "propagation_tested_hollow_polygon_candidate_z05",
+        "propagation_tested_hollow_polygon_candidate_z06",
+        "propagation_tested_hollow_polygon_candidate_z07",
+        "propagation_tested_hollow_polygon_candidate_z08"
+      ],
+      "max_inherited_drift_fraction": 0.05294517646722602,
+      "likely_cause": "near_threshold_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-d5ad3e8da59c",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "5",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "200",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv#15"
+      ],
+      "case_ids": [
+        "ell5_L200_core3_E10"
+      ],
+      "max_inherited_drift_fraction": 0.1110637435198303,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-d88d6536c3c9",
+      "physical_signature": {
+        "path": "vector_ideal_vs_lab_case1",
+        "generation_method": "two_slm_same_axis_sop",
+        "model_level": "current_lab_approximation",
+        "beam_family": "vector",
+        "vector_mode": "sop_encoded_case1",
+        "vector_program": "achievable_sop",
+        "vector_method": "method_b_complex_amplitude_proxy",
+        "ell": "1",
+        "target_core_diameter_um": "3",
+        "scalar_reference_case_id": "vector_scalar_reference_ell1"
+      },
+      "source_row_count": 5,
+      "source_artifact_count": 5,
+      "source_artifacts": [
+        "outputs/csv/publication_study/stage6_fidelity_ladder_summary.csv",
+        "outputs/csv/publication_study/stage6_slm_encoded_vector_summary.csv",
+        "outputs/csv/vector/stage6_fidelity_ladder_summary.csv",
+        "outputs/csv/vector/stage6_slm_encoded_vector_summary.csv",
+        "outputs/csv/vector/vector_ideal_vs_lab_case1_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/stage6_fidelity_ladder_summary.csv#4",
+        "outputs/csv/publication_study/stage6_slm_encoded_vector_summary.csv#1",
+        "outputs/csv/vector/stage6_fidelity_ladder_summary.csv#4",
+        "outputs/csv/vector/stage6_slm_encoded_vector_summary.csv#1",
+        "outputs/csv/vector/vector_ideal_vs_lab_case1_summary.csv#4"
+      ],
+      "case_ids": [
+        "current_lab_case1_sop_method_b"
+      ],
+      "max_inherited_drift_fraction": 1.1210326024895458,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-d8d8cb089aca",
+      "physical_signature": {
+        "case_family": "ell1_core3_l150",
+        "artifact_family": "publication_study"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv#2",
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv#9"
+      ],
+      "case_ids": [
+        "ell1_core3_L150"
+      ],
+      "max_inherited_drift_fraction": 0.3773359355874672,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-d99959352381",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "1",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 5,
+      "source_artifact_count": 5,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#6",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#6",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#6",
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#3",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#3"
+      ],
+      "case_ids": [
+        "D1.0_L150.0",
+        "target_core_diameter_um_1p0"
+      ],
+      "max_inherited_drift_fraction": 3.8330919027090804,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-d9f2a26cf389",
+      "physical_signature": {
+        "path": "phase_only_proxy",
+        "generation_method": "phase_only_slm",
+        "model_level": "lab_realistic",
+        "beam_family": "discrete_nfold",
+        "target_symmetry_order": "3",
+        "target_polygon_sides": "3",
+        "ell": "0"
+      },
+      "source_row_count": 7,
+      "source_artifact_count": 7,
+      "source_artifacts": [
+        "outputs/csv/advanced/discrete_nfold_acceptance_summary.csv",
+        "outputs/csv/advanced/discrete_nfold_beam_summary.csv",
+        "outputs/csv/stage10_discrete/10_discrete_acceptance_summary.csv",
+        "outputs/csv/stage10_discrete/10_discrete_cgh_exports.csv",
+        "outputs/csv/stage10_discrete/10_discrete_continuous_limit.csv",
+        "outputs/csv/stage10_discrete/10_discrete_encoding_comparison.csv",
+        "outputs/csv/stage10_discrete/10_discrete_pattern_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/advanced/discrete_nfold_acceptance_summary.csv#2",
+        "outputs/csv/advanced/discrete_nfold_beam_summary.csv#2",
+        "outputs/csv/stage10_discrete/10_discrete_acceptance_summary.csv#2",
+        "outputs/csv/stage10_discrete/10_discrete_cgh_exports.csv#2",
+        "outputs/csv/stage10_discrete/10_discrete_continuous_limit.csv#2",
+        "outputs/csv/stage10_discrete/10_discrete_encoding_comparison.csv#2",
+        "outputs/csv/stage10_discrete/10_discrete_pattern_summary.csv#2"
+      ],
+      "case_ids": [
+        "triangular_phase_only_approximation"
+      ],
+      "max_inherited_drift_fraction": 0.17514726351116602,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-dd5d3f6627c1",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "6",
+        "target_bessel_length_um": "100",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#26",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#26"
+      ],
+      "case_ids": [
+        "D6.0_L100.0"
+      ],
+      "max_inherited_drift_fraction": 0.07011230150147267,
+      "likely_cause": "near_threshold_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-e218b700aae6",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "800",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv#15"
+      ],
+      "case_ids": [
+        "target_bessel_length_um_800p0"
+      ],
+      "max_inherited_drift_fraction": 2.151151477634537,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-e39bf69e8de0",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "4",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/oat_sensitivity_raw.csv#33"
+      ],
+      "case_ids": [
+        "slm_phase_bits_4"
+      ],
+      "max_inherited_drift_fraction": 0.3060293636784036,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-e3c9c4687101",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "3",
+        "effective_ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general",
+        "vortex_phase_on": "true",
+        "flatten_pre_axicon_phase": "false",
+        "comparison_route": "lab_realistic"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/quicklook/four_condition_phase_comparison_metrics.csv",
+        "outputs/csv/quicklook/quicklook_four_condition_phase_comparison_summary.csv",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/quicklook/four_condition_phase_comparison_metrics.csv#6",
+        "outputs/csv/quicklook/quicklook_four_condition_phase_comparison_summary.csv#6",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv#11"
+      ],
+      "case_ids": [
+        "vortex_standard_axicon"
+      ],
+      "max_inherited_drift_fraction": 0.4801926307533216,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-e61545f556a3",
+      "physical_signature": {
+        "path": "ideal",
+        "generation_method": "physical_axicon",
+        "model_level": "hardware_route",
+        "objective_NA": "0.45",
+        "regime": "general",
+        "route_variant": "ideal",
+        "physical_axicon_base_angle_deg": "0.242851125457",
+        "equivalent_kr_m_inv": "1603333.33333"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/stage_c/physical_axicon_design_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/stage_c/physical_axicon_design_summary.csv#1"
+      ],
+      "case_ids": [
+        "general_physical_ideal"
+      ],
+      "max_inherited_drift_fraction": 0.6959580083651529,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-e657514f6513",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "8",
+        "target_bessel_length_um": "50",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#31",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#31"
+      ],
+      "case_ids": [
+        "D8.0_L50.0"
+      ],
+      "max_inherited_drift_fraction": 0.30727708554540656,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-e835a3ff583b",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "200",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv#11"
+      ],
+      "case_ids": [
+        "ell3_L200_core3_E10"
+      ],
+      "max_inherited_drift_fraction": 0.08474119812176148,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-e9ac98cf3be4",
+      "physical_signature": {
+        "path": "simulation",
+        "generation_method": "amplitude_phase_target",
+        "model_level": "numerical_propagation",
+        "beam_family": "hollow_polygon",
+        "target_symmetry_order": "6",
+        "target_polygon_sides": "6"
+      },
+      "source_row_count": 14,
+      "source_artifact_count": 14,
+      "source_artifacts": [
+        "outputs/csv/advanced/hexagonal_polygonal_acceptance_summary.csv",
+        "outputs/csv/advanced/hexagonal_polygonal_beam_summary.csv",
+        "outputs/csv/hex_outline/13_hollow_hex_outline_checkpoint.csv",
+        "outputs/csv/hex_outline/14_hexlike_transient_vs_outline.csv",
+        "outputs/csv/hex_outline/15_hybrid_transient_seed_lab_gate.csv",
+        "outputs/csv/hex_outline/16_hex_bessel_like_summary.csv",
+        "outputs/csv/hex_outline/17_zernike_hex_bessel_sweep.csv",
+        "outputs/csv/polygonal_hex_ring/11_polygonal_hex_ring_acceptance_metrics.csv",
+        "outputs/csv/polygonal_hex_ring/11_polygonal_hex_ring_materials_proxy.csv",
+        "outputs/csv/polygonal_hex_ring/12_hollow_hex_sidelobe_ideal_sweep.csv",
+        "outputs/csv/polygonal_hex_ring/12_hollow_hex_sidelobe_lab_shortlist.csv",
+        "outputs/csv/stage_h2/H2_air_knob_sweep.csv",
+        "outputs/csv/stage_h2/H2_survival_summary.csv",
+        "outputs/csv/stage_h2/H2_transient_hexlike_scan.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/advanced/hexagonal_polygonal_acceptance_summary.csv#4",
+        "outputs/csv/advanced/hexagonal_polygonal_beam_summary.csv#4",
+        "outputs/csv/hex_outline/13_hollow_hex_outline_checkpoint.csv#4",
+        "outputs/csv/hex_outline/14_hexlike_transient_vs_outline.csv#4",
+        "outputs/csv/hex_outline/15_hybrid_transient_seed_lab_gate.csv#4",
+        "outputs/csv/hex_outline/16_hex_bessel_like_summary.csv#4",
+        "outputs/csv/hex_outline/17_zernike_hex_bessel_sweep.csv#4",
+        "outputs/csv/polygonal_hex_ring/11_polygonal_hex_ring_acceptance_metrics.csv#4",
+        "outputs/csv/polygonal_hex_ring/11_polygonal_hex_ring_materials_proxy.csv#4",
+        "outputs/csv/polygonal_hex_ring/12_hollow_hex_sidelobe_ideal_sweep.csv#4",
+        "outputs/csv/polygonal_hex_ring/12_hollow_hex_sidelobe_lab_shortlist.csv#4",
+        "outputs/csv/stage_h2/H2_air_knob_sweep.csv#4",
+        "outputs/csv/stage_h2/H2_survival_summary.csv#4",
+        "outputs/csv/stage_h2/H2_transient_hexlike_scan.csv#4"
+      ],
+      "case_ids": [
+        "propagation_tested_hollow_polygon_candidate"
+      ],
+      "max_inherited_drift_fraction": 0.05294517646722602,
+      "likely_cause": "near_threshold_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-e9e7ac0d5aeb",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "1",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "250",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv#8"
+      ],
+      "case_ids": [
+        "ell1_L250_core3_E10"
+      ],
+      "max_inherited_drift_fraction": 0.06976905209761322,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-ea689bc4f560",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "8",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 4,
+      "source_artifact_count": 4,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#11",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#11",
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#33",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#33"
+      ],
+      "case_ids": [
+        "D8.0_L150.0",
+        "target_core_diameter_um_8p0"
+      ],
+      "max_inherited_drift_fraction": 0.05278357481862712,
+      "likely_cause": "near_threshold_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-ef3aeb4a6ed7",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "4",
+        "target_bessel_length_um": "50",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#19",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#19"
+      ],
+      "case_ids": [
+        "D4.0_L50.0"
+      ],
+      "max_inherited_drift_fraction": 0.25100624315679576,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-ef6c1a67ab98",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "1",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "propagation_method": "bl_asm"
+      },
+      "source_row_count": 1,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv#6"
+      ],
+      "case_ids": [
+        "ell1_L150_core3_E10"
+      ],
+      "max_inherited_drift_fraction": 0.37733593558746725,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-f009d5adf88a",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "0",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 6,
+      "source_artifact_count": 6,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_ell_family_comparison.csv",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv",
+        "outputs/csv/publication_study/03_sweep_ell_family_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_ell_family_publication.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_ell_family_comparison.csv#1",
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#1",
+        "outputs/csv/publication_study/03_sweep_ell_family_atlas.csv#1",
+        "outputs/csv/publication_study/03_sweep_ell_family_publication.csv#1",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#1",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#1"
+      ],
+      "case_ids": [
+        "ell0_fixed_energy",
+        "ell_0"
+      ],
+      "max_inherited_drift_fraction": 1.0229108219471434,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-f11d8956c141",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "1",
+        "target_bessel_length_um": "100",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#2",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#2"
+      ],
+      "case_ids": [
+        "D1.0_L100.0"
+      ],
+      "max_inherited_drift_fraction": 3.8963209013812583,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-f4824d105c9f",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "2",
+        "target_bessel_length_um": "100",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#8",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#8"
+      ],
+      "case_ids": [
+        "D2.0_L100.0"
+      ],
+      "max_inherited_drift_fraction": 1.4923485874026454,
+      "likely_cause": "high_kr_and_or_long_zone_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-f4f688b71790",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "0",
+        "effective_ell": "0",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general",
+        "vortex_phase_on": "true",
+        "flatten_pre_axicon_phase": "true",
+        "comparison_route": "ideal_conical"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/quicklook/four_condition_phase_comparison_metrics.csv",
+        "outputs/csv/quicklook/quicklook_four_condition_phase_comparison_summary.csv",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/quicklook/four_condition_phase_comparison_metrics.csv#7",
+        "outputs/csv/quicklook/quicklook_four_condition_phase_comparison_summary.csv#7",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv#12"
+      ],
+      "case_ids": [
+        "vortex_flattened_pre_axicon"
+      ],
+      "max_inherited_drift_fraction": 1.0262509044652939,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-f7ad530ed676",
+      "physical_signature": {
+        "case_family": "ell1_core5_l300",
+        "artifact_family": "publication_study"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 1,
+      "source_artifacts": [
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv#13",
+        "outputs/csv/publication_study/scalar_preset_comparison_fast_vs_publication.csv#6"
+      ],
+      "case_ids": [
+        "ell1_core5_L300"
+      ],
+      "max_inherited_drift_fraction": 0.893001091201412,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-fcb0e49baff7",
+      "physical_signature": {
+        "path": "phase_only_proxy",
+        "generation_method": "phase_only_slm",
+        "model_level": "lab_realistic",
+        "beam_family": "discrete_nfold",
+        "target_symmetry_order": "8",
+        "target_polygon_sides": "8",
+        "ell": "0"
+      },
+      "source_row_count": 7,
+      "source_artifact_count": 7,
+      "source_artifacts": [
+        "outputs/csv/advanced/discrete_nfold_acceptance_summary.csv",
+        "outputs/csv/advanced/discrete_nfold_beam_summary.csv",
+        "outputs/csv/stage10_discrete/10_discrete_acceptance_summary.csv",
+        "outputs/csv/stage10_discrete/10_discrete_cgh_exports.csv",
+        "outputs/csv/stage10_discrete/10_discrete_continuous_limit.csv",
+        "outputs/csv/stage10_discrete/10_discrete_encoding_comparison.csv",
+        "outputs/csv/stage10_discrete/10_discrete_pattern_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/advanced/discrete_nfold_acceptance_summary.csv#8",
+        "outputs/csv/advanced/discrete_nfold_beam_summary.csv#8",
+        "outputs/csv/stage10_discrete/10_discrete_acceptance_summary.csv#8",
+        "outputs/csv/stage10_discrete/10_discrete_cgh_exports.csv#8",
+        "outputs/csv/stage10_discrete/10_discrete_continuous_limit.csv#8",
+        "outputs/csv/stage10_discrete/10_discrete_encoding_comparison.csv#8",
+        "outputs/csv/stage10_discrete/10_discrete_pattern_summary.csv#8"
+      ],
+      "case_ids": [
+        "octagonal_phase_only_approximation"
+      ],
+      "max_inherited_drift_fraction": 0.2711217934414618,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-fdec491667a8",
+      "physical_signature": {
+        "path": "phase_only_proxy",
+        "generation_method": "phase_only_slm",
+        "model_level": "lab_realistic",
+        "beam_family": "discrete_nfold",
+        "target_symmetry_order": "6",
+        "target_polygon_sides": "6",
+        "ell": "0"
+      },
+      "source_row_count": 7,
+      "source_artifact_count": 7,
+      "source_artifacts": [
+        "outputs/csv/advanced/discrete_nfold_acceptance_summary.csv",
+        "outputs/csv/advanced/discrete_nfold_beam_summary.csv",
+        "outputs/csv/stage10_discrete/10_discrete_acceptance_summary.csv",
+        "outputs/csv/stage10_discrete/10_discrete_cgh_exports.csv",
+        "outputs/csv/stage10_discrete/10_discrete_continuous_limit.csv",
+        "outputs/csv/stage10_discrete/10_discrete_encoding_comparison.csv",
+        "outputs/csv/stage10_discrete/10_discrete_pattern_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/advanced/discrete_nfold_acceptance_summary.csv#6",
+        "outputs/csv/advanced/discrete_nfold_beam_summary.csv#6",
+        "outputs/csv/stage10_discrete/10_discrete_acceptance_summary.csv#6",
+        "outputs/csv/stage10_discrete/10_discrete_cgh_exports.csv#6",
+        "outputs/csv/stage10_discrete/10_discrete_continuous_limit.csv#6",
+        "outputs/csv/stage10_discrete/10_discrete_encoding_comparison.csv#6",
+        "outputs/csv/stage10_discrete/10_discrete_pattern_summary.csv#6"
+      ],
+      "case_ids": [
+        "hexagonal_phase_only_approximation"
+      ],
+      "max_inherited_drift_fraction": 0.2154813351527677,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-fdf28c415516",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "300",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 2,
+      "source_artifact_count": 2,
+      "source_artifacts": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv#16",
+        "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv#16"
+      ],
+      "case_ids": [
+        "D3.0_L300.0"
+      ],
+      "max_inherited_drift_fraction": 1.407501127881165,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-fdff79c6ed84",
+      "physical_signature": {
+        "path": "ideal",
+        "ell": "3",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "1",
+        "propagation_method": "bl_asm",
+        "regime": "general"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv#40",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv#40",
+        "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv#40"
+      ],
+      "case_ids": [
+        "beam_radius_on_slm_mm_1p0"
+      ],
+      "max_inherited_drift_fraction": 1.04549912365757,
+      "likely_cause": "bl_asm_bandlimit_clipping_or_insufficient_spatial_window",
+      "quantitative_status": "invalid_unconverged"
+    },
+    {
+      "case_uid": "HDR-fe99128db1bd",
+      "physical_signature": {
+        "path": "realistic",
+        "ell": "0",
+        "effective_ell": "0",
+        "target_core_diameter_um": "3",
+        "target_bessel_length_um": "150",
+        "phase_bits": "8",
+        "fill_factor": "0.93",
+        "blaze_period_px": "20",
+        "beam_radius_on_slm_mm": "2",
+        "propagation_method": "bl_asm",
+        "regime": "general",
+        "vortex_phase_on": "true",
+        "flatten_pre_axicon_phase": "true",
+        "comparison_route": "lab_realistic"
+      },
+      "source_row_count": 3,
+      "source_artifact_count": 3,
+      "source_artifacts": [
+        "outputs/csv/quicklook/four_condition_phase_comparison_metrics.csv",
+        "outputs/csv/quicklook/quicklook_four_condition_phase_comparison_summary.csv",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv"
+      ],
+      "source_rows": [
+        "outputs/csv/quicklook/four_condition_phase_comparison_metrics.csv#8",
+        "outputs/csv/quicklook/quicklook_four_condition_phase_comparison_summary.csv#8",
+        "outputs/csv/quicklook/quicklook_metric_summary.csv#13"
+      ],
+      "case_ids": [
+        "vortex_flattened_pre_axicon"
+      ],
+      "max_inherited_drift_fraction": 0.4402367885205893,
+      "likely_cause": "fixed_focal_window_or_bl_asm_bandlimit_clipping",
+      "quantitative_status": "invalid_unconverged"
+    }
+  ]
+}

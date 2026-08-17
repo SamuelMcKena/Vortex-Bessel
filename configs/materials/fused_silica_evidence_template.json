@@ -1,0 +1,65 @@
+{
+  "material_profile_id": "fused_silica_evidence_template",
+  "status": "template_no_numeric_claims",
+  "material": "fused silica",
+  "all_values_unknown_until_evidence_attached": true,
+  "properties": {
+    "supplier": {
+      "value": null,
+      "unit": null,
+      "evidence_status": "unknown"
+    },
+    "grade": {
+      "value": null,
+      "unit": null,
+      "evidence_status": "unknown"
+    },
+    "thickness_mm": {
+      "value": null,
+      "unit": "mm",
+      "evidence_status": "unknown"
+    },
+    "surface_polish": {
+      "value": null,
+      "unit": null,
+      "evidence_status": "unknown"
+    },
+    "refractive_index_at_1030_nm": {
+      "value": null,
+      "unit": null,
+      "evidence_status": "needs_verified_source"
+    },
+    "modification_threshold": {
+      "value": null,
+      "unit": "J/cm^2",
+      "evidence_status": "needs_bench_measurement"
+    },
+    "etch_selectivity": {
+      "value": null,
+      "unit": null,
+      "evidence_status": "needs_bench_measurement"
+    },
+    "waveguide_loss": {
+      "value": null,
+      "unit": "dB/cm",
+      "evidence_status": "needs_bench_measurement"
+    },
+    "weld_strength": {
+      "value": null,
+      "unit": null,
+      "evidence_status": "needs_bench_measurement"
+    },
+    "channel_or_tgv_morphology": {
+      "value": null,
+      "unit": null,
+      "evidence_status": "needs_bench_measurement"
+    }
+  },
+  "forbidden_transfer": "Do not copy CrZnSe proxy values into this profile.",
+  "stage": "9A.3",
+  "application_claims": {
+    "channel_or_tgv": "fused_silica_bessel_channel_or_tgv_future",
+    "waveguide": "fused_silica_waveguide_future",
+    "welding": "fused_silica_welding_future"
+  }
+}

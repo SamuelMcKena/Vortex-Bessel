@@ -1,0 +1,115 @@
+{
+  "register_type": "manufacturer_evidence",
+  "value_state_vocabulary": [
+    "unknown",
+    "placeholder",
+    "estimated",
+    "manufacturer_specified",
+    "measured"
+  ],
+  "entries": [
+    {
+      "evidence_id": "M_SLM1_SPEC",
+      "component": "SLM1",
+      "required_for_claim_ids": [
+        "phase_only_slm_mask_generation",
+        "phase_quantisation_and_grayscale_export"
+      ],
+      "needed_fields": [
+        "make",
+        "model",
+        "pixel_pitch_um",
+        "resolution",
+        "phase_stroke_at_1030_nm",
+        "polarisation",
+        "wavelength-specific phase stroke",
+        "grayscale-to-phase LUT",
+        "input polarisation requirement",
+        "incidence-angle condition",
+        "active area / pixel geometry",
+        "spatial phase non-uniformity",
+        "fill factor",
+        "reflectivity"
+      ],
+      "current_value_state": "unknown",
+      "source_document": null,
+      "verified": false
+    },
+    {
+      "evidence_id": "M_SLM2_SPEC",
+      "component": "SLM2",
+      "required_for_claim_ids": [
+        "phase_only_slm_mask_generation",
+        "command_domain_carrier_grating"
+      ],
+      "needed_fields": [
+        "make",
+        "model",
+        "pixel_pitch_um",
+        "active_area",
+        "fill_factor",
+        "reflectivity",
+        "wavelength-specific phase stroke",
+        "grayscale-to-phase LUT",
+        "input polarisation requirement",
+        "incidence-angle condition",
+        "active area / pixel geometry",
+        "spatial phase non-uniformity",
+        "fill factor"
+      ],
+      "current_value_state": "unknown",
+      "source_document": null,
+      "verified": false
+    },
+    {
+      "evidence_id": "M_4F_LENSES",
+      "component": "4F lenses",
+      "required_for_claim_ids": [
+        "physical_fourier_filtering_future_route"
+      ],
+      "needed_fields": [
+        "focal_length_mm",
+        "clear_aperture_mm",
+        "coating",
+        "part_number"
+      ],
+      "current_value_state": "unknown",
+      "source_document": null,
+      "verified": false
+    },
+    {
+      "evidence_id": "M_CAMERA",
+      "component": "camera",
+      "required_for_claim_ids": [
+        "camera_coordinate_calibration"
+      ],
+      "needed_fields": [
+        "pixel_pitch_um",
+        "bit_depth",
+        "linearity",
+        "sensor_size"
+      ],
+      "current_value_state": "unknown",
+      "source_document": null,
+      "verified": false
+    },
+    {
+      "evidence_id": "M_AXICON",
+      "component": "physical axicon",
+      "required_for_claim_ids": [
+        "physical_axicon_bessel_conversion",
+        "physical_axicon_aperture_and_decentre"
+      ],
+      "needed_fields": [
+        "cone_angle",
+        "clear_aperture",
+        "apex_quality",
+        "coating"
+      ],
+      "current_value_state": "unknown",
+      "source_document": null,
+      "verified": false
+    }
+  ],
+  "stage": "9A.3"
+}

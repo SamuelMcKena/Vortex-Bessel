@@ -1,0 +1,13 @@
+.tmp_*/
+.tmp_pytest/
+.tmp_pytest_cache/
+.pytest_tmp_*/
+.pytest-tmp-*/
+outputs/pytest_cache/
+outputs/pytest_runtime/
+__pycache__/
+*.pyc
+/*.ipynb
+/*.zip
+/vbb_study - Copy/
+vbb_study.egg-info/

@@ -1,0 +1,2 @@
+measurement_id,timestamp_utc,parameter,value,uncertainty,unit,coating_state,surface_orientation_verified,wavelength_m,source_reference,operator,data_classification
+,,refractive_index,,,1,,,,,,laboratory_measurement

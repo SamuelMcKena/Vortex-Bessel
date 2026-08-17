@@ -1,0 +1,236 @@
+{
+  "schema_version": "1.0",
+  "current_bundle": "calibration/templates/canonical_lab_calibration_template.json",
+  "schema_valid": true,
+  "missing_values": [
+    "laser.pulse_energy_J",
+    "laser.beam_radius_on_slm_m",
+    "fourier_filter.iris_radius_m",
+    "fourier_filter.plus_one_position_m",
+    "objective.focal_length_m",
+    "objective.effective_pupil_radius_m",
+    "objective.pupil_fill_fraction",
+    "relay.magnification",
+    "axicon.clear_aperture_m",
+    "camera.pixel_pitch_m",
+    "camera.magnification",
+    "camera.object_plane_scale_m_per_pixel",
+    "camera.rotation_deg",
+    "transmissions.slm1",
+    "transmissions.slm2",
+    "transmissions.four_f",
+    "transmissions.objective",
+    "transmissions.interface"
+  ],
+  "warnings": [],
+  "claim_readiness": {
+    "global_transverse_morphology": {
+      "claim_type": "global_transverse_morphology",
+      "ready": true,
+      "status": "ready_without_calibration",
+      "missing_measurements": [],
+      "non_calibrated_measurements": [],
+      "satisfied_measurements": []
+    },
+    "feature_radius": {
+      "claim_type": "feature_radius",
+      "ready": false,
+      "status": "blocked_missing_or_uncalibrated_measurements",
+      "missing_measurements": [
+        "fourier_filter.iris_radius_m",
+        "objective.focal_length_m",
+        "objective.effective_pupil_radius_m",
+        "objective.pupil_fill_fraction",
+        "relay.magnification",
+        "camera.object_plane_scale_m_per_pixel"
+      ],
+      "non_calibrated_measurements": [
+        "fourier_filter.focal_length_m [assumed]"
+      ],
+      "satisfied_measurements": [
+        "laser.wavelength_m",
+        "objective.numerical_aperture"
+      ]
+    },
+    "ring_radius": {
+      "claim_type": "ring_radius",
+      "ready": false,
+      "status": "blocked_missing_or_uncalibrated_measurements",
+      "missing_measurements": [
+        "fourier_filter.iris_radius_m",
+        "objective.focal_length_m",
+        "objective.effective_pupil_radius_m",
+        "objective.pupil_fill_fraction",
+        "relay.magnification",
+        "camera.object_plane_scale_m_per_pixel"
+      ],
+      "non_calibrated_measurements": [
+        "fourier_filter.focal_length_m [assumed]"
+      ],
+      "satisfied_measurements": [
+        "laser.wavelength_m",
+        "objective.numerical_aperture"
+      ]
+    },
+    "peak_location": {
+      "claim_type": "peak_location",
+      "ready": false,
+      "status": "blocked_missing_or_uncalibrated_measurements",
+      "missing_measurements": [
+        "fourier_filter.iris_radius_m",
+        "objective.focal_length_m",
+        "objective.effective_pupil_radius_m",
+        "objective.pupil_fill_fraction",
+        "relay.magnification",
+        "camera.object_plane_scale_m_per_pixel"
+      ],
+      "non_calibrated_measurements": [
+        "fourier_filter.focal_length_m [assumed]"
+      ],
+      "satisfied_measurements": [
+        "laser.wavelength_m",
+        "objective.numerical_aperture"
+      ]
+    },
+    "edge_sharpness": {
+      "claim_type": "edge_sharpness",
+      "ready": false,
+      "status": "blocked_missing_or_uncalibrated_measurements",
+      "missing_measurements": [
+        "fourier_filter.iris_radius_m",
+        "objective.focal_length_m",
+        "objective.effective_pupil_radius_m",
+        "objective.pupil_fill_fraction",
+        "relay.magnification",
+        "camera.object_plane_scale_m_per_pixel"
+      ],
+      "non_calibrated_measurements": [
+        "fourier_filter.focal_length_m [assumed]"
+      ],
+      "satisfied_measurements": [
+        "laser.wavelength_m",
+        "objective.numerical_aperture"
+      ]
+    },
+    "ridge_width": {
+      "claim_type": "ridge_width",
+      "ready": false,
+      "status": "blocked_missing_or_uncalibrated_measurements",
+      "missing_measurements": [
+        "fourier_filter.iris_radius_m",
+        "objective.focal_length_m",
+        "objective.effective_pupil_radius_m",
+        "objective.pupil_fill_fraction",
+        "relay.magnification",
+        "camera.object_plane_scale_m_per_pixel"
+      ],
+      "non_calibrated_measurements": [
+        "fourier_filter.focal_length_m [assumed]"
+      ],
+      "satisfied_measurements": [
+        "laser.wavelength_m",
+        "objective.numerical_aperture"
+      ]
+    },
+    "transition_width": {
+      "claim_type": "transition_width",
+      "ready": false,
+      "status": "blocked_missing_or_uncalibrated_measurements",
+      "missing_measurements": [
+        "fourier_filter.iris_radius_m",
+        "objective.focal_length_m",
+        "objective.effective_pupil_radius_m",
+        "objective.pupil_fill_fraction",
+        "relay.magnification",
+        "camera.object_plane_scale_m_per_pixel"
+      ],
+      "non_calibrated_measurements": [
+        "fourier_filter.focal_length_m [assumed]"
+      ],
+      "satisfied_measurements": [
+        "laser.wavelength_m",
+        "objective.numerical_aperture"
+      ]
+    },
+    "longitudinal_field": {
+      "claim_type": "longitudinal_field",
+      "ready": false,
+      "status": "blocked_missing_or_uncalibrated_measurements",
+      "missing_measurements": [
+        "objective.pupil_fill_fraction"
+      ],
+      "non_calibrated_measurements": [],
+      "satisfied_measurements": [
+        "laser.wavelength_m",
+        "objective.numerical_aperture"
+      ]
+    },
+    "polarisation_component": {
+      "claim_type": "polarisation_component",
+      "ready": false,
+      "status": "blocked_missing_or_uncalibrated_measurements",
+      "missing_measurements": [
+        "objective.pupil_fill_fraction"
+      ],
+      "non_calibrated_measurements": [],
+      "satisfied_measurements": [
+        "laser.wavelength_m",
+        "objective.numerical_aperture"
+      ]
+    },
+    "interface_power": {
+      "claim_type": "interface_power",
+      "ready": false,
+      "status": "blocked_missing_or_uncalibrated_measurements",
+      "missing_measurements": [
+        "material.coating_state",
+        "material.surface_orientation_verified"
+      ],
+      "non_calibrated_measurements": [
+        "material.refractive_index [placeholder]"
+      ],
+      "satisfied_measurements": [
+        "laser.wavelength_m"
+      ]
+    },
+    "absolute_dimensions": {
+      "claim_type": "absolute_dimensions",
+      "ready": false,
+      "status": "blocked_missing_or_uncalibrated_measurements",
+      "missing_measurements": [
+        "fourier_filter.iris_radius_m",
+        "objective.focal_length_m",
+        "objective.effective_pupil_radius_m",
+        "objective.pupil_fill_fraction",
+        "relay.magnification",
+        "camera.object_plane_scale_m_per_pixel"
+      ],
+      "non_calibrated_measurements": [
+        "fourier_filter.focal_length_m [assumed]"
+      ],
+      "satisfied_measurements": [
+        "laser.wavelength_m",
+        "objective.numerical_aperture"
+      ]
+    },
+    "absolute_fluence": {
+      "claim_type": "absolute_fluence",
+      "ready": false,
+      "status": "blocked_missing_or_uncalibrated_measurements",
+      "missing_measurements": [
+        "laser.pulse_energy_J",
+        "camera.object_plane_scale_m_per_pixel",
+        "transmissions.slm1",
+        "transmissions.slm2",
+        "transmissions.four_f",
+        "transmissions.objective",
+        "transmissions.interface"
+      ],
+      "non_calibrated_measurements": [],
+      "satisfied_measurements": []
+    }
+  },
+  "absolute_dimensions_unlocked": false,
+  "absolute_fluence_unlocked": false,
+  "experimentally_validated_prediction_present": false
+}

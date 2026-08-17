@@ -1,0 +1,787 @@
+[
+  {
+    "path": "bessel_twin_core.py",
+    "tokens": [
+      "plt.subplots",
+      "render_",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "interface_correction_diagnosis.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "publication_diagnostics.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "reference_kernels/balyian_shared_kernel_v4.py",
+    "tokens": [
+      "plt.figure",
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "reference_kernels/research_lab_shared_legacy.py",
+    "tokens": [
+      "plt.figure",
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "run_hex_bessel_like_checkpoint.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "run_hex_outline_hybrid_checkpoint.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "run_hollow_hex_sidelobe_shortlist.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "run_polygonal_hex_ring_checkpoint.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "run_zernike_hex_bessel_checkpoint.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "tests/test_nathan_full_report_pack.py",
+    "tokens": [
+      "render_"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "tests/test_nathan_mode2u_master_highres_audit.py",
+    "tokens": [
+      "render_"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "tests/test_nathan_mode2w_fix_sequential_master.py",
+    "tokens": [
+      "render_"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "tests/test_phase2b_visual_diagnostics.py",
+    "tokens": [
+      "render_"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "tests/test_phase2c_objective_interface.py",
+    "tokens": [
+      "render_"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "tests/test_stage8c1_cockpit_dashboard.py",
+    "tokens": [
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "tools/audit_presentation_figure_inventory.py",
+    "tokens": [
+      "Image.save",
+      "plt.figure",
+      "plt.subplots",
+      "render_",
+      "savefig",
+      "write_phase2"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "tools/build_phase2i_presentation_figures.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "tools/build_presentation_extended_evidence.py",
+    "tokens": [
+      "plt.figure",
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "tools/build_presentation_extended_evidence_v2.py",
+    "tokens": [
+      "plt.figure"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "tools/render_phase2h_canonical_evidence.py",
+    "tokens": [
+      "plt.subplots",
+      "render_",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "tools/render_phase2h_cylindrical_analyzer_tilt_study.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "tools/render_phase2h_highres_analyzer_atlas.py",
+    "tokens": [
+      "plt.subplots",
+      "render_",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "tools/render_phase2h_profile_planes.py",
+    "tokens": [
+      "plt.subplots",
+      "render_",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "tools/render_phase2h_systematic_vector_tilt_study.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "tools/render_phase2h_vector_tilt_preview.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "tools/render_vortex_input_angle_research.py",
+    "tokens": [
+      "render_"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "tools/render_vortex_visual_atlas.py",
+    "tokens": [
+      "render_"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "tools/run_phase2a_canonical.py",
+    "tokens": [
+      "write_phase2"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "tools/run_phase2b_visual_diagnostics.py",
+    "tokens": [
+      "write_phase2"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "tools/run_vortex_axicon_physics_suite.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "tools/run_vortex_axicon_physics_suite_v3.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "tools/run_vortex_declared_aberration_suite.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "tools/run_vortex_system_error_evidence_v5.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "tools/run_vortex_system_error_suite.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/active_realism_metrics.py",
+    "tokens": [
+      "plt.figure",
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/bench_inventory.py",
+    "tokens": [
+      "plt.figure",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/calibration_acquisition.py",
+    "tokens": [
+      "plt.figure",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/candidate_beam_atlas.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "vbb_study/digital_twin/cockpit_dashboard.py",
+    "tokens": [
+      "plt.figure",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/code_evidence_audit.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/component_plane_figures.py",
+    "tokens": [
+      "plt.figure",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "vbb_study/digital_twin/component_plane_metrics.py",
+    "tokens": [
+      "plt.figure",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/control_contract.py",
+    "tokens": [
+      "plt.figure",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/cslm_route.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/downstream_carrier_stop.py",
+    "tokens": [
+      "plt.figure",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/field_figures.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "vbb_study/digital_twin/first_bench_screen.py",
+    "tokens": [
+      "plt.figure",
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/nathan_full_report_pack.py",
+    "tokens": [
+      "plt.figure",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/nathan_local_vector_truth.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/nathan_mode2u2_fix_strict_hexagon_optimisation.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/nathan_mode2u2_master_closure.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/nathan_mode2u3_hardware_closure.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/nathan_mode2u_master_audit.py",
+    "tokens": [
+      "plt.subplots",
+      "render_",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/nathan_mode2v_lab_ready_build.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/nathan_mode2w_annotated_master.py",
+    "tokens": [
+      "plt.figure",
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/nathan_mode2w_fix_sequential_master.py",
+    "tokens": [
+      "plt.figure",
+      "plt.subplots",
+      "render_",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/nathan_mode2y_figures.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "vbb_study/digital_twin/nathan_mode2z_figures.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "vbb_study/digital_twin/nathan_mode2z_highn_figures.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "vbb_study/digital_twin/nathan_report_visual_refinement.py",
+    "tokens": [
+      "plt.figure",
+      "plt.subplots",
+      "render_",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "vbb_study/digital_twin/nathan_vector_hexagon.py",
+    "tokens": [
+      "plt.figure",
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/nominal_f300_4f.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/phase2a_canonical.py",
+    "tokens": [
+      "write_phase2"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/phase2b_figures.py",
+    "tokens": [
+      "plt.figure",
+      "plt.subplots",
+      "render_",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "vbb_study/digital_twin/phase2b_visual_cases.py",
+    "tokens": [
+      "render_"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "vbb_study/digital_twin/phase2b_visual_diagnostics.py",
+    "tokens": [
+      "render_",
+      "write_phase2"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "vbb_study/digital_twin/phase2c_figures.py",
+    "tokens": [
+      "plt.figure",
+      "plt.subplots",
+      "render_"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "vbb_study/digital_twin/phase2c_objective_interface.py",
+    "tokens": [
+      "render_"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/phase2d_figures.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "vbb_study/digital_twin/phase2e_finite_zone_repair.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/phase2e_propagation_repair.py",
+    "tokens": [
+      "plt.figure",
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "vbb_study/digital_twin/phase2e_report_figures.py",
+    "tokens": [
+      "plt.figure",
+      "plt.subplots",
+      "render_",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "vbb_study/digital_twin/phase2e_report_visualisation.py",
+    "tokens": [
+      "render_"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "vbb_study/digital_twin/phase2e_source_sampling_repair.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/route_aware_axicon.py",
+    "tokens": [
+      "plt.figure",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/slm_calibration_masks.py",
+    "tokens": [
+      "plt.figure",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/digital_twin/vortex_error_research_figures.py",
+    "tokens": [
+      "plt.subplots",
+      "render_",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "vbb_study/digital_twin/vortex_visual_atlas_figures.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "vbb_study/experimental/closure.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/experimental/longitudinal.py",
+    "tokens": [
+      "plt.subplots",
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/publication/notebook_widgets.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/publication/quicklook.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/publication/visuals.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "high"
+  },
+  {
+    "path": "vbb_study/vbb_capsule.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/vbb_discrete.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/vbb_hex_outline.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/vbb_hexagon_study.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/vbb_materials.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/vbb_materials_study.py",
+    "tokens": [
+      "plt.figure",
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/vbb_polarized_train.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/vbb_polygonal.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/vbb_sample_study.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/vbb_style.py",
+    "tokens": [
+      "savefig"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/vbb_train_viz.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/vbb_validation.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/vbb_vector.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/vbb_viz.py",
+    "tokens": [
+      "plt.figure"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/vector_arm_sweeps.py",
+    "tokens": [
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  },
+  {
+    "path": "vbb_study/viz_fields.py",
+    "tokens": [
+      "plt.figure",
+      "plt.subplots"
+    ],
+    "presentation_relevance_hint": "review"
+  }
+]

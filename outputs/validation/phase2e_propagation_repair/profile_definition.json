@@ -1,0 +1,33 @@
+{
+  "B0": {
+    "case_id": "B0",
+    "reference_z_m": 0.06,
+    "observable": "on_axis_intensity",
+    "bucket_type": "fixed_circular_core",
+    "r_core_bucket_m": 4.8828125e-05,
+    "radius_metric": "first radial-profile minimum after the central maximum",
+    "metric_smoothing": "none"
+  },
+  "V1": {
+    "case_id": "V1",
+    "reference_z_m": 0.06,
+    "observable": "fixed_reference_ring_intensity",
+    "bucket_type": "fixed_annulus",
+    "reference_ring_radius_m": 8.7890625e-05,
+    "r_inner_m": 6.8359375e-05,
+    "r_outer_m": 0.000107421875,
+    "radius_metric": "native radial-profile maximum within the fixed reference annulus",
+    "metric_smoothing": "none"
+  },
+  "V3": {
+    "case_id": "V3",
+    "reference_z_m": 0.06,
+    "observable": "fixed_reference_ring_intensity",
+    "bucket_type": "fixed_annulus",
+    "reference_ring_radius_m": 4.8828125e-05,
+    "r_inner_m": 2.9296875e-05,
+    "r_outer_m": 6.8359375e-05,
+    "radius_metric": "native radial-profile maximum within the fixed reference annulus",
+    "metric_smoothing": "none"
+  }
+}

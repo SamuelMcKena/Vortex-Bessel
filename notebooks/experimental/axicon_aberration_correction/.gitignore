@@ -1,0 +1,15 @@
+# Raw BeamGage acquisitions are local experimental data (about 1.7 GB).
+*.bmg
+z-scan 2 1010/
+new z-scan bessel beam 1010/
+
+# Reproducible generated products; regenerate from the notebook/scripts.
+outputs/
+Publication_Study/outputs/
+postcorrectionoutput*.png
+
+# Python/Jupyter runtime files.
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/

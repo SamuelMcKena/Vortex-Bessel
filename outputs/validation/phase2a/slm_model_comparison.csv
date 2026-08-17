@@ -1,0 +1,4 @@
+slm_model,equation,input_power,output_power,output_power_fraction,modulated_power_fraction,unmodulated_power_fraction,zero_order_fraction_within_unmodulated_component,ledger_relative_error,fill_factor_sampling,expected_scope,fill_factor_loss_counted_in_external_energy_ledger
+throughput_only,Eout=sqrt(FF)*exp(i*phi)*Ein,4.096e-09,3.8092799999999995e-09,0.9299999999999999,0.9299999999999999,0.0,0.0,0.0,not_applicable,unresolved pixel borders; total throughput only,False
+resolved_pixel_aperture,Eout=M*exp(i*phi)*Ein,4.096e-09,3.8439999999999995e-09,0.9384765624999999,0.9384765624999999,0.0,0.0,0.0,resolved_binary_pixel_aperture,native or supersampled pixel grid,False
+coherent_unmodulated_deadspace,Eout=[M*exp(i*phi)+(1-M)]*Ein,4.096e-09,4.096e-09,1.0,0.9384765624999999,0.0615234375,0.06152343749999999,0.0,resolved_binary_pixel_aperture,coherent zero-order/dead-space study,False

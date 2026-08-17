@@ -1,0 +1,190 @@
+{
+  "schema_version": "1.0",
+  "calibration_id": "lab_YYYYMMDD",
+  "created_utc": null,
+  "operator": "",
+  "data_classification": "template_unpopulated",
+  "laser": {
+    "wavelength_m": {
+      "value": 1.029e-06,
+      "uncertainty": null,
+      "source": "manufacturer",
+      "unit": "m"
+    },
+    "pulse_energy_J": {
+      "value": null,
+      "uncertainty": null,
+      "source": "calibration_required",
+      "unit": "J"
+    },
+    "beam_radius_on_slm_m": {
+      "value": null,
+      "uncertainty": null,
+      "source": "calibration_required",
+      "unit": "m",
+      "definition": "1/e^2 intensity radius"
+    }
+  },
+  "slm": {
+    "model": "HOLOEYE PLUTO-2.1 NIR-149",
+    "phase_lut_path": null,
+    "phase_stroke_rad": null,
+    "phase_stroke_uncertainty_rad": null,
+    "panel_orientation_verified": false,
+    "calibration_date": null,
+    "active_resolution": [
+      1920,
+      1080
+    ],
+    "pixel_pitch_m": 8e-06
+  },
+  "fourier_filter": {
+    "focal_length_m": {
+      "value": 0.3,
+      "uncertainty": null,
+      "source": "assumed",
+      "unit": "m"
+    },
+    "iris_radius_m": {
+      "value": null,
+      "uncertainty": null,
+      "source": "calibration_required",
+      "unit": "m"
+    },
+    "plus_one_position_m": {
+      "value": null,
+      "uncertainty": null,
+      "source": "calibration_required",
+      "unit": "m"
+    }
+  },
+  "objective": {
+    "numerical_aperture": {
+      "value": 0.45,
+      "uncertainty": null,
+      "source": "manufacturer",
+      "unit": "1"
+    },
+    "focal_length_m": {
+      "value": null,
+      "uncertainty": null,
+      "source": "calibration_required",
+      "unit": "m"
+    },
+    "effective_pupil_radius_m": {
+      "value": null,
+      "uncertainty": null,
+      "source": "calibration_required",
+      "unit": "m"
+    },
+    "pupil_fill_fraction": {
+      "value": null,
+      "uncertainty": null,
+      "source": "calibration_required",
+      "unit": "1"
+    }
+  },
+  "relay": {
+    "magnification": {
+      "value": null,
+      "uncertainty": null,
+      "source": "calibration_required",
+      "unit": "1"
+    }
+  },
+  "axicon": {
+    "base_angle_deg": {
+      "value": 2.0,
+      "uncertainty": null,
+      "source": "assumed",
+      "unit": "deg"
+    },
+    "clear_aperture_m": {
+      "value": null,
+      "uncertainty": null,
+      "source": "calibration_required",
+      "unit": "m"
+    },
+    "refractive_index": {
+      "value": 1.458,
+      "uncertainty": null,
+      "source": "assumed",
+      "unit": "1"
+    }
+  },
+  "camera": {
+    "pixel_pitch_m": {
+      "value": null,
+      "uncertainty": null,
+      "source": "calibration_required",
+      "unit": "m"
+    },
+    "magnification": {
+      "value": null,
+      "uncertainty": null,
+      "source": "calibration_required",
+      "unit": "1"
+    },
+    "object_plane_scale_m_per_pixel": {
+      "value": null,
+      "uncertainty": null,
+      "source": "calibration_required",
+      "unit": "m/pixel"
+    },
+    "rotation_deg": {
+      "value": null,
+      "uncertainty": null,
+      "source": "calibration_required",
+      "unit": "deg"
+    },
+    "centre_pixel": null
+  },
+  "transmissions": {
+    "slm1": {
+      "value": null,
+      "uncertainty": null,
+      "source": "calibration_required",
+      "unit": "1"
+    },
+    "slm2": {
+      "value": null,
+      "uncertainty": null,
+      "source": "calibration_required",
+      "unit": "1"
+    },
+    "four_f": {
+      "value": null,
+      "uncertainty": null,
+      "source": "calibration_required",
+      "unit": "1"
+    },
+    "objective": {
+      "value": null,
+      "uncertainty": null,
+      "source": "calibration_required",
+      "unit": "1"
+    },
+    "interface": {
+      "value": null,
+      "uncertainty": null,
+      "source": "calibration_required",
+      "unit": "1"
+    }
+  },
+  "material": {
+    "name": "Cr:ZnSe",
+    "refractive_index": {
+      "value": 2.44,
+      "uncertainty": null,
+      "source": "placeholder",
+      "unit": "1"
+    },
+    "coating_state": "unknown",
+    "surface_orientation_verified": false
+  },
+  "experimental_comparison": {
+    "performed": false,
+    "evidence_path": null,
+    "acceptance_passed": false
+  }
+}

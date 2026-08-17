@@ -1,0 +1,153 @@
+{
+  "profile_name": "cslm_f300_nominal_4f_profile",
+  "stage": "9B.0.1",
+  "profile_status": "nominal_4f_forward_model_not_bench_calibrated",
+  "claim_boundary_labels": [
+    "nominal_4f_forward_model",
+    "not_bench_calibrated",
+    "not_physical_4f_readiness_ready",
+    "not_camera_modelled",
+    "not_material_modelled"
+  ],
+  "final_export_allowed": false,
+  "known_nominal_geometry": {
+    "slm2_to_lens1_m": {
+      "value": 0.3,
+      "provenance": "nominal_from_bench_description"
+    },
+    "lens1_focal_length_m": {
+      "value": 0.3,
+      "provenance": "nominal_from_bench_description"
+    },
+    "lens1_to_fourier_plane_m": {
+      "value": 0.3,
+      "provenance": "nominal_from_bench_description"
+    },
+    "fourier_plane_to_lens2_m": {
+      "value": 0.3,
+      "provenance": "nominal_from_bench_description"
+    },
+    "lens2_focal_length_m": {
+      "value": 0.3,
+      "provenance": "nominal_from_bench_description"
+    },
+    "lens2_to_nominal_relay_output_m": {
+      "value": 0.3,
+      "provenance": "nominal_from_bench_description"
+    }
+  },
+  "unknown_or_unverified_hardware": {
+    "SLM2 pixel pitch": null,
+    "SLM2 active area": null,
+    "SLM2 phase calibration": null,
+    "lens clear apertures": null,
+    "lens part numbers": null,
+    "pinhole diameter": null,
+    "pinhole physical x/y stage coordinates": null,
+    "pinhole physical z offset": null,
+    "selected-order sign confirmation": null,
+    "camera relation to relay-output plane": null,
+    "relay-output-to-axicon distance": null,
+    "axicon pose": null
+  },
+  "model_convention": {
+    "simulation_plane_width_m": {
+      "value": 0.008,
+      "provenance": "numerical_scenario_parameter"
+    },
+    "simulation_grid_size": {
+      "value": 128,
+      "provenance": "numerical_scenario_parameter"
+    },
+    "wavelength_m": {
+      "value": 1.03e-6,
+      "provenance": "numerical_scenario_parameter"
+    },
+    "input_beam_radius_m": {
+      "value": 0.0008,
+      "provenance": "numerical_scenario_parameter"
+    },
+    "input_beam_decentre_m": {
+      "value": [
+        0.0,
+        0.0
+      ],
+      "provenance": "numerical_scenario_parameter"
+    },
+    "input_beam_ellipticity": {
+      "value": 1.0,
+      "provenance": "numerical_scenario_parameter"
+    },
+    "lens_clear_radius_m": {
+      "value": 0.0032,
+      "provenance": "numerical_scenario_parameter"
+    },
+    "pinhole_radius_m": {
+      "value": 0.00018,
+      "provenance": "numerical_scenario_parameter"
+    },
+    "pinhole_offset_x_m": {
+      "value": 0.00031,
+      "provenance": "numerical_scenario_parameter"
+    },
+    "pinhole_offset_y_m": {
+      "value": 0.0,
+      "provenance": "numerical_scenario_parameter"
+    }
+  },
+  "upstream_source_contract": {
+    "candidate_default": "existing_cslm_component_route",
+    "field_handoff": "field_arriving_at_slm2",
+    "slm1_phase_location": "SLM1_phase_plane",
+    "slm1_to_slm2_propagation_included": true,
+    "forbidden_shortcut": "do_not_apply_slm1_phase_directly_at_slm2"
+  },
+  "carrier_boundary": {
+    "carrier_realism": "ideal_continuous_phase_ramp",
+    "ideal_blazed_carrier_shift_surrogate": true,
+    "pixelated_slm_diffraction_orders_modelled": false,
+    "zero_order_modelled": false,
+    "physical_order_efficiency_modelled": false,
+    "selected_order_purity_predicted": false,
+    "carrier_boundary": "The Fourier-plane stop selects a region of the ideal continuous-ramp spectrum. It is not a simulation of physical pixelated-SLM zero-order leakage, discrete diffraction-order power fractions, or measured selected-order purity."
+  },
+  "stop_sampling_policy": {
+    "minimum_stop_diameter_pixels_for_exploration": 6.0,
+    "minimum_stop_diameter_pixels_for_ranking": 10.0,
+    "exploratory_profile": {
+      "simulation_grid_size": 128,
+      "simulation_plane_width_m": 0.008,
+      "sampling_pitch_m": 0.0000625,
+      "pinhole_radius_m": 0.00018,
+      "stop_diameter_pixels": 5.76,
+      "stop_diameter_pixels_rounded": 6,
+      "stop_sampling_status": "exploratory_only",
+      "ranking_allowed": false
+    },
+    "standard_profile": {
+      "simulation_grid_size": 256,
+      "simulation_plane_width_m": 0.008,
+      "sampling_pitch_m": 0.00003125,
+      "pinhole_radius_m": 0.00018,
+      "stop_diameter_pixels": 11.52,
+      "stop_diameter_pixels_rounded": 12,
+      "stop_sampling_status": "ranking_eligible",
+      "ranking_allowed": "requires_passed_exploratory_vs_standard_convergence"
+    },
+    "ranking_rule": "Candidate ranking requires the standard profile and passed exploratory-vs-standard convergence. Exploratory plots remain diagnostic only."
+  },
+  "default_profiles": {
+    "exploratory": {
+      "purpose": "quick figures and qualitative diagnostics only",
+      "simulation_grid_size": 128,
+      "ranking_allowed": false
+    },
+    "standard": {
+      "purpose": "candidate ranking after convergence check",
+      "simulation_grid_size": 256,
+      "ranking_allowed": "only_after_convergence_pass"
+    }
+  },
+  "carrier_coordinate_status": "nominal_model_not_bench_calibrated",
+  "physical_4f_readiness": "blocked"
+}

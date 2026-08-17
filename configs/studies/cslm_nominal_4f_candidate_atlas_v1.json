@@ -1,0 +1,197 @@
+{
+  "stage": "9B.0.1",
+  "study_name": "cslm_nominal_4f_candidate_atlas_v1",
+  "study_status": "nominal_4f_candidate_atlas_not_bench_validated",
+  "model_label": "Nominal F300 4F scenario - not bench calibrated",
+  "claim_boundary_labels": [
+    "nominal_4f_forward_model",
+    "not_bench_calibrated",
+    "not_physical_4f_readiness_ready",
+    "not_camera_modelled",
+    "not_material_modelled"
+  ],
+  "candidate_status_labels": [
+    "nominally_simulated",
+    "command_masks_exportable_unvalidated",
+    "not_bench_validated"
+  ],
+  "final_export_allowed": false,
+  "upstream_source_contract": {
+    "candidate_default": "existing_cslm_component_route",
+    "field_handoff": "field_arriving_at_slm2",
+    "slm1_phase_location": "SLM1_phase_plane",
+    "slm1_to_slm2_propagation_included": true,
+    "forbidden_shortcut": "do_not_apply_slm1_phase_directly_at_slm2"
+  },
+  "slm_role_contract": {
+    "SLM1": "vortex/structured phase conditioning source",
+    "SLM2": "ideal continuous carrier surrogate and future correction map only",
+    "SLM2_forbidden_content": [
+      "axicon phase",
+      "material correction",
+      "validated inverse correction"
+    ]
+  },
+  "carrier_boundary": {
+    "carrier_realism": "ideal_continuous_phase_ramp",
+    "ideal_blazed_carrier_shift_surrogate": true,
+    "pixelated_slm_diffraction_orders_modelled": false,
+    "zero_order_modelled": false,
+    "physical_order_efficiency_modelled": false,
+    "selected_order_purity_predicted": false,
+    "carrier_boundary": "The Fourier-plane stop selects a region of the ideal continuous-ramp spectrum. It is not a simulation of physical pixelated-SLM zero-order leakage, discrete diffraction-order power fractions, or measured selected-order purity.",
+    "command_domain_carrier_cycles_are_not": "measured cycles/mm or physical Fourier-plane order coordinates"
+  },
+  "stop_sampling_policy": {
+    "exploratory_profile": {
+      "sampling_pitch_m": 6.25e-05,
+      "stop_radius_pixels": 2.8800000000000003,
+      "stop_diameter_pixels": 5.760000000000001,
+      "stop_diameter_pixels_rounded": 6,
+      "minimum_stop_diameter_pixels_for_exploration": 6.0,
+      "minimum_stop_diameter_pixels_for_ranking": 10.0,
+      "stop_sampling_status": "exploratory_only",
+      "convergence_status": "not_checked",
+      "ranking_allowed": false
+    },
+    "standard_profile": {
+      "sampling_pitch_m": 3.125e-05,
+      "stop_radius_pixels": 5.760000000000001,
+      "stop_diameter_pixels": 11.520000000000001,
+      "stop_diameter_pixels_rounded": 12,
+      "minimum_stop_diameter_pixels_for_exploration": 6.0,
+      "minimum_stop_diameter_pixels_for_ranking": 10.0,
+      "stop_sampling_status": "ranking_eligible",
+      "convergence_status": "not_checked",
+      "ranking_allowed": false
+    },
+    "minimum_stop_diameter_pixels_for_exploration": 6.0,
+    "minimum_stop_diameter_pixels_for_ranking": 10.0,
+    "ranking_rule": "candidate ranking requires standard profile plus passed exploratory-vs-standard convergence"
+  },
+  "nominal_4f_contract": {
+    "component_sequence": [
+      "field arriving at SLM2 from existing CSLM route",
+      "SLM2 ideal continuous carrier plane",
+      "300 mm free-space segment",
+      "Lens 1 f=300 mm",
+      "300 mm free-space segment",
+      "Fourier/pinhole plane",
+      "300 mm free-space segment",
+      "Lens 2 f=300 mm",
+      "300 mm free-space segment",
+      "nominal relay output"
+    ],
+    "physical_4f_readiness": "blocked",
+    "carrier_coordinate_status": "nominal_model_not_bench_calibrated"
+  },
+  "candidate_families": {
+    "gaussian_reference": {
+      "ell_values": [
+        0
+      ]
+    },
+    "vortex_charge_sweep": {
+      "ell_values": [
+        1,
+        2,
+        3,
+        4
+      ]
+    }
+  },
+  "initial_shortlist_candidate_ids": [
+    "gaussian_reference",
+    "vortex_ell_1",
+    "vortex_ell_2",
+    "vortex_ell_3",
+    "vortex_ell_4"
+  ],
+  "robustness_sweeps": {
+    "status": "exploratory_not_ranked_until_stop_sampling_convergence",
+    "carrier_vs_stop_offset_transmission": {
+      "carrier_cycles_x": [
+        -12,
+        -8,
+        -4,
+        0,
+        4,
+        8,
+        12
+      ],
+      "stop_offset_delta_x_m": [
+        -0.00016,
+        -8e-05,
+        0.0,
+        8e-05,
+        0.00016
+      ]
+    },
+    "pinhole_radius_vs_stop_offset_transmission": {
+      "pinhole_radius_m": [
+        0.00012,
+        0.00018,
+        0.00026,
+        0.00034
+      ],
+      "stop_offset_delta_x_m": [
+        -0.00012,
+        0.0,
+        0.00012
+      ]
+    },
+    "beam_radius_vs_relay_quality": {
+      "beam_radius_m": [
+        0.00055,
+        0.0008,
+        0.00105
+      ]
+    },
+    "input_decentre_vs_output_centroid": {
+      "decentre_m": [
+        [
+          -8e-05,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          8e-05,
+          0.0
+        ],
+        [
+          0.0,
+          -8e-05
+        ],
+        [
+          0.0,
+          8e-05
+        ]
+      ]
+    }
+  },
+  "package_contract": {
+    "root": "outputs/nominal_4f_candidate_runs",
+    "required_files": [
+      "run_manifest.json",
+      "candidate_manifest.json",
+      "nominal_4f_profile_snapshot.json",
+      "SLM1 phase_rad.npy",
+      "SLM1 quantised_rad.npy",
+      "SLM1 gray.png",
+      "SLM2 phase_rad.npy",
+      "SLM2 quantised_rad.npy",
+      "SLM2 gray.png",
+      "fourier_plane_pre_stop.png",
+      "fourier_stop_transmission.png",
+      "fourier_plane_post_stop.png",
+      "nominal_relay_output_xy.png",
+      "energy_ledger.csv",
+      "robustness_summary.csv",
+      "stop_sampling_convergence_report.json",
+      "claim_boundary.md"
+    ]
+  }
+}

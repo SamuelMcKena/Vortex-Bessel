@@ -1,0 +1,14 @@
+claim_id,branch,claim,pre_phase1_status,post_phase1_status,reason,regeneration_required
+P1A-C1,scalar_physical_axicon,Nonzero requested vortex survives the default physical route,known_failure_xfail,validated,"Default SLM2 mode preserves vortex and end-to-end winding matches ell",yes_for_inherited_physical_outputs
+P1A-C2,scalar_physical_axicon,Full conjugation may intentionally remove nonzero vortex,silent_default,diagnostic_only,"Nonzero full mode now requires allow_vortex_removal=true",no_for_explicit_diagnostic
+P1A-C3,scalar_physical_axicon,ell=0 remains compatible with full conjugation,allowed,validated_unchanged,"No requested topology is removed",no
+P1B-C1,stage_c_fourier_geometry,Reported physical Fourier-plane ring radius is dimensionally valid,invalid,formula_valid_outputs_stale,"Wavelength is now explicit; old CSV/notebook values omitted lambda",yes
+P1B-C2,nathan_4f,Canonical +1 displacement is 1.929375 mm,valid,validated_unchanged,"Nathan branch already used lambda*f*carrier",no
+P1C-C1,scalar_low_kr,Well-sampled numerical propagation supports quantitative metrics,valid,validated,"Measured z-stack drift is at or below 0.05",no
+P1C-C2,scalar_large_kr,Metrics remain quantitative when drift exceeds 0.05,allowed_with_label,blocked,"Hard gate sets quantitative_metrics_valid=false",yes_before_quantitative_reuse
+P1C-C3,first_order_filtering,Intentional first-order efficiency loss is numerical drift,separate_loss,separate_loss_unchanged,"The gate uses only z-stack transverse power",no
+P1D-C1,canonical_scalar,Historical default is a fixed-bench prediction,ambiguous,inverse_design_only,"Default numbers are retained but labelled target_matched_inverse_design",metadata_reexport_for_publication
+P1D-C2,fixed_scalar,Changing requested target may retune fixed bench,ambiguous,blocked_by_contract,"fixed_physical_optics map is sourced only from relay/objective config",no
+P1D-C3,fixed_scalar,Fixed bench achieved requested target by construction,possible_overclaim,measured_against_prediction,"hardware_target_achieved is false unless fixed-map prediction meets tolerance",no
+P1D-C4,nathan_source_scale,Nathan V0/source-scale control changes under ObjectiveMap contract,not_applicable,confirmed_unaffected,"Nathan control does not use ObjectiveMap",no
+P1-BC1,characterisation_lock,Legacy full-conjugation diagnostic baseline remains numerically stable,locked,locked_unchanged,"Diagnostic now carries explicit acknowledgement",no

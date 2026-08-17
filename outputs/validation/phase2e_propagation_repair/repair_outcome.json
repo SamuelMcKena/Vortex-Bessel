@@ -1,0 +1,204 @@
+{
+  "outcome": "PHASE2E-FINITE-B",
+  "report_figures_authorised": false,
+  "why_previous_looked_infinite": [
+    "z range ended at 100 mm before the propagated on-axis field had clearly decayed",
+    "the complete +/-5 mm field compressed a tens-of-micrometres feature into a narrow line",
+    "the configured 20--60 mm interval was shown without a separately measured zone",
+    "the former radius finder returned values outside its valid formation/sampling domain"
+  ],
+  "route_semantics": {
+    "initial_complex_field": "phase2b_visual_cases._scalar_seed B0/V1/V3",
+    "initial_field_plane": "axicon_output_plane",
+    "propagation_medium_index": 1.0,
+    "wavelength_m": 1.029e-06,
+    "z_origin": "axicon_output_plane",
+    "z_direction": "downstream_positive",
+    "objective_status": "no objective Fourier transform is applied in this scalar propagation route",
+    "pupil_plane": "repository-defined post-Fourier-filter numerical plane immediately before axicon",
+    "pupil_application_count": 1,
+    "axicon_conical_phase_application_count": 1,
+    "objective_transform_application_count": 0,
+    "field_already_focused": false,
+    "physical_window_m": 0.01,
+    "native_context_grid_n": 512,
+    "native_context_dx_m": 1.953125e-05,
+    "native_context_z_min_m": 0.0,
+    "native_context_z_max_m": 0.18,
+    "native_context_z_step_m": 0.0005,
+    "propagation_transfer_function": "band-limited angular spectrum with Matsushima mask and evanescent decay",
+    "context_propagator": "make_bl_asm_propagator; exact cached-spectrum equivalent of accepted angular_spectrum_propagate_bl",
+    "detail_renderer": "same-source fixed-coordinate spectral line evaluation; presentation only",
+    "metric_renderer": "accepted-source scalable angular spectrum, pad factor 4; azimuthal metrics on returned native zoom arrays",
+    "focused_field_propagated_as_axicon_field": false,
+    "pupil_applied_twice": false,
+    "plotting_or_validation_mutates_stack": false
+  },
+  "final_z_range_m": [
+    0.0,
+    0.18
+  ],
+  "z_step_m": 0.0005,
+  "full_field_window_m": 0.01,
+  "beam_detail_crop_m": [
+    -0.0005,
+    0.0005
+  ],
+  "zone_metrics": [
+    {
+      "case_id": "B0",
+      "configured_nominal_interval_m": [
+        0.02,
+        0.06
+      ],
+      "configured_nominal_interval_role": "configured_nominal_interval_not_measured_zone",
+      "geometric_hard_pupil_estimate_m": 0.1125,
+      "geometric_gaussian_radius_estimate_m": 0.125,
+      "measured_FWHM_axial_zone_m": [
+        0.026000000000000006,
+        0.10300000000000008
+      ],
+      "measured_strict_useful_region_m": [
+        0.03550000000000002,
+        0.10300000000000008
+      ],
+      "first_sample_after_strict_region_m": 0.10350000000000008,
+      "criteria": {
+        "feature_intensity_fraction": 0.5,
+        "fixed_bucket_power_fraction": 0.5,
+        "radius_stability_fraction": 0.1,
+        "feature_strength_validity_floor": 0.05,
+        "minimum_samples_across_width": 6.0
+      },
+      "reference_sas_retained_output_power_fraction": 0.6257711206769084,
+      "valid_radius_min_m": 6.81959172504969e-06,
+      "valid_radius_max_m": 1.2525402774008342e-05,
+      "minimum_valid_samples_across_width": 8.124199497453148,
+      "maximum_valid_samples_across_width": 43.35912622127178,
+      "feature_definition": {
+        "case_id": "B0",
+        "estimator": "central_core_azimuthal_average_HWHM",
+        "reference_z_m": 0.06,
+        "reference_radius_m": 1.1786689340172572e-05,
+        "reference_width_m": 2.3573378680345144e-05,
+        "fixed_bucket_radius_m": 2.5467749999999997e-05,
+        "minimum_samples_across_width": 6.0,
+        "metric_grid": "accepted N=512 source propagated by pad-factor-4 SAS zoom",
+        "reference_output_dx_m": 1.5435e-06,
+        "reference_samples_across_width": 15.272678121376835
+      }
+    },
+    {
+      "case_id": "V1",
+      "configured_nominal_interval_m": [
+        0.02,
+        0.06
+      ],
+      "configured_nominal_interval_role": "configured_nominal_interval_not_measured_zone",
+      "geometric_hard_pupil_estimate_m": 0.1125,
+      "geometric_gaussian_radius_estimate_m": 0.125,
+      "measured_FWHM_axial_zone_m": [
+        0.025500000000000005,
+        0.10350000000000008
+      ],
+      "measured_strict_useful_region_m": [
+        0.05850000000000004,
+        0.10300000000000008
+      ],
+      "first_sample_after_strict_region_m": 0.10350000000000008,
+      "criteria": {
+        "feature_intensity_fraction": 0.5,
+        "fixed_bucket_power_fraction": 0.5,
+        "radius_stability_fraction": 0.1,
+        "feature_strength_validity_floor": 0.05,
+        "minimum_samples_across_width": 6.0
+      },
+      "reference_sas_retained_output_power_fraction": 0.6256333327145208,
+      "valid_radius_min_m": 1.620675e-05,
+      "valid_radius_max_m": 2.054784375e-05,
+      "minimum_valid_samples_across_width": 7.035440541168476,
+      "maximum_valid_samples_across_width": 36.8072564498301,
+      "feature_definition": {
+        "case_id": "V1",
+        "estimator": "intended_annular_maximum_with_two_sided_HWHM",
+        "reference_z_m": 0.06,
+        "reference_ring_radius_m": 1.9293749999999998e-05,
+        "reference_inner_hwhm_m": 9.627382490537211e-06,
+        "reference_outer_hwhm_m": 2.900319818276851e-05,
+        "reference_ring_width_m": 1.93758156922313e-05,
+        "fixed_annulus_inner_m": 9.627382490537211e-06,
+        "fixed_annulus_outer_m": 2.900319818276851e-05,
+        "minimum_samples_across_width": 6.0,
+        "metric_grid": "accepted N=512 source propagated by pad-factor-4 SAS zoom",
+        "reference_output_dx_m": 1.5435e-06,
+        "reference_samples_across_width": 12.553168572874181
+      }
+    },
+    {
+      "case_id": "V3",
+      "configured_nominal_interval_m": [
+        0.02,
+        0.06
+      ],
+      "configured_nominal_interval_role": "configured_nominal_interval_not_measured_zone",
+      "geometric_hard_pupil_estimate_m": 0.1125,
+      "geometric_gaussian_radius_estimate_m": 0.125,
+      "measured_FWHM_axial_zone_m": [
+        0.02,
+        0.10350000000000008
+      ],
+      "measured_strict_useful_region_m": [
+        0.02,
+        0.10350000000000008
+      ],
+      "first_sample_after_strict_region_m": 0.10400000000000008,
+      "criteria": {
+        "feature_intensity_fraction": 0.5,
+        "fixed_bucket_power_fraction": 0.5,
+        "radius_stability_fraction": 0.1,
+        "feature_strength_validity_floor": 0.05,
+        "minimum_samples_across_width": 6.0
+      },
+      "reference_sas_retained_output_power_fraction": 0.6344777847868412,
+      "valid_radius_min_m": 4.032393750000003e-05,
+      "valid_radius_max_m": 4.8047868750000035e-05,
+      "minimum_valid_samples_across_width": 8.590549607644036,
+      "maximum_valid_samples_across_width": 46.57141831339106,
+      "feature_definition": {
+        "case_id": "V3",
+        "estimator": "intended_annular_maximum_with_two_sided_HWHM",
+        "reference_z_m": 0.06,
+        "reference_ring_radius_m": 4.398975e-05,
+        "reference_inner_hwhm_m": 3.125256316937045e-05,
+        "reference_outer_hwhm_m": 5.416872307625437e-05,
+        "reference_ring_width_m": 2.291615990688392e-05,
+        "fixed_annulus_inner_m": 3.125256316937045e-05,
+        "fixed_annulus_outer_m": 5.416872307625437e-05,
+        "minimum_samples_across_width": 6.0,
+        "metric_grid": "accepted N=512 source propagated by pad-factor-4 SAS zoom",
+        "reference_output_dx_m": 1.5435e-06,
+        "reference_samples_across_width": 14.846880406144425
+      }
+    }
+  ],
+  "window_convergence_pass": true,
+  "z_sampling_convergence_pass": false,
+  "minimum_width_sampling_pass": true,
+  "maximum_edge_energy_fraction": 0.0004196843767175724,
+  "accepted_upstream_artifacts_unchanged": true,
+  "plot_mutation_detected": false,
+  "configured_interval_is_measured_zone": false,
+  "old_disputed_figure_overwritten": false,
+  "old_disputed_figure_status": "superseded_not_report_eligible",
+  "replacement_figures": [
+    "outputs/figures/phase2e_report_visualisation/01b_propagation_maps/b0_finite_propagation_primary.png",
+    "outputs/figures/phase2e_report_visualisation/01b_propagation_maps/b0_transverse_snapshots.png",
+    "outputs/figures/phase2e_report_visualisation/01b_propagation_maps/v1_finite_propagation_primary.png",
+    "outputs/figures/phase2e_report_visualisation/01b_propagation_maps/v1_transverse_snapshots.png",
+    "outputs/figures/phase2e_report_visualisation/01b_propagation_maps/v3_finite_propagation_primary.png",
+    "outputs/figures/phase2e_report_visualisation/01b_propagation_maps/v3_transverse_snapshots.png",
+    "outputs/figures/phase2e_report_visualisation/01b_propagation_maps/b0_full_field_extended_z.png",
+    "outputs/figures/phase2e_report_visualisation/01b_propagation_maps/b0_beam_detail_extended_z.png",
+    "outputs/figures/phase2e_report_visualisation/01b_propagation_maps/b0_previous_vs_repaired_propagation.png"
+  ]
+}

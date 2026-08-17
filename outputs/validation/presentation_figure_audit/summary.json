@@ -1,0 +1,19 @@
+{
+  "outcome": "PRESENTATION-FIGURE-INVENTORY",
+  "tracked_figure_assets": 252,
+  "figure_producing_python_files": 100,
+  "classification_counts": {
+    "historical_or_legacy": 18,
+    "new_presentation_candidate": 24,
+    "other_figure_asset": 129,
+    "other_tracked_figure": 1,
+    "phase2b_diagnostic_or_appendix": 4,
+    "phase2e_diagnostic_or_appendix": 32,
+    "primary_scalar_candidate": 24,
+    "separate_vector_hexagonal_scope": 4,
+    "vector_reference_appendix": 16
+  },
+  "inventory_csv": "outputs/validation/presentation_figure_audit/tracked_figure_inventory.csv",
+  "renderer_inventory_json": "outputs/validation/presentation_figure_audit/figure_renderer_inventory.json",
+  "note": "Classification is a presentation-review hint only; scientific authority is determined by phase sign-offs and evidence contracts."
+}

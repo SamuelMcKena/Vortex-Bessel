@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "dataset_id": "bench_YYYYMMDD_runNN",
+  "data_classification": "template_unpopulated",
+  "created_utc": null,
+  "operator": "",
+  "calibration_bundle_path": null,
+  "canonical_z_ref_m": null,
+  "acquisition": {
+    "laser_state_id": null,
+    "slm1_mask_id": null,
+    "slm2_mask_id": null,
+    "axicon_pose_id": null,
+    "objective_state_id": null,
+    "sample_id": null,
+    "camera_export_method": null,
+    "notes": "Quantitative frames must be lossless numeric/radiometric exports, not screenshots."
+  },
+  "frames": []
+}

@@ -1,0 +1,299 @@
+{
+  "stage": "9A.3",
+  "status": "verified_seed_integrated_plus_targeted_open_searches",
+  "entries": [
+    {
+      "claim_id": "angular_spectrum_or_bl_asm_propagation",
+      "research_question": "What sampling/FOV rules are accepted for BL-ASM/ASM finite-aperture propagation?",
+      "exact_search_queries": [
+        "band limited angular spectrum propagation aliasing finite aperture"
+      ],
+      "target_journals_or_source_types": [
+        "peer-reviewed optics methods paper"
+      ],
+      "required_evidence_standard": "verified primary source or authoritative textbook/standard; DOI/publisher metadata must be checked before BibTeX entry is added",
+      "candidate_source_status": "verified_seed_integrated",
+      "verified_reference_keys": [
+        "matsushima2009bandlimited"
+      ],
+      "why_this_reference_is_needed": "Literature supports method principles only and does not validate the local bench."
+    },
+    {
+      "claim_id": "finite_sampling_and_aliasing_control",
+      "research_question": "What source supports finite-grid sampling and alias control for angular-spectrum propagation?",
+      "exact_search_queries": [
+        "band limited angular spectrum method sampling aliasing"
+      ],
+      "target_journals_or_source_types": [
+        "peer-reviewed optics methods paper"
+      ],
+      "required_evidence_standard": "verified primary source or authoritative textbook/standard; DOI/publisher metadata must be checked before BibTeX entry is added",
+      "candidate_source_status": "verified_seed_integrated",
+      "verified_reference_keys": [
+        "matsushima2009bandlimited"
+      ],
+      "why_this_reference_is_needed": "Literature supports method principles only and does not validate the local bench."
+    },
+    {
+      "claim_id": "phase_only_slm_mask_generation",
+      "research_question": "What source supports SLM phase calibration and spatially varying phase response?",
+      "exact_search_queries": [
+        "LCOS SLM phase calibration spatially varying phase response"
+      ],
+      "target_journals_or_source_types": [
+        "peer-reviewed SLM calibration paper"
+      ],
+      "required_evidence_standard": "verified primary source or authoritative textbook/standard; DOI/publisher metadata must be checked before BibTeX entry is added",
+      "candidate_source_status": "verified_seed_integrated",
+      "verified_reference_keys": [
+        "engstrom2013slmcalibration"
+      ],
+      "why_this_reference_is_needed": "Literature supports method principles only and does not validate the local bench."
+    },
+    {
+      "claim_id": "phase_quantisation_and_grayscale_export",
+      "research_question": "What source supports grayscale command/phase calibration boundaries for SLMs?",
+      "exact_search_queries": [
+        "spatial light modulator grayscale phase calibration quantisation"
+      ],
+      "target_journals_or_source_types": [
+        "peer-reviewed SLM calibration paper"
+      ],
+      "required_evidence_standard": "verified primary source or authoritative textbook/standard; DOI/publisher metadata must be checked before BibTeX entry is added",
+      "candidate_source_status": "verified_seed_integrated",
+      "verified_reference_keys": [
+        "engstrom2013slmcalibration"
+      ],
+      "why_this_reference_is_needed": "Literature supports method principles only and does not validate the local bench."
+    },
+    {
+      "claim_id": "command_domain_carrier_grating",
+      "research_question": "How does a pixelated SLM carrier/grating create diffraction orders and zero-order artifacts?",
+      "exact_search_queries": [
+        "pixelated spatial light modulator zero order carrier grating"
+      ],
+      "target_journals_or_source_types": [
+        "peer-reviewed SLM diffraction paper"
+      ],
+      "required_evidence_standard": "verified primary source or authoritative textbook/standard; DOI/publisher metadata must be checked before BibTeX entry is added",
+      "candidate_source_status": "verified_seed_integrated",
+      "verified_reference_keys": [
+        "zhang2009zeroorder"
+      ],
+      "why_this_reference_is_needed": "Literature supports method principles only and does not validate the local bench."
+    },
+    {
+      "claim_id": "pixelated_slm_zero_order_and_unwanted_orders",
+      "research_question": "How do pixelated SLMs distribute zero, first, and unwanted orders?",
+      "exact_search_queries": [
+        "pixelated spatial light modulator zero order Fourier filtering"
+      ],
+      "target_journals_or_source_types": [
+        "peer-reviewed SLM diffraction paper"
+      ],
+      "required_evidence_standard": "verified primary source or authoritative textbook/standard; DOI/publisher metadata must be checked before BibTeX entry is added",
+      "candidate_source_status": "verified_seed_integrated",
+      "verified_reference_keys": [
+        "zhang2009zeroorder"
+      ],
+      "why_this_reference_is_needed": "Literature supports method principles only and does not validate the local bench."
+    },
+    {
+      "claim_id": "physical_fourier_filtering_future_route",
+      "research_question": "What physical thin-lens/finite-aperture 4F model is appropriate for a measured SLM Fourier plane?",
+      "exact_search_queries": [
+        "finite aperture 4F optical system scalar diffraction Fourier filter"
+      ],
+      "target_journals_or_source_types": [
+        "peer-reviewed Fourier optics paper",
+        "authoritative Fourier optics textbook"
+      ],
+      "required_evidence_standard": "verified primary source or authoritative textbook/standard; DOI/publisher metadata must be checked before BibTeX entry is added",
+      "candidate_source_status": "targeted_search_required",
+      "verified_reference_keys": [],
+      "why_this_reference_is_needed": "Literature supports method principles only and does not validate the local bench."
+    },
+    {
+      "claim_id": "physical_axicon_bessel_conversion",
+      "research_question": "How do physical axicon decentre, tilt, apex and finite aperture affect Bessel beams?",
+      "exact_search_queries": [
+        "physical axicon decentration tilt Bessel beam tolerance"
+      ],
+      "target_journals_or_source_types": [
+        "peer-reviewed axicon tolerance paper",
+        "manufacturer axicon datasheet"
+      ],
+      "required_evidence_standard": "verified primary source or authoritative textbook/standard; DOI/publisher metadata must be checked before BibTeX entry is added",
+      "candidate_source_status": "targeted_search_required",
+      "verified_reference_keys": [],
+      "why_this_reference_is_needed": "Literature supports method principles only and does not validate the local bench."
+    },
+    {
+      "claim_id": "physical_axicon_aperture_and_decentre",
+      "research_question": "What source quantifies axicon aperture/decentre tolerances for Bessel beam quality?",
+      "exact_search_queries": [
+        "axicon finite aperture decentre Bessel beam quality"
+      ],
+      "target_journals_or_source_types": [
+        "peer-reviewed axicon tolerance paper"
+      ],
+      "required_evidence_standard": "verified primary source or authoritative textbook/standard; DOI/publisher metadata must be checked before BibTeX entry is added",
+      "candidate_source_status": "targeted_search_required",
+      "verified_reference_keys": [],
+      "why_this_reference_is_needed": "Literature supports method principles only and does not validate the local bench."
+    },
+    {
+      "claim_id": "camera_z_stack_acquisition",
+      "research_question": "What metrology standards support camera z-stack acquisition of annular/Bessel beams?",
+      "exact_search_queries": [
+        "camera z stack Bessel beam profiling metrology"
+      ],
+      "target_journals_or_source_types": [
+        "peer-reviewed beam metrology paper"
+      ],
+      "required_evidence_standard": "verified primary source or authoritative textbook/standard; DOI/publisher metadata must be checked before BibTeX entry is added",
+      "candidate_source_status": "targeted_search_required",
+      "verified_reference_keys": [],
+      "why_this_reference_is_needed": "Literature supports method principles only and does not validate the local bench."
+    },
+    {
+      "claim_id": "camera_coordinate_calibration",
+      "research_question": "How should camera scale/orientation/reference-plane calibration be validated for beam profiling?",
+      "exact_search_queries": [
+        "camera calibration beam profiling magnification orientation"
+      ],
+      "target_journals_or_source_types": [
+        "peer-reviewed metrology paper",
+        "camera manufacturer documentation"
+      ],
+      "required_evidence_standard": "verified primary source or authoritative textbook/standard; DOI/publisher metadata must be checked before BibTeX entry is added",
+      "candidate_source_status": "targeted_search_required",
+      "verified_reference_keys": [],
+      "why_this_reference_is_needed": "Literature supports method principles only and does not validate the local bench."
+    },
+    {
+      "claim_id": "multi_plane_phase_retrieval_future",
+      "research_question": "Which multi-plane phase retrieval methods are suitable for Bessel intensity z-stacks?",
+      "exact_search_queries": [
+        "multi plane phase retrieval Bessel beam intensity z stack"
+      ],
+      "target_journals_or_source_types": [
+        "peer-reviewed phase retrieval paper"
+      ],
+      "required_evidence_standard": "verified primary source or authoritative textbook/standard; DOI/publisher metadata must be checked before BibTeX entry is added",
+      "candidate_source_status": "verified_seed_integrated",
+      "verified_reference_keys": [
+        "miao2022besselretrieval"
+      ],
+      "why_this_reference_is_needed": "Literature supports method principles only and does not validate the local bench."
+    },
+    {
+      "claim_id": "effective_aberration_inference_future",
+      "research_question": "What methods support effective aberration inference/correction from measured beam errors?",
+      "exact_search_queries": [
+        "closed loop aberration correction Zernike wavefront sensor"
+      ],
+      "target_journals_or_source_types": [
+        "peer-reviewed adaptive optics paper"
+      ],
+      "required_evidence_standard": "verified primary source or authoritative textbook/standard; DOI/publisher metadata must be checked before BibTeX entry is added",
+      "candidate_source_status": "verified_seed_integrated",
+      "verified_reference_keys": [
+        "neil2000closedloop"
+      ],
+      "why_this_reference_is_needed": "Literature supports method principles only and does not validate the local bench."
+    },
+    {
+      "claim_id": "zernike_or_phase_conjugate_correction_future",
+      "research_question": "What methods support Zernike or SLM correction of measured aberrations?",
+      "exact_search_queries": [
+        "SLM aberration correction Shack Hartmann sensor holographic correction"
+      ],
+      "target_journals_or_source_types": [
+        "peer-reviewed adaptive optics paper"
+      ],
+      "required_evidence_standard": "verified primary source or authoritative textbook/standard; DOI/publisher metadata must be checked before BibTeX entry is added",
+      "candidate_source_status": "verified_seed_integrated",
+      "verified_reference_keys": [
+        "neil2000closedloop",
+        "lopezquesada2009slmcorrection"
+      ],
+      "why_this_reference_is_needed": "Literature supports method principles only and does not validate the local bench."
+    },
+    {
+      "claim_id": "neural_fast_estimator_future",
+      "research_question": "What evidence standards are required for synthetic-to-real neural optical estimators?",
+      "exact_search_queries": [
+        "synthetic to real optical alignment neural estimator uncertainty"
+      ],
+      "target_journals_or_source_types": [
+        "peer-reviewed ML uncertainty paper"
+      ],
+      "required_evidence_standard": "verified primary source or authoritative textbook/standard; DOI/publisher metadata must be checked before BibTeX entry is added",
+      "candidate_source_status": "targeted_search_required",
+      "verified_reference_keys": [],
+      "why_this_reference_is_needed": "Literature supports method principles only and does not validate the local bench."
+    },
+    {
+      "claim_id": "fused_silica_bessel_channel_or_tgv_future",
+      "research_question": "What does Bessel-beam microchannel literature support, and what local evidence remains required?",
+      "exact_search_queries": [
+        "femtosecond laser Bessel beam microchannel fused silica"
+      ],
+      "target_journals_or_source_types": [
+        "peer-reviewed ultrafast processing paper"
+      ],
+      "required_evidence_standard": "verified primary source or authoritative textbook/standard; DOI/publisher metadata must be checked before BibTeX entry is added",
+      "candidate_source_status": "verified_seed_integrated",
+      "verified_reference_keys": [
+        "bhuyan2010microchannels"
+      ],
+      "why_this_reference_is_needed": "Literature supports method principles only and does not validate the local bench."
+    },
+    {
+      "claim_id": "fused_silica_waveguide_future",
+      "research_question": "What directly verified source should support Bessel/vortex-Bessel waveguide writing in fused silica?",
+      "exact_search_queries": [
+        "ultrafast laser fused silica waveguide Bessel beam writing"
+      ],
+      "target_journals_or_source_types": [
+        "peer-reviewed waveguide-writing paper"
+      ],
+      "required_evidence_standard": "verified primary source or authoritative textbook/standard; DOI/publisher metadata must be checked before BibTeX entry is added",
+      "candidate_source_status": "targeted_search_required",
+      "verified_reference_keys": [],
+      "why_this_reference_is_needed": "Literature supports method principles only and does not validate the local bench."
+    },
+    {
+      "claim_id": "fused_silica_welding_future",
+      "research_question": "What does Bessel-beam glass welding literature support, and what local evidence remains required?",
+      "exact_search_queries": [
+        "femtosecond laser Bessel beam welding transparent materials"
+      ],
+      "target_journals_or_source_types": [
+        "peer-reviewed glass welding paper"
+      ],
+      "required_evidence_standard": "verified primary source or authoritative textbook/standard; DOI/publisher metadata must be checked before BibTeX entry is added",
+      "candidate_source_status": "verified_seed_integrated",
+      "verified_reference_keys": [
+        "zhang2018besselwelding"
+      ],
+      "why_this_reference_is_needed": "Literature supports method principles only and does not validate the local bench."
+    },
+    {
+      "claim_id": "legacy_crznse_material_proxy_branch",
+      "research_question": "Which Cr:ZnSe/ZnSe-family material proxy assumptions are material-specific and non-transferable?",
+      "exact_search_queries": [
+        "CrZnSe femtosecond laser waveguide writing threshold",
+        "ZnSe femtosecond laser modification threshold"
+      ],
+      "target_journals_or_source_types": [
+        "peer-reviewed material processing paper"
+      ],
+      "required_evidence_standard": "verified primary source or authoritative textbook/standard; DOI/publisher metadata must be checked before BibTeX entry is added",
+      "candidate_source_status": "targeted_search_required",
+      "verified_reference_keys": [],
+      "why_this_reference_is_needed": "Literature supports method principles only and does not validate the local bench."
+    }
+  ]
+}

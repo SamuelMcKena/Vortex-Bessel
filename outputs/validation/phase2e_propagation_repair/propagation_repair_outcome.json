@@ -1,0 +1,146 @@
+{
+  "outcome": "PHASE2E-PROP-B",
+  "canonical_primary_figures_authorised": true,
+  "hard_pupil_features_experimentally_authorised": false,
+  "previous_source_plane": "axicon_output_plane",
+  "current_direct_source_matches_canonical_gate": true,
+  "minimum_first_common_plane_complex_overlap": 0.9995627639680442,
+  "pupil_applied_at_repository_contract_plane": true,
+  "pupil_application_count": 1,
+  "focused_field_mispropagated_as_axicon_field": false,
+  "objective_transform_application_count": 0,
+  "cached_array_mutation_detected": false,
+  "shared_transverse_peak_diagnosis": "plane maximum can follow whichever core or sidelobe is brightest and is not a fixed beam observable; it is retained only as a grey diagnostic trace",
+  "case_summaries": {
+    "B0": {
+      "case_id": "B0",
+      "profile_definition": {
+        "case_id": "B0",
+        "reference_z_m": 0.06,
+        "observable": "on_axis_intensity",
+        "bucket_type": "fixed_circular_core",
+        "r_core_bucket_m": 4.8828125e-05,
+        "radius_metric": "first radial-profile minimum after the central maximum",
+        "metric_smoothing": "none"
+      },
+      "plane_max_feature_switch_count": 0,
+      "power_drift_fraction": 7.772224452196773e-16,
+      "maximum_edge_energy_fraction": 4.975448047202283e-06,
+      "source_hash": "e8e968bfc81307bdda6e1f7e4dad190cdf3397c89f24aeaeb6474f7c91db9e4d"
+    },
+    "V1": {
+      "case_id": "V1",
+      "profile_definition": {
+        "case_id": "V1",
+        "reference_z_m": 0.06,
+        "observable": "fixed_reference_ring_intensity",
+        "bucket_type": "fixed_annulus",
+        "reference_ring_radius_m": 8.7890625e-05,
+        "r_inner_m": 6.8359375e-05,
+        "r_outer_m": 0.000107421875,
+        "radius_metric": "native radial-profile maximum within the fixed reference annulus",
+        "metric_smoothing": "none"
+      },
+      "plane_max_feature_switch_count": 1,
+      "power_drift_fraction": 7.797261789071497e-16,
+      "maximum_edge_energy_fraction": 1.8847296863586997e-05,
+      "source_hash": "926ddbb4e4adc8f9c8848a683c1bc6c6d0bd950b70099f0fe000c7d6bbc2d0a6"
+    },
+    "V3": {
+      "case_id": "V3",
+      "profile_definition": {
+        "case_id": "V3",
+        "reference_z_m": 0.06,
+        "observable": "fixed_reference_ring_intensity",
+        "bucket_type": "fixed_annulus",
+        "reference_ring_radius_m": 4.8828125e-05,
+        "r_inner_m": 2.9296875e-05,
+        "r_outer_m": 6.8359375e-05,
+        "radius_metric": "native radial-profile maximum within the fixed reference annulus",
+        "metric_smoothing": "none"
+      },
+      "plane_max_feature_switch_count": 1,
+      "power_drift_fraction": 5.958966871613865e-16,
+      "maximum_edge_energy_fraction": 1.3400051797062235e-05,
+      "source_hash": "7f74abc31171fc13edec965216ce22fb3527e6cd28426e7a7b7e5bf4c52742d2"
+    }
+  },
+  "direct_route_comparison": {
+    "xz_intensity_correlation": 0.9835625092121644,
+    "yz_intensity_correlation": 0.9835624446802123,
+    "on_axis_trace_correlation": 0.9974022808787159,
+    "source_grid_n": 1024,
+    "canonical_grid_n": 512,
+    "interpretation": "separate renderer; not used as the canonical report volume"
+  },
+  "symmetry_audit": {
+    "route": "ideal_optical_route",
+    "xz_yz_correlation": 0.9999999987044722,
+    "required_minimum": 0.9999,
+    "pass": true,
+    "meshgrid_indexing": "xy",
+    "centre_pixel_policy": "even grid; matched positive half-pixel centre slices",
+    "pupil_offset_m": [
+      0.0,
+      0.0
+    ],
+    "pupil_centred": true,
+    "transpose_or_axis_swap_detected": false
+  },
+  "convergence_all_predeclared_gates_pass": false,
+  "grid_resolution_gates_pass": false,
+  "physical_window_gates_pass": true,
+  "z_step_gates_pass": true,
+  "maximum_edge_energy_fraction": 9.387952978435587e-05,
+  "structure_classification": {
+    "global_linear_primary_structure": "accepted canonical model structure subject to convergence gates",
+    "one_percent_clipped_diagonal_and_vertical_structure": "display_emphasised_weak_structure",
+    "hard_pupil_difference": "nominal_hard_pupil_diffraction_model_consequence",
+    "experimentally_physical": false
+  },
+  "accepted_phase2a_region_m": [
+    0.02,
+    0.06
+  ],
+  "geometric_estimates_replace_canonical_region": false,
+  "old_disputed_outputs_overwritten": false,
+  "old_disputed_outputs_marked_superseded": true,
+  "plot_mutation_audit": [
+    {
+      "plot": "b0_canonical_propagation_primary",
+      "hashes_equal": true
+    },
+    {
+      "plot": "v1_canonical_propagation_primary",
+      "hashes_equal": true
+    },
+    {
+      "plot": "v3_canonical_propagation_primary",
+      "hashes_equal": true
+    },
+    {
+      "plot": "b0_low_intensity_diagnostic",
+      "hashes_equal": true
+    },
+    {
+      "plot": "b0_canonical_vs_direct_route",
+      "hashes_equal": true
+    },
+    {
+      "plot": "b0_pupil_model_audit",
+      "hashes_equal": true
+    },
+    {
+      "plot": "canonical_vs_current_input",
+      "hashes_equal": true
+    }
+  ],
+  "replacement_figures": [
+    "outputs/figures/phase2e_report_visualisation/01b_propagation_maps/b0_canonical_propagation_primary.png",
+    "outputs/figures/phase2e_report_visualisation/01b_propagation_maps/v1_canonical_propagation_primary.png",
+    "outputs/figures/phase2e_report_visualisation/01b_propagation_maps/v3_canonical_propagation_primary.png",
+    "outputs/figures/phase2e_report_visualisation/01b_propagation_maps/b0_low_intensity_diagnostic.png",
+    "outputs/figures/phase2e_report_visualisation/01b_propagation_maps/b0_canonical_vs_direct_route.png",
+    "outputs/figures/phase2e_report_visualisation/01b_propagation_maps/b0_pupil_model_audit.png"
+  ]
+}

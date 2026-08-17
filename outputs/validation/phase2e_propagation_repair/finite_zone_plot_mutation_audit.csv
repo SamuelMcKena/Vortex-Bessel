@@ -1,0 +1,10 @@
+plot,hashes_equal
+b0_finite_propagation_primary,True
+b0_transverse_snapshots,True
+v1_finite_propagation_primary,True
+v1_transverse_snapshots,True
+v3_finite_propagation_primary,True
+v3_transverse_snapshots,True
+b0_full_field_extended_z,True
+b0_beam_detail_extended_z,True
+b0_previous_vs_repaired_propagation,True

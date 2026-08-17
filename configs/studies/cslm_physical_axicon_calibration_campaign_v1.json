@@ -1,0 +1,882 @@
+{
+  "campaign_name": "cslm_physical_axicon_calibration_campaign_v1",
+  "campaign_status": "planned_calibration_campaign_not_yet_acquired",
+  "claim_boundary": "n=1.0 free-space optical/fluence diagnostic; acquisition & ingestion only; no physical 4F field, no camera-imaging model, no inverse correction, no AI, no material model; final_export_allowed=False",
+  "governance": {
+    "fourier_filter_physics_available": false,
+    "camera_model_enabled": false,
+    "material_model_enabled": false,
+    "diagnostic_only": true,
+    "final_export_allowed": false,
+    "n_medium": 1.0
+  },
+  "families": [
+    {
+      "family_id": 0,
+      "name": "dark_background_reference",
+      "capture_kind": "dark_frame",
+      "purpose": "background subtraction; saturation/quality control; repeatability",
+      "identifies": "camera background, noise floor, saturation reference",
+      "coordinate_frame": "camera_sensor_pixel_frame",
+      "captures": [
+        {
+          "capture_id": "F0_dark_lowgain",
+          "capture_kind": "dark_frame",
+          "settings": {
+            "beam": "shuttered",
+            "repeats": 5
+          }
+        },
+        {
+          "capture_id": "F0_dark_opgain",
+          "capture_kind": "dark_frame",
+          "settings": {
+            "beam": "shuttered",
+            "repeats": 5
+          }
+        }
+      ]
+    },
+    {
+      "family_id": 1,
+      "name": "input_beam_record",
+      "capture_kind": "input_beam",
+      "purpose": "beam centre/diameter/ellipticity/rotation/aperture context (pixels only)",
+      "identifies": "input beam shape in pixels (no calibrated physical radius yet)",
+      "coordinate_frame": "camera_sensor_pixel_frame",
+      "note": "Do not claim a calibrated physical beam radius until camera/object-plane mapping exists.",
+      "captures": [
+        {
+          "capture_id": "F1_input_beam",
+          "capture_kind": "input_beam",
+          "settings": {
+            "slm1": "flat",
+            "location": "before_route_if_accessible"
+          }
+        }
+      ]
+    },
+    {
+      "family_id": 2,
+      "name": "slm2_carrier_fourier_mapping",
+      "capture_kind": "fourier_plane_carrier_sweep",
+      "purpose": "carrier sign convention; carrier-frequency->order-position mapping; Fourier-stop centring; Fourier-plane coordinate calibration",
+      "identifies": "the highest-priority calibration: SLM2 carrier -> Fourier order position",
+      "coordinate_frame": "Fourier_plane_physical_position_frame",
+      "priority": "highest",
+      "captures": [
+        {
+          "capture_id": "F2_carrier_x_0",
+          "capture_kind": "fourier_plane_carrier_sweep",
+          "settings": {
+            "slm1": "flat",
+            "carrier_axis": "x",
+            "carrier_cpm": -30000.0,
+            "record_orders": [
+              "zero",
+              "+1",
+              "-1"
+            ]
+          }
+        },
+        {
+          "capture_id": "F2_carrier_x_1",
+          "capture_kind": "fourier_plane_carrier_sweep",
+          "settings": {
+            "slm1": "flat",
+            "carrier_axis": "x",
+            "carrier_cpm": -15000.0,
+            "record_orders": [
+              "zero",
+              "+1",
+              "-1"
+            ]
+          }
+        },
+        {
+          "capture_id": "F2_carrier_x_2",
+          "capture_kind": "fourier_plane_carrier_sweep",
+          "settings": {
+            "slm1": "flat",
+            "carrier_axis": "x",
+            "carrier_cpm": 0.0,
+            "record_orders": [
+              "zero",
+              "+1",
+              "-1"
+            ]
+          }
+        },
+        {
+          "capture_id": "F2_carrier_x_3",
+          "capture_kind": "fourier_plane_carrier_sweep",
+          "settings": {
+            "slm1": "flat",
+            "carrier_axis": "x",
+            "carrier_cpm": 15000.0,
+            "record_orders": [
+              "zero",
+              "+1",
+              "-1"
+            ]
+          }
+        },
+        {
+          "capture_id": "F2_carrier_x_4",
+          "capture_kind": "fourier_plane_carrier_sweep",
+          "settings": {
+            "slm1": "flat",
+            "carrier_axis": "x",
+            "carrier_cpm": 30000.0,
+            "record_orders": [
+              "zero",
+              "+1",
+              "-1"
+            ]
+          }
+        },
+        {
+          "capture_id": "F2_carrier_y_0",
+          "capture_kind": "fourier_plane_carrier_sweep",
+          "settings": {
+            "slm1": "flat",
+            "carrier_axis": "y",
+            "carrier_cpm": -30000.0,
+            "record_orders": [
+              "zero",
+              "+1",
+              "-1"
+            ]
+          }
+        },
+        {
+          "capture_id": "F2_carrier_y_1",
+          "capture_kind": "fourier_plane_carrier_sweep",
+          "settings": {
+            "slm1": "flat",
+            "carrier_axis": "y",
+            "carrier_cpm": -15000.0,
+            "record_orders": [
+              "zero",
+              "+1",
+              "-1"
+            ]
+          }
+        },
+        {
+          "capture_id": "F2_carrier_y_2",
+          "capture_kind": "fourier_plane_carrier_sweep",
+          "settings": {
+            "slm1": "flat",
+            "carrier_axis": "y",
+            "carrier_cpm": 0.0,
+            "record_orders": [
+              "zero",
+              "+1",
+              "-1"
+            ]
+          }
+        },
+        {
+          "capture_id": "F2_carrier_y_3",
+          "capture_kind": "fourier_plane_carrier_sweep",
+          "settings": {
+            "slm1": "flat",
+            "carrier_axis": "y",
+            "carrier_cpm": 15000.0,
+            "record_orders": [
+              "zero",
+              "+1",
+              "-1"
+            ]
+          }
+        },
+        {
+          "capture_id": "F2_carrier_y_4",
+          "capture_kind": "fourier_plane_carrier_sweep",
+          "settings": {
+            "slm1": "flat",
+            "carrier_axis": "y",
+            "carrier_cpm": 30000.0,
+            "record_orders": [
+              "zero",
+              "+1",
+              "-1"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "family_id": 3,
+      "name": "fourier_stop_scan",
+      "capture_kind": "fourier_stop_scan",
+      "purpose": "practical stop placement; clipping/sensitivity; selected-order operating point",
+      "identifies": "measured stop operating point (no stop model in this stage)",
+      "coordinate_frame": "Fourier_plane_physical_position_frame",
+      "note": "Measured-data procedure only; do not model the stop yet.",
+      "captures": [
+        {
+          "capture_id": "F3_stop_centre_x_0",
+          "capture_kind": "fourier_stop_scan",
+          "settings": {
+            "selected_carrier": "from_F2",
+            "scan": "centre_x",
+            "step_index": 0
+          }
+        },
+        {
+          "capture_id": "F3_stop_centre_x_1",
+          "capture_kind": "fourier_stop_scan",
+          "settings": {
+            "selected_carrier": "from_F2",
+            "scan": "centre_x",
+            "step_index": 1
+          }
+        },
+        {
+          "capture_id": "F3_stop_centre_x_2",
+          "capture_kind": "fourier_stop_scan",
+          "settings": {
+            "selected_carrier": "from_F2",
+            "scan": "centre_x",
+            "step_index": 2
+          }
+        },
+        {
+          "capture_id": "F3_stop_centre_y_0",
+          "capture_kind": "fourier_stop_scan",
+          "settings": {
+            "selected_carrier": "from_F2",
+            "scan": "centre_y",
+            "step_index": 0
+          }
+        },
+        {
+          "capture_id": "F3_stop_centre_y_1",
+          "capture_kind": "fourier_stop_scan",
+          "settings": {
+            "selected_carrier": "from_F2",
+            "scan": "centre_y",
+            "step_index": 1
+          }
+        },
+        {
+          "capture_id": "F3_stop_centre_y_2",
+          "capture_kind": "fourier_stop_scan",
+          "settings": {
+            "selected_carrier": "from_F2",
+            "scan": "centre_y",
+            "step_index": 2
+          }
+        },
+        {
+          "capture_id": "F3_stop_radius_0",
+          "capture_kind": "fourier_stop_scan",
+          "settings": {
+            "selected_carrier": "from_F2",
+            "scan": "radius",
+            "step_index": 0
+          }
+        },
+        {
+          "capture_id": "F3_stop_radius_1",
+          "capture_kind": "fourier_stop_scan",
+          "settings": {
+            "selected_carrier": "from_F2",
+            "scan": "radius",
+            "step_index": 1
+          }
+        },
+        {
+          "capture_id": "F3_stop_radius_2",
+          "capture_kind": "fourier_stop_scan",
+          "settings": {
+            "selected_carrier": "from_F2",
+            "scan": "radius",
+            "step_index": 2
+          }
+        }
+      ]
+    },
+    {
+      "family_id": 4,
+      "name": "gaussian_through_axicon_baseline",
+      "capture_kind": "post_axicon_z_stack",
+      "purpose": "Gaussian-through-physical-axicon baseline z-stack",
+      "identifies": "axicon Bessel formation for a Gaussian input (pixel z-stack)",
+      "coordinate_frame": "camera_sensor_pixel_frame",
+      "captures": [
+        {
+          "capture_id": "F4_gauss_z00",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "flat",
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 0
+          }
+        },
+        {
+          "capture_id": "F4_gauss_z01",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "flat",
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 1
+          }
+        },
+        {
+          "capture_id": "F4_gauss_z02",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "flat",
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 2
+          }
+        },
+        {
+          "capture_id": "F4_gauss_z03",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "flat",
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 3
+          }
+        },
+        {
+          "capture_id": "F4_gauss_z04",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "flat",
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 4
+          }
+        },
+        {
+          "capture_id": "F4_gauss_z05",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "flat",
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 5
+          }
+        },
+        {
+          "capture_id": "F4_gauss_z06",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "flat",
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 6
+          }
+        },
+        {
+          "capture_id": "F4_gauss_z07",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "flat",
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 7
+          }
+        },
+        {
+          "capture_id": "F4_gauss_z08",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "flat",
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 8
+          }
+        },
+        {
+          "capture_id": "F4_gauss_z09",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "flat",
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 9
+          }
+        },
+        {
+          "capture_id": "F4_gauss_z10",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "flat",
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 10
+          }
+        }
+      ]
+    },
+    {
+      "family_id": 5,
+      "name": "vortex_through_axicon_baseline_atlas",
+      "capture_kind": "post_axicon_z_stack",
+      "purpose": "vortex-through-physical-axicon baseline atlas (l=1,2,3)",
+      "identifies": "charge-dependent annular Bessel formation (pixel z-stacks)",
+      "coordinate_frame": "camera_sensor_pixel_frame",
+      "note": "Only the deliberate variable (topological charge) may differ across atlas cases.",
+      "captures": [
+        {
+          "capture_id": "F5_l1_z00",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 1,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 0
+          }
+        },
+        {
+          "capture_id": "F5_l1_z01",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 1,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 1
+          }
+        },
+        {
+          "capture_id": "F5_l1_z02",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 1,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 2
+          }
+        },
+        {
+          "capture_id": "F5_l1_z03",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 1,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 3
+          }
+        },
+        {
+          "capture_id": "F5_l1_z04",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 1,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 4
+          }
+        },
+        {
+          "capture_id": "F5_l1_z05",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 1,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 5
+          }
+        },
+        {
+          "capture_id": "F5_l1_z06",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 1,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 6
+          }
+        },
+        {
+          "capture_id": "F5_l1_z07",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 1,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 7
+          }
+        },
+        {
+          "capture_id": "F5_l1_z08",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 1,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 8
+          }
+        },
+        {
+          "capture_id": "F5_l1_z09",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 1,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 9
+          }
+        },
+        {
+          "capture_id": "F5_l1_z10",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 1,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 10
+          }
+        },
+        {
+          "capture_id": "F5_l2_z00",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 2,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 0
+          }
+        },
+        {
+          "capture_id": "F5_l2_z01",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 2,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 1
+          }
+        },
+        {
+          "capture_id": "F5_l2_z02",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 2,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 2
+          }
+        },
+        {
+          "capture_id": "F5_l2_z03",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 2,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 3
+          }
+        },
+        {
+          "capture_id": "F5_l2_z04",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 2,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 4
+          }
+        },
+        {
+          "capture_id": "F5_l2_z05",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 2,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 5
+          }
+        },
+        {
+          "capture_id": "F5_l2_z06",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 2,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 6
+          }
+        },
+        {
+          "capture_id": "F5_l2_z07",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 2,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 7
+          }
+        },
+        {
+          "capture_id": "F5_l2_z08",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 2,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 8
+          }
+        },
+        {
+          "capture_id": "F5_l2_z09",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 2,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 9
+          }
+        },
+        {
+          "capture_id": "F5_l2_z10",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 2,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 10
+          }
+        },
+        {
+          "capture_id": "F5_l3_z00",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 3,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 0
+          }
+        },
+        {
+          "capture_id": "F5_l3_z01",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 3,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 1
+          }
+        },
+        {
+          "capture_id": "F5_l3_z02",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 3,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 2
+          }
+        },
+        {
+          "capture_id": "F5_l3_z03",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 3,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 3
+          }
+        },
+        {
+          "capture_id": "F5_l3_z04",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 3,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 4
+          }
+        },
+        {
+          "capture_id": "F5_l3_z05",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 3,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 5
+          }
+        },
+        {
+          "capture_id": "F5_l3_z06",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 3,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 6
+          }
+        },
+        {
+          "capture_id": "F5_l3_z07",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 3,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 7
+          }
+        },
+        {
+          "capture_id": "F5_l3_z08",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 3,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 8
+          }
+        },
+        {
+          "capture_id": "F5_l3_z09",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 3,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 9
+          }
+        },
+        {
+          "capture_id": "F5_l3_z10",
+          "capture_kind": "post_axicon_z_stack",
+          "settings": {
+            "slm1": "vortex",
+            "topological_charge": 3,
+            "order_handoff_mode": "ideal_selected_order_surrogate",
+            "z_index": 10
+          }
+        }
+      ]
+    },
+    {
+      "family_id": 6,
+      "name": "future_controlled_perturbation_placeholders",
+      "capture_kind": "manual_observation",
+      "purpose": "planned future controlled perturbations (NOT executed in this stage)",
+      "identifies": "future correction-study variables",
+      "coordinate_frame": "lab_beam_frame",
+      "status": "planned_future_calibration",
+      "implementation": "not_implemented_in_current_stage",
+      "captures": [
+        {
+          "capture_id": "F6_future_tip_tilt",
+          "capture_kind": "manual_observation",
+          "status": "planned_future_calibration",
+          "implementation": "not_implemented_in_current_stage",
+          "settings": {
+            "perturbation": "tip_tilt"
+          }
+        },
+        {
+          "capture_id": "F6_future_defocus",
+          "capture_kind": "manual_observation",
+          "status": "planned_future_calibration",
+          "implementation": "not_implemented_in_current_stage",
+          "settings": {
+            "perturbation": "defocus"
+          }
+        },
+        {
+          "capture_id": "F6_future_astigmatism_x",
+          "capture_kind": "manual_observation",
+          "status": "planned_future_calibration",
+          "implementation": "not_implemented_in_current_stage",
+          "settings": {
+            "perturbation": "astigmatism_x"
+          }
+        },
+        {
+          "capture_id": "F6_future_astigmatism_y",
+          "capture_kind": "manual_observation",
+          "status": "planned_future_calibration",
+          "implementation": "not_implemented_in_current_stage",
+          "settings": {
+            "perturbation": "astigmatism_y"
+          }
+        },
+        {
+          "capture_id": "F6_future_coma_x",
+          "capture_kind": "manual_observation",
+          "status": "planned_future_calibration",
+          "implementation": "not_implemented_in_current_stage",
+          "settings": {
+            "perturbation": "coma_x"
+          }
+        },
+        {
+          "capture_id": "F6_future_coma_y",
+          "capture_kind": "manual_observation",
+          "status": "planned_future_calibration",
+          "implementation": "not_implemented_in_current_stage",
+          "settings": {
+            "perturbation": "coma_y"
+          }
+        },
+        {
+          "capture_id": "F6_future_trefoil_x",
+          "capture_kind": "manual_observation",
+          "status": "planned_future_calibration",
+          "implementation": "not_implemented_in_current_stage",
+          "settings": {
+            "perturbation": "trefoil_x"
+          }
+        },
+        {
+          "capture_id": "F6_future_trefoil_y",
+          "capture_kind": "manual_observation",
+          "status": "planned_future_calibration",
+          "implementation": "not_implemented_in_current_stage",
+          "settings": {
+            "perturbation": "trefoil_y"
+          }
+        },
+        {
+          "capture_id": "F6_future_mask_centre_x_offset",
+          "capture_kind": "manual_observation",
+          "status": "planned_future_calibration",
+          "implementation": "not_implemented_in_current_stage",
+          "settings": {
+            "perturbation": "mask_centre_x_offset"
+          }
+        },
+        {
+          "capture_id": "F6_future_mask_centre_y_offset",
+          "capture_kind": "manual_observation",
+          "status": "planned_future_calibration",
+          "implementation": "not_implemented_in_current_stage",
+          "settings": {
+            "perturbation": "mask_centre_y_offset"
+          }
+        },
+        {
+          "capture_id": "F6_future_carrier_frequency_offset",
+          "capture_kind": "manual_observation",
+          "status": "planned_future_calibration",
+          "implementation": "not_implemented_in_current_stage",
+          "settings": {
+            "perturbation": "carrier_frequency_offset"
+          }
+        },
+        {
+          "capture_id": "F6_future_axicon_x_offset",
+          "capture_kind": "manual_observation",
+          "status": "planned_future_calibration",
+          "implementation": "not_implemented_in_current_stage",
+          "settings": {
+            "perturbation": "axicon_x_offset"
+          }
+        },
+        {
+          "capture_id": "F6_future_axicon_y_offset",
+          "capture_kind": "manual_observation",
+          "status": "planned_future_calibration",
+          "implementation": "not_implemented_in_current_stage",
+          "settings": {
+            "perturbation": "axicon_y_offset"
+          }
+        }
+      ]
+    }
+  ]
+}

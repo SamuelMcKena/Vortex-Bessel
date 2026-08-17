@@ -1,0 +1,4 @@
+level,quadrature_order_r,quadrature_order_phi,angular_sample_count,intensity_correlation_to_high,feature_radius_um,longitudinal_power_fraction,correlation_change_from_previous,feature_radius_relative_change_from_previous,longitudinal_absolute_change_from_previous,meets_predeclared_change_limits
+low,24,72,1728,0.999999574302697,0.6562499999999997,0.04938534472358634,,,,
+medium,32,96,3072,0.999999592948098,0.6562499999999997,0.04938372815538499,4.8536780261621004e-08,0.0,1.6165682013499771e-06,True
+high,48,144,6912,1.0,0.6562499999999997,0.04947044849664054,4.0705190196277385e-07,0.0,8.672034125555006e-05,True

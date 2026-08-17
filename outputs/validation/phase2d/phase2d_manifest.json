@@ -1,0 +1,117 @@
+{
+  "phase": "PHASE 2D",
+  "outcome": "PHASE2D-B",
+  "generated_artifacts": [
+    "calibration/templates/beam_radius_measurement_template.csv",
+    "calibration/templates/camera_scale_template.csv",
+    "calibration/templates/canonical_lab_calibration_template.json",
+    "calibration/templates/energy_transmission_template.csv",
+    "calibration/templates/material_interface_template.csv",
+    "calibration/templates/objective_relay_template.csv",
+    "calibration/templates/slm_phase_lut_template.csv",
+    "outputs/figures/phase2d/calibrated_vs_uncalibrated/h1_calibration_state_comparison.pdf",
+    "outputs/figures/phase2d/calibrated_vs_uncalibrated/h1_calibration_state_comparison.png",
+    "outputs/figures/phase2d/calibration_readiness.pdf",
+    "outputs/figures/phase2d/calibration_readiness.png",
+    "outputs/figures/phase2d/solver_policy_matrix.pdf",
+    "outputs/figures/phase2d/solver_policy_matrix.png",
+    "outputs/figures/phase2d/uncertainty_summary/synthetic_full_uncertainty.pdf",
+    "outputs/figures/phase2d/uncertainty_summary/synthetic_full_uncertainty.png",
+    "outputs/validation/phase2d/calibration_dependency_graph.csv",
+    "outputs/validation/phase2d/calibration_readiness.json",
+    "outputs/validation/phase2d/canonical_case_summary.csv",
+    "outputs/validation/phase2d/claim_maturity_registry.csv",
+    "outputs/validation/phase2d/phase2d_claim_registry.csv",
+    "outputs/validation/phase2d/phase2d_outcome_report.json",
+    "outputs/validation/phase2d/solver_claim_policy.csv",
+    "outputs/validation/phase2d/synthetic_bundles/full_synthetic_validation.json",
+    "outputs/validation/phase2d/synthetic_bundles/partial_synthetic_validation.json",
+    "outputs/validation/phase2d/uncertainty_validation.csv"
+  ],
+  "figure_manifest": [
+    {
+      "figure_id": "calibration_readiness",
+      "png_path": "C:\\PhD\\Code\\Publication_Study\\outputs\\figures\\phase2d\\calibration_readiness.png",
+      "pdf_path": "C:\\PhD\\Code\\Publication_Study\\outputs\\figures\\phase2d\\calibration_readiness.pdf"
+    },
+    {
+      "figure_id": "solver_policy_matrix",
+      "png_path": "C:\\PhD\\Code\\Publication_Study\\outputs\\figures\\phase2d\\solver_policy_matrix.png",
+      "pdf_path": "C:\\PhD\\Code\\Publication_Study\\outputs\\figures\\phase2d\\solver_policy_matrix.pdf"
+    },
+    {
+      "figure_id": "synthetic_uncertainty_summary",
+      "png_path": "C:\\PhD\\Code\\Publication_Study\\outputs\\figures\\phase2d\\uncertainty_summary\\synthetic_full_uncertainty.png",
+      "pdf_path": "C:\\PhD\\Code\\Publication_Study\\outputs\\figures\\phase2d\\uncertainty_summary\\synthetic_full_uncertainty.pdf"
+    },
+    {
+      "figure_id": "h1_calibration_state_comparison",
+      "png_path": "C:\\PhD\\Code\\Publication_Study\\outputs\\figures\\phase2d\\calibrated_vs_uncalibrated\\h1_calibration_state_comparison.png",
+      "pdf_path": "C:\\PhD\\Code\\Publication_Study\\outputs\\figures\\phase2d\\calibrated_vs_uncalibrated\\h1_calibration_state_comparison.pdf"
+    }
+  ],
+  "upstream_hashes_before": {
+    "outputs/validation/phase1_critical_repairs/phase1_repair_summary.json": "5856da7fc324a45bc10d518f4e8051ab9342ec68df24bd23db43287fbe80a0f6",
+    "outputs/validation/phase1_reconciliation/phase1r_regeneration_manifest.json": "74cd4f0741a90c2b6d509e21920356dc055b597df28ad3e7efdb3c2e75ae45cf",
+    "outputs/validation/phase2a/canonical_hardware_manifest.json": "f5400c6ff8d1fdb735903a29b13309f36b7aaa36f6f37e55a5c5a6581615013c",
+    "outputs/validation/phase2a/canonical_case_summary.csv": "ddf2c6738e24c1f596e369f94c0dd6bea2fd9352714fcda7887ef280fd130421",
+    "outputs/validation/phase2a/canonical_power_ledgers.csv": "89dea98ce4b72e6e81b639e7fbd226b45c60246b314db0a3c4ab85879ebf759a",
+    "outputs/figures/phase2b_visual_diagnostics/00_manifests/phase2b_final_manifest.json": "2a895d43db087a44175f4ef04ab3f2c1cc92bd6c8ff587050e1a9b78a9b7f882",
+    "outputs/validation/phase2c/phase2c_objective_benchmark.csv": "65e54328b66065a0f66202d0ea56b80dc2e9960d639522a7aebb4e84628811d8",
+    "outputs/validation/phase2c/phase2c_interface_benchmark.csv": "73afd7ac1fcbea17919281048d24053c93936034e6a2bd962c88f74e8587162a",
+    "outputs/validation/phase2c/phase2c_outcome_report.json": "04a4098fbd8d68ee6f80b54a2c09baadb3be286912f0b7113df15124c2b14c4a"
+  },
+  "upstream_hashes_after": {
+    "outputs/validation/phase1_critical_repairs/phase1_repair_summary.json": "5856da7fc324a45bc10d518f4e8051ab9342ec68df24bd23db43287fbe80a0f6",
+    "outputs/validation/phase1_reconciliation/phase1r_regeneration_manifest.json": "74cd4f0741a90c2b6d509e21920356dc055b597df28ad3e7efdb3c2e75ae45cf",
+    "outputs/validation/phase2a/canonical_hardware_manifest.json": "f5400c6ff8d1fdb735903a29b13309f36b7aaa36f6f37e55a5c5a6581615013c",
+    "outputs/validation/phase2a/canonical_case_summary.csv": "ddf2c6738e24c1f596e369f94c0dd6bea2fd9352714fcda7887ef280fd130421",
+    "outputs/validation/phase2a/canonical_power_ledgers.csv": "89dea98ce4b72e6e81b639e7fbd226b45c60246b314db0a3c4ab85879ebf759a",
+    "outputs/figures/phase2b_visual_diagnostics/00_manifests/phase2b_final_manifest.json": "2a895d43db087a44175f4ef04ab3f2c1cc92bd6c8ff587050e1a9b78a9b7f882",
+    "outputs/validation/phase2c/phase2c_objective_benchmark.csv": "65e54328b66065a0f66202d0ea56b80dc2e9960d639522a7aebb4e84628811d8",
+    "outputs/validation/phase2c/phase2c_interface_benchmark.csv": "73afd7ac1fcbea17919281048d24053c93936034e6a2bd962c88f74e8587162a",
+    "outputs/validation/phase2c/phase2c_outcome_report.json": "04a4098fbd8d68ee6f80b54a2c09baadb3be286912f0b7113df15124c2b14c4a"
+  },
+  "upstream_hashes_unchanged": true,
+  "output_hashes": {
+    "calibration/templates/canonical_lab_calibration_template.json": "602b976059b590f4ebec84cfbcd581b70669555e90ce5ae3a20e534e18a590ca",
+    "calibration/templates/beam_radius_measurement_template.csv": "3b43eb2fbe508c46b8c607db3b833242aab5449330f2ca6d8d3d33f59ef18069",
+    "calibration/templates/energy_transmission_template.csv": "a44db5fc4a5208c7dd3c93af782193d81e6a4f6d29d0f73c443cae97b05036e9",
+    "calibration/templates/slm_phase_lut_template.csv": "03808fd000a8ea13a24ef05894301e0f6c69c3d33ca86f8727573d5780f7ab10",
+    "calibration/templates/camera_scale_template.csv": "c5dad2c667306ccfa970499aaaf13019dca41c4cd169e479551dcc09c4937217",
+    "calibration/templates/objective_relay_template.csv": "540c83722e74736abeb1476f8b95dedaffc7b6847199b4fbe422215a928885dc",
+    "calibration/templates/material_interface_template.csv": "e28b2720cf057232a13fcdb416a0fb69e41268771d96d6142cd940bb0da58185",
+    "outputs/validation/phase2d/synthetic_bundles/partial_synthetic_validation.json": "63344d57f2612e88352334deeb24baa1dd719c158f87b0b2ef2649d49e42f8cb",
+    "outputs/validation/phase2d/synthetic_bundles/full_synthetic_validation.json": "64dd9527edd29b24d6270b0867fddfd388b2f5783b922245367f6a49feeeda7e",
+    "outputs/validation/phase2d/solver_claim_policy.csv": "271f01a4221f64e5ac33fcca4608edd15a55053d5adaddba767a78d25d8d73ad",
+    "outputs/validation/phase2d/calibration_dependency_graph.csv": "2b2efd3dd5cc809f122246ba700c681a112fb0766471fb2684898a0e8068eace",
+    "outputs/validation/phase2d/calibration_readiness.json": "f61a089641ad3e5a76bafa450734c71384c2db488f939d291cc1ece331b23cef",
+    "outputs/validation/phase2d/canonical_case_summary.csv": "bc26b9a07d641e8781d927d0f18c635fbe553401507a2974546b7be18f88c5e5",
+    "outputs/validation/phase2d/uncertainty_validation.csv": "1c1e23013bb17399bcf948f6b3f3042a34061a0e440dfae1ec2bcfd77a3c4b14",
+    "outputs/validation/phase2d/claim_maturity_registry.csv": "737c0c09850f6f3fbe06a61582534fa83b9b7744ef111e9f8bb8a950df08a5cb",
+    "outputs/validation/phase2d/phase2d_claim_registry.csv": "4c84d3113d1defdc7c1af3b178040e1c1cab5ee1a7d96447dbe963ec9aeea5f5",
+    "outputs/figures/phase2d/calibration_readiness.png": "5267d40b1adce5186ac1e666b77aebaf52805b115bd82bd487367a41eee3210e",
+    "outputs/figures/phase2d/calibration_readiness.pdf": "496561bf8c54b726d30fe4bdfcc39d2c914894998b1a67e5e2f78918df989a32",
+    "outputs/figures/phase2d/solver_policy_matrix.png": "7556a308962fbdd13263674064a8ed786cfa2b44d0a03b81a4854f5d6d79d1e0",
+    "outputs/figures/phase2d/solver_policy_matrix.pdf": "97db4f93c9b5defa2394bde2a8716ae4302abe6eb4aaa0e46b3d2508509ae879",
+    "outputs/figures/phase2d/uncertainty_summary/synthetic_full_uncertainty.png": "6809f3323b05a01a7ea95d17c99439b34c8198daa587ce843e6ca62c9bfb7af1",
+    "outputs/figures/phase2d/uncertainty_summary/synthetic_full_uncertainty.pdf": "cb13607f8ca68db97bcc719f41e0421cd7e89792396d5dcdf36024ea268b751c",
+    "outputs/figures/phase2d/calibrated_vs_uncalibrated/h1_calibration_state_comparison.png": "d47435d160af5a223d6ab9410d7a7a1bbb67dc7e03619452fcda1a79ab8f86c3",
+    "outputs/figures/phase2d/calibrated_vs_uncalibrated/h1_calibration_state_comparison.pdf": "8544a34af70fbfae34a7c86722e8f8bff0c829ef7fd36d93f720ab7bc57a8135",
+    "outputs/validation/phase2d/phase2d_outcome_report.json": "fa6242917d3f7e18c8509c35f314b2dc31bf86dcaf410ffd23bf41c66a209375"
+  },
+  "accepted_upstream_outputs_overwritten": false,
+  "phase2c_solver_outputs_recomputed": false,
+  "synthetic_results_experimentally_validated": false,
+  "source_files": [
+    "vbb_study/solver_policy.py",
+    "vbb_study/calibration/schema.py",
+    "vbb_study/calibration/io.py",
+    "vbb_study/calibration/validation.py",
+    "vbb_study/calibration/uncertainty.py",
+    "vbb_study/digital_twin/phase2d_canonical_pipeline.py",
+    "vbb_study/digital_twin/phase2d_figures.py",
+    "tools/validate_calibration_bundle.py",
+    "tools/run_phase2d_calibration_bridge.py"
+  ]
+}

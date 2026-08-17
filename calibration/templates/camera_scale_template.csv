@@ -1,0 +1,2 @@
+measurement_id,timestamp_utc,known_spacing_m,u_known_spacing_m,delta_pixels,u_delta_pixels,object_plane_scale_m_per_pixel,u_scale_m_per_pixel,rotation_deg,u_rotation_deg,source_file_sha256,operator,data_classification
+,,,,,,,,,,,,laboratory_measurement

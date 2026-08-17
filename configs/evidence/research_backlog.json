@@ -1,0 +1,1203 @@
+{
+  "stage": "9A.3",
+  "status": "verified_seed_integrated_open_validation_layers",
+  "priority_vocabulary": [
+    "P0",
+    "P1",
+    "P2",
+    "P3"
+  ],
+  "time_horizon_vocabulary": [
+    "immediate",
+    "pre_4f_model",
+    "pre_inverse_correction",
+    "pre_fused_silica_pilot",
+    "later_research"
+  ],
+  "items": [
+    {
+      "research_id": "P0_SLM_SPEC",
+      "title": "Actual SLM make/model, pitch, active area, resolution, orientation",
+      "priority": "P0",
+      "time_horizon": "immediate",
+      "linked_claim_ids": [
+        "phase_only_slm_mask_generation",
+        "phase_quantisation_and_grayscale_export"
+      ],
+      "linked_code_paths": [
+        "vbb_study/equations/holography.py",
+        "vbb_study/digital_twin/cslm_route.py",
+        "vbb_study/digital_twin/slm_calibration_masks.py"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "SLM geometry and phase response are placeholders.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "SLM datasheets/LUTs",
+      "bench_data_needed": "orientation and displayed active area",
+      "recommended_search_terms": [
+        "LCOS SLM 1030 nm pixel pitch phase response"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "manufacturer specification pack plus bench orientation note",
+      "what_code_or_lab_stage_it_unblocks": "Level C physical 4F readiness",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": "Level-C",
+      "required_evidence_layers": [
+        "manufacturer_specification",
+        "bench_measurement",
+        "peer_reviewed_primary_source"
+      ],
+      "concrete_next_deliverable": "manufacturer datasheet for actual SLM model plus bench orientation measurement",
+      "next_deliverable_type": "manufacturer_datasheet"
+    },
+    {
+      "research_id": "P0_SLM_PHASE",
+      "title": "SLM phase response and polarisation requirement at 1030 nm",
+      "priority": "P0",
+      "time_horizon": "immediate",
+      "linked_claim_ids": [
+        "phase_only_slm_mask_generation",
+        "phase_quantisation_and_grayscale_export"
+      ],
+      "linked_code_paths": [
+        "vbb_study/equations/holography.py",
+        "vbb_study/digital_twin/cslm_route.py",
+        "vbb_study/digital_twin/slm_calibration_masks.py"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "Grayscale command is not yet calibrated to phase.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "phase stroke, polarisation",
+      "bench_data_needed": "grayscale-phase or diffraction curve",
+      "recommended_search_terms": [
+        "LCOS SLM phase calibration 1030 nm diffraction efficiency"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "phase-response calibration plan and first measurement",
+      "what_code_or_lab_stage_it_unblocks": "SLM command trust boundary",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": "Level-C",
+      "required_evidence_layers": [
+        "manufacturer_specification",
+        "bench_measurement",
+        "peer_reviewed_primary_source"
+      ],
+      "concrete_next_deliverable": "bench measurement of 1030 nm grayscale-to-phase or diffraction-efficiency response",
+      "next_deliverable_type": "bench_measurement"
+    },
+    {
+      "research_id": "P0_LENS_GEOMETRY",
+      "title": "Lens focal lengths, clear apertures, coatings, and real positions",
+      "priority": "P0",
+      "time_horizon": "immediate",
+      "linked_claim_ids": [
+        "physical_fourier_filtering_future_route"
+      ],
+      "linked_code_paths": [
+        "vbb_study/digital_twin/cslm_route.py",
+        "vbb_study/digital_twin/bench_inventory.py"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "4F lens geometry is declaration only.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "lens specs/coatings",
+      "bench_data_needed": "lens positions",
+      "recommended_search_terms": [
+        "finite aperture 4F optical system scalar diffraction"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "measured lens table",
+      "what_code_or_lab_stage_it_unblocks": "initial scalar 4F model",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": "Level-C",
+      "required_evidence_layers": [
+        "manufacturer_specification",
+        "bench_measurement",
+        "targeted_literature_search"
+      ],
+      "concrete_next_deliverable": "manufacturer datasheet plus bench measurement of lens positions and apertures",
+      "next_deliverable_type": "manufacturer_datasheet_and_bench_measurement"
+    },
+    {
+      "research_id": "P0_CARRIER_MAPPING",
+      "title": "Carrier command to Fourier-plane order-position mapping",
+      "priority": "P0",
+      "time_horizon": "immediate",
+      "linked_claim_ids": [
+        "command_domain_carrier_grating",
+        "physical_fourier_filtering_future_route"
+      ],
+      "linked_code_paths": [
+        "vbb_study/digital_twin/slm_calibration_masks.py",
+        "configs/studies/cslm_fourier_carrier_calibration_minimal_v1.json",
+        "vbb_study/digital_twin/cslm_route.py",
+        "vbb_study/digital_twin/bench_inventory.py"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "Command cycles are not yet physical Fourier-plane coordinates.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "order positions versus carrier cycles",
+      "recommended_search_terms": [
+        "pixelated spatial light modulator zero order Fourier filtering"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "first Fourier-plane carrier sweep dataset",
+      "what_code_or_lab_stage_it_unblocks": "Fourier-plane mapping",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": "Level-C",
+      "required_evidence_layers": [
+        "bench_measurement",
+        "peer_reviewed_primary_source",
+        "manufacturer_specification",
+        "targeted_literature_search"
+      ],
+      "concrete_next_deliverable": "downstream carrier-stop response dataset now; direct Fourier-plane mapping only with temporary Fourier-plane access",
+      "next_deliverable_type": "first_carrier_session_image_dataset"
+    },
+    {
+      "research_id": "P0_FOURIER_STOP",
+      "title": "Fourier-stop geometry, centre, radius, and adjustment convention",
+      "priority": "P0",
+      "time_horizon": "immediate",
+      "linked_claim_ids": [
+        "physical_fourier_filtering_future_route"
+      ],
+      "linked_code_paths": [
+        "vbb_study/digital_twin/cslm_route.py",
+        "vbb_study/digital_twin/bench_inventory.py"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "Stop model cannot be placed without measured geometry.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "stop/mount specs",
+      "bench_data_needed": "centre/radius scans",
+      "recommended_search_terms": [
+        "Fourier plane spatial filter SLM first order"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "stop-centre/radius measurement log",
+      "what_code_or_lab_stage_it_unblocks": "selected-order 4F model",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": "Level-C",
+      "required_evidence_layers": [
+        "manufacturer_specification",
+        "bench_measurement",
+        "targeted_literature_search"
+      ],
+      "concrete_next_deliverable": "bench measurement of Fourier-stop centre, radius, and adjustment convention",
+      "next_deliverable_type": "bench_measurement"
+    },
+    {
+      "research_id": "P0_CAMERA",
+      "title": "Camera pixel pitch, magnification, orientation, linearity, saturation",
+      "priority": "P0",
+      "time_horizon": "immediate",
+      "linked_claim_ids": [
+        "camera_coordinate_calibration",
+        "camera_z_stack_acquisition"
+      ],
+      "linked_code_paths": [
+        "vbb_study/digital_twin/measured_image_metrics.py",
+        "docs/42_calibration_acquisition_and_measured_data_ingestion.md",
+        "vbb_study/digital_twin/calibration_acquisition.py",
+        "configs/studies/cslm_physical_axicon_calibration_campaign_v1.json"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "Pixel metrics cannot be physical metrics yet.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "sensor pixel pitch/bit depth",
+      "bench_data_needed": "magnification/orientation/linearity",
+      "recommended_search_terms": [
+        "camera annular beam profiling z stack calibration"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "camera calibration sheet",
+      "what_code_or_lab_stage_it_unblocks": "measured-to-model comparison",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": "Level-D",
+      "required_evidence_layers": [
+        "manufacturer_specification",
+        "bench_measurement"
+      ],
+      "concrete_next_deliverable": "manufacturer datasheet plus bench measurement of scale, orientation, and linearity",
+      "next_deliverable_type": "manufacturer_datasheet_and_bench_measurement"
+    },
+    {
+      "research_id": "P0_AXICON",
+      "title": "Physical axicon specification, aperture, orientation, and bench position",
+      "priority": "P0",
+      "time_horizon": "immediate",
+      "linked_claim_ids": [
+        "physical_axicon_bessel_conversion",
+        "physical_axicon_aperture_and_decentre"
+      ],
+      "linked_code_paths": [
+        "vbb_study/digital_twin/route_aware_axicon.py",
+        "vbb_study/digital_twin/cslm_route.py"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "Benchmark uses demo axicon parameters until measured.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "axicon angle/aperture/apex",
+      "bench_data_needed": "position/orientation",
+      "recommended_search_terms": [
+        "physical axicon decentration tilt Bessel beam tolerance"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "axicon spec and alignment log",
+      "what_code_or_lab_stage_it_unblocks": "post-axicon z-stack validation",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": "Level-D",
+      "required_evidence_layers": [
+        "manufacturer_specification",
+        "bench_measurement",
+        "targeted_literature_search"
+      ],
+      "concrete_next_deliverable": "manufacturer datasheet plus bench measurement of physical axicon pose",
+      "next_deliverable_type": "manufacturer_datasheet_and_bench_measurement"
+    },
+    {
+      "research_id": "P0_INPUT_BEAM",
+      "title": "Input beam size, ellipticity, centring, and polarisation at relevant planes",
+      "priority": "P0",
+      "time_horizon": "immediate",
+      "linked_claim_ids": [
+        "slm1_to_slm2_propagation",
+        "energy_and_fluence_accounting"
+      ],
+      "linked_code_paths": [
+        "vbb_study/digital_twin/cslm_route.py",
+        "vbb_study/digital_twin/energy_accounting.py",
+        "vbb_study/digital_twin/field_fluence.py"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "Source field is demo geometry.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "beam size/centering/polarisation",
+      "recommended_search_terms": [
+        "Gaussian beam measurement SLM plane polarisation"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "beam profiling sheet",
+      "what_code_or_lab_stage_it_unblocks": "route-normalised simulation comparison",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": "Level-D",
+      "required_evidence_layers": [
+        "bench_measurement",
+        "targeted_literature_search",
+        "declared_assumption_or_placeholder"
+      ],
+      "concrete_next_deliverable": "bench measurement of beam size, centring, ellipticity, and polarisation",
+      "next_deliverable_type": "bench_measurement"
+    },
+    {
+      "research_id": "P1_BLASM",
+      "title": "BL-ASM/ASM sampling validity for carrier, aperture, and distances",
+      "priority": "P1",
+      "time_horizon": "pre_4f_model",
+      "linked_claim_ids": [
+        "angular_spectrum_or_bl_asm_propagation",
+        "finite_sampling_and_aliasing_control"
+      ],
+      "linked_code_paths": [
+        "vbb_study/equations/propagation.py",
+        "vbb_study/digital_twin/component_plane_pipeline.py",
+        "vbb_study/digital_twin/slm_calibration_masks.py"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "Need source-backed validity criteria.",
+      "literature_needed": "primary BL-ASM/sampling references",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "band limited angular spectrum propagation aliasing finite aperture"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "validated sampling memo",
+      "what_code_or_lab_stage_it_unblocks": "publication simulation claim",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "peer_reviewed_primary_source",
+        "manufacturer_specification",
+        "bench_measurement"
+      ],
+      "concrete_next_deliverable": "validated sampling memo",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "P1_4F_MODEL",
+      "title": "Finite-aperture thin-lens / 4F modelling",
+      "priority": "P1",
+      "time_horizon": "pre_4f_model",
+      "linked_claim_ids": [
+        "physical_fourier_filtering_future_route"
+      ],
+      "linked_code_paths": [
+        "vbb_study/digital_twin/cslm_route.py",
+        "vbb_study/digital_twin/bench_inventory.py"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "No component-owned lens model exists.",
+      "literature_needed": "Fourier optics primary/textbook sources",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "finite aperture thin lens Fourier optics 4F scalar propagation"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "4F model design note",
+      "what_code_or_lab_stage_it_unblocks": "Stage 9B physical 4F implementation",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "peer_reviewed_primary_source",
+        "targeted_literature_search",
+        "manufacturer_specification",
+        "bench_measurement"
+      ],
+      "concrete_next_deliverable": "4F model design note",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "P1_SLM_DIFFRACTION",
+      "title": "Pixelated SLM diffraction and zero-order behaviour",
+      "priority": "P1",
+      "time_horizon": "pre_4f_model",
+      "linked_claim_ids": [
+        "pixelated_slm_zero_order_and_unwanted_orders"
+      ],
+      "linked_code_paths": [
+        "vbb_study/digital_twin/cslm_route.py",
+        "vbb_study/digital_twin/slm_calibration_masks.py"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "Order power split unknown.",
+      "literature_needed": "SLM diffraction papers",
+      "manufacturer_data_needed": "fill factor/reflectivity",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "pixelated spatial light modulator zero order Fourier filtering"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "order-efficiency evidence plan",
+      "what_code_or_lab_stage_it_unblocks": "4F throughput model",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "peer_reviewed_primary_source",
+        "manufacturer_specification",
+        "bench_measurement"
+      ],
+      "concrete_next_deliverable": "order-efficiency evidence plan",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "P1_PHASE_QUANT",
+      "title": "Phase quantisation and calibration effects",
+      "priority": "P1",
+      "time_horizon": "pre_4f_model",
+      "linked_claim_ids": [
+        "phase_quantisation_and_grayscale_export"
+      ],
+      "linked_code_paths": [
+        "vbb_study/equations/holography.py",
+        "vbb_study/digital_twin/slm_calibration_masks.py"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "Quantisation exists but physical response unverified.",
+      "literature_needed": "SLM calibration primary sources",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "LCOS SLM phase calibration 1030 nm diffraction efficiency"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "phase quantisation sensitivity note",
+      "what_code_or_lab_stage_it_unblocks": "SLM mask publication method",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "peer_reviewed_primary_source",
+        "manufacturer_specification",
+        "bench_measurement"
+      ],
+      "concrete_next_deliverable": "phase quantisation sensitivity note",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "P1_AXICON_TOL",
+      "title": "Axicon tolerance, decentre, tilt, apex quality, and aperture behaviour",
+      "priority": "P1",
+      "time_horizon": "pre_4f_model",
+      "linked_claim_ids": [
+        "physical_axicon_aperture_and_decentre"
+      ],
+      "linked_code_paths": [
+        "vbb_study/digital_twin/route_aware_axicon.py"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "Tolerance model needs literature/manufacturer context.",
+      "literature_needed": "axicon tolerance papers",
+      "manufacturer_data_needed": "apex/angle tolerances",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "physical axicon decentration tilt Bessel beam tolerance"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "axicon tolerance register",
+      "what_code_or_lab_stage_it_unblocks": "alignment tolerance claim",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "peer_reviewed_primary_source",
+        "manufacturer_specification",
+        "targeted_literature_search",
+        "bench_measurement"
+      ],
+      "concrete_next_deliverable": "axicon tolerance register",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "P1_CAMERA_PROFILING",
+      "title": "Camera-based annular beam profiling and z-stack metrology",
+      "priority": "P1",
+      "time_horizon": "pre_4f_model",
+      "linked_claim_ids": [
+        "ring_centre_radius_dark_core_and_uniformity_metrics",
+        "camera_z_stack_acquisition"
+      ],
+      "linked_code_paths": [
+        "vbb_study/digital_twin/annular_axis_tracking.py",
+        "vbb_study/digital_twin/measured_image_metrics.py",
+        "vbb_study/digital_twin/calibration_acquisition.py",
+        "configs/studies/cslm_physical_axicon_calibration_campaign_v1.json"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "Metric reliability needs metrology backing.",
+      "literature_needed": "beam profiling/metrology sources",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "camera based annular beam profiling z-stack metrology"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "metric validity memo",
+      "what_code_or_lab_stage_it_unblocks": "measured validation figures",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "peer_reviewed_primary_source",
+        "targeted_literature_search",
+        "bench_measurement"
+      ],
+      "concrete_next_deliverable": "metric validity memo",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "P2_PHASE_RETRIEVAL",
+      "title": "Multi-plane phase retrieval",
+      "priority": "P2",
+      "time_horizon": "pre_inverse_correction",
+      "linked_claim_ids": [
+        "multi_plane_phase_retrieval_future"
+      ],
+      "linked_code_paths": [
+        "docs/42_calibration_acquisition_and_measured_data_ingestion.md"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "No phase retrieval implemented.",
+      "literature_needed": "phase retrieval primary papers",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "multi plane phase retrieval vortex Bessel beam intensity z stack"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "algorithm literature review",
+      "what_code_or_lab_stage_it_unblocks": "future phase reconstruction",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "peer_reviewed_primary_source",
+        "bench_measurement"
+      ],
+      "concrete_next_deliverable": "algorithm literature review",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "P2_PHASE_DIVERSITY",
+      "title": "Phase-diversity wavefront sensing",
+      "priority": "P2",
+      "time_horizon": "pre_inverse_correction",
+      "linked_claim_ids": [
+        "effective_aberration_inference_future"
+      ],
+      "linked_code_paths": [
+        "docs/42_calibration_acquisition_and_measured_data_ingestion.md"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "No phase-diversity inference implemented.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "phase diversity Zernike aberration estimation spatial light modulator correction"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "phase-diversity feasibility note",
+      "what_code_or_lab_stage_it_unblocks": "future effective aberration inference",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "peer_reviewed_primary_source",
+        "bench_measurement"
+      ],
+      "concrete_next_deliverable": "phase-diversity feasibility note",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "P2_IDENTIFIABILITY",
+      "title": "Effective aberration versus component-root-cause identifiability",
+      "priority": "P2",
+      "time_horizon": "pre_inverse_correction",
+      "linked_claim_ids": [
+        "effective_aberration_inference_future"
+      ],
+      "linked_code_paths": [
+        "docs/42_calibration_acquisition_and_measured_data_ingestion.md"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "Need to know what can be inferred from intensity-only data.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "identifiability aberration inference intensity z stack"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "identifiability risk register",
+      "what_code_or_lab_stage_it_unblocks": "safe correction claims",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "peer_reviewed_primary_source",
+        "bench_measurement"
+      ],
+      "concrete_next_deliverable": "identifiability risk register",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "P2_ZERNIKE_BASIS",
+      "title": "Zernike basis and normalisation",
+      "priority": "P2",
+      "time_horizon": "pre_inverse_correction",
+      "linked_claim_ids": [
+        "zernike_or_phase_conjugate_correction_future"
+      ],
+      "linked_code_paths": [
+        "vbb_study/digital_twin/control_contract.py",
+        "docs/40_editable_hardware_geometry_contract.md"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "Basis conventions must be locked before correction.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "Zernike polynomial normalisation optical aberration correction"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "basis convention doc",
+      "what_code_or_lab_stage_it_unblocks": "phase-correction route",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "peer_reviewed_primary_source",
+        "manufacturer_specification",
+        "bench_measurement"
+      ],
+      "concrete_next_deliverable": "basis convention doc",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "P2_SLM_CONJ",
+      "title": "SLM conjugate-phase correction",
+      "priority": "P2",
+      "time_horizon": "pre_inverse_correction",
+      "linked_claim_ids": [
+        "zernike_or_phase_conjugate_correction_future"
+      ],
+      "linked_code_paths": [
+        "vbb_study/digital_twin/control_contract.py",
+        "docs/40_editable_hardware_geometry_contract.md"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "No correction map is validated.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "SLM conjugate phase correction aberration compensation"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "correction validation plan",
+      "what_code_or_lab_stage_it_unblocks": "future SLM correction stage",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "peer_reviewed_primary_source",
+        "manufacturer_specification",
+        "bench_measurement"
+      ],
+      "concrete_next_deliverable": "correction validation plan",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "P2_SENSORLESS",
+      "title": "Sensorless optimisation",
+      "priority": "P2",
+      "time_horizon": "pre_inverse_correction",
+      "linked_claim_ids": [
+        "zernike_or_phase_conjugate_correction_future"
+      ],
+      "linked_code_paths": [
+        "vbb_study/digital_twin/control_contract.py",
+        "docs/40_editable_hardware_geometry_contract.md"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "No optimisation loop exists.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "sensorless adaptive optics spatial light modulator optimisation"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "sensorless optimisation literature note",
+      "what_code_or_lab_stage_it_unblocks": "future adaptive optimisation",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "peer_reviewed_primary_source",
+        "manufacturer_specification",
+        "bench_measurement"
+      ],
+      "concrete_next_deliverable": "sensorless optimisation literature note",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "P2_NEURAL",
+      "title": "Synthetic-to-real training and uncertainty for neural estimators",
+      "priority": "P2",
+      "time_horizon": "later_research",
+      "linked_claim_ids": [
+        "neural_fast_estimator_future"
+      ],
+      "linked_code_paths": [
+        "docs/42_calibration_acquisition_and_measured_data_ingestion.md"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "No dataset or uncertainty model exists.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "synthetic to real optical alignment neural estimator uncertainty"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "AI feasibility note",
+      "what_code_or_lab_stage_it_unblocks": "optional future estimator",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "targeted_literature_search",
+        "bench_measurement"
+      ],
+      "concrete_next_deliverable": "AI feasibility note",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "P3_FS_REGIMES",
+      "title": "Fused-silica internal modification regimes",
+      "priority": "P3",
+      "time_horizon": "pre_fused_silica_pilot",
+      "linked_claim_ids": [
+        "fused_silica_bessel_channel_or_tgv_future",
+        "fused_silica_welding_future"
+      ],
+      "linked_code_paths": [
+        "configs/materials/fused_silica_evidence_template.json",
+        "docs/44_code_to_evidence_audit.md",
+        "vbb_study/equations/capsule_geometry.py"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "No fused-silica process evidence in repo.",
+      "literature_needed": "primary fused-silica fs processing papers",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "femtosecond laser fused silica Bessel beam channel drilling"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "fused-silica literature table",
+      "what_code_or_lab_stage_it_unblocks": "pilot parameter window",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "peer_reviewed_primary_source",
+        "bench_measurement"
+      ],
+      "concrete_next_deliverable": "fused-silica literature table",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "P3_FS_INTERFACE",
+      "title": "Bessel/vortex-Bessel propagation at the sample interface",
+      "priority": "P3",
+      "time_horizon": "pre_fused_silica_pilot",
+      "linked_claim_ids": [
+        "fused_silica_bessel_channel_or_tgv_future",
+        "fused_silica_waveguide_future",
+        "fused_silica_welding_future"
+      ],
+      "linked_code_paths": [
+        "configs/materials/fused_silica_evidence_template.json",
+        "docs/44_code_to_evidence_audit.md",
+        "vbb_study/equations/capsule_geometry.py"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "No sample-interface model is active.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "fused silica Bessel beam interface aberration femtosecond"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "interface research note",
+      "what_code_or_lab_stage_it_unblocks": "sample-entry claim boundary",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "peer_reviewed_primary_source",
+        "bench_measurement",
+        "targeted_literature_search"
+      ],
+      "concrete_next_deliverable": "interface research note",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "P3_TGV",
+      "title": "TGV/channel formation and etching",
+      "priority": "P3",
+      "time_horizon": "pre_fused_silica_pilot",
+      "linked_claim_ids": [
+        "fused_silica_bessel_channel_or_tgv_future"
+      ],
+      "linked_code_paths": [
+        "configs/materials/fused_silica_evidence_template.json",
+        "docs/44_code_to_evidence_audit.md"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "TGV etch response is not modelled.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "femtosecond laser fused silica Bessel beam channel drilling etching"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "TGV evidence plan",
+      "what_code_or_lab_stage_it_unblocks": "TGV pilot design",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "peer_reviewed_primary_source",
+        "bench_measurement"
+      ],
+      "concrete_next_deliverable": "TGV evidence plan",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "P3_WAVEGUIDE",
+      "title": "Waveguide-writing regimes and characterisation",
+      "priority": "P3",
+      "time_horizon": "pre_fused_silica_pilot",
+      "linked_claim_ids": [
+        "fused_silica_waveguide_future"
+      ],
+      "linked_code_paths": [
+        "configs/materials/fused_silica_evidence_template.json",
+        "docs/44_code_to_evidence_audit.md"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "Waveguide outcomes are not predicted.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "ultrafast laser fused silica waveguide Bessel beam writing"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "waveguide evidence plan",
+      "what_code_or_lab_stage_it_unblocks": "waveguide pilot criteria",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "targeted_literature_search",
+        "bench_measurement"
+      ],
+      "concrete_next_deliverable": "waveguide evidence plan",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "P3_WELDING",
+      "title": "Ultrafast glass welding / symmetric weld-feature conditions",
+      "priority": "P3",
+      "time_horizon": "pre_fused_silica_pilot",
+      "linked_claim_ids": [
+        "fused_silica_welding_future",
+        "capsule_or_weld_feature_geometry_branch"
+      ],
+      "linked_code_paths": [
+        "configs/materials/fused_silica_evidence_template.json",
+        "docs/44_code_to_evidence_audit.md",
+        "vbb_study/equations/capsule_geometry.py",
+        "vbb_study/publication/capsule.py",
+        "notebooks/advanced/01_capsule_weld_feature_design.ipynb"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "Weld-feature branch is geometry only.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "femtosecond laser fused silica glass welding Bessel beam"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "welding evidence plan",
+      "what_code_or_lab_stage_it_unblocks": "future weld-feature claim",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "peer_reviewed_primary_source",
+        "bench_measurement",
+        "declared_assumption_or_placeholder"
+      ],
+      "concrete_next_deliverable": "welding evidence plan",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "LEGACY_CRZNSE",
+      "title": "CrZnSe legacy materials proxy work",
+      "priority": "P3",
+      "time_horizon": "later_research",
+      "linked_claim_ids": [
+        "legacy_crznse_material_proxy_branch"
+      ],
+      "linked_code_paths": [
+        "vbb_study/equations/materials.py",
+        "vbb_study/config.py",
+        "notebooks/materials/01_material_proxy_fluence_and_thresholds.ipynb"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "Retained but excluded from fused-silica decisions.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "CrZnSe femtosecond laser waveguide writing threshold"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "legacy separation note",
+      "what_code_or_lab_stage_it_unblocks": "no immediate lab path dependency",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "targeted_literature_search",
+        "declared_assumption_or_placeholder"
+      ],
+      "concrete_next_deliverable": "legacy separation note",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "LEGACY_VECTOR",
+      "title": "Vector beams and Jones modelling",
+      "priority": "P3",
+      "time_horizon": "later_research",
+      "linked_claim_ids": [
+        "vector_beam_branch"
+      ],
+      "linked_code_paths": [
+        "vbb_study/equations/vector_jones.py",
+        "vbb_study/publication/vector.py",
+        "notebooks/vector/01_vector_beam_theory_atlas.ipynb"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "Optional vector branch not needed for scalar campaign.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "Jones vector beam spatial light modulator"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "optional vector review",
+      "what_code_or_lab_stage_it_unblocks": "future vector extension",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "targeted_literature_search"
+      ],
+      "concrete_next_deliverable": "optional vector review",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "LEGACY_POLYGONAL",
+      "title": "Hexagonal / polygonal / discrete beam studies",
+      "priority": "P3",
+      "time_horizon": "later_research",
+      "linked_claim_ids": [
+        "hexagonal_polygonal_discrete_beam_branch"
+      ],
+      "linked_code_paths": [
+        "vbb_study/equations/polygonal.py",
+        "vbb_study/studies/polygonal_cases.py",
+        "notebooks/advanced/03_discrete_nfold_beams.ipynb"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "Exploratory branch not needed for first lab calibration.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "polygonal Bessel beams discrete n-fold beams"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "optional beam-shaping review",
+      "what_code_or_lab_stage_it_unblocks": "advanced studies only",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "declared_assumption_or_placeholder"
+      ],
+      "concrete_next_deliverable": "optional beam-shaping review",
+      "next_deliverable_type": "documented_evidence_artifact"
+    },
+    {
+      "research_id": "LEGACY_CAPSULE",
+      "title": "Capsule and weld-feature geometry studies",
+      "priority": "P3",
+      "time_horizon": "later_research",
+      "linked_claim_ids": [
+        "capsule_or_weld_feature_geometry_branch"
+      ],
+      "linked_code_paths": [
+        "vbb_study/equations/capsule_geometry.py",
+        "vbb_study/publication/capsule.py",
+        "notebooks/advanced/01_capsule_weld_feature_design.ipynb"
+      ],
+      "why_the_code_needs_this": "Moves the labelled assumption from placeholder/search-needed to measured or source-verified evidence.",
+      "current_gap": "Geometry proxy not material physics.",
+      "literature_needed": "",
+      "manufacturer_data_needed": "",
+      "bench_data_needed": "",
+      "recommended_search_terms": [
+        "ultrafast laser glass welding feature geometry"
+      ],
+      "suggested_primary_source_types": [
+        "peer-reviewed primary paper",
+        "manufacturer datasheet",
+        "bench measurement log"
+      ],
+      "expected_deliverable": "optional geometry review",
+      "what_code_or_lab_stage_it_unblocks": "future material-calibrated design",
+      "what_claim_it_makes_possible": "A narrower simulation or bench-validation claim with explicit evidence provenance.",
+      "owner": "project",
+      "status": "not_started",
+      "readiness_blocker_level": null,
+      "required_evidence_layers": [
+        "declared_assumption_or_placeholder"
+      ],
+      "concrete_next_deliverable": "optional geometry review",
+      "next_deliverable_type": "documented_evidence_artifact"
+    }
+  ]
+}

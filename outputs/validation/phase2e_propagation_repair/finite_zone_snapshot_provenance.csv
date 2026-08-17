@@ -1,0 +1,19 @@
+case_id,snapshot_role,z_m,physical_crop_halfwidth_m,source_method,native_dx_m,metrics_from_snapshot
+B0,before formation,0.016000000000000007,0.0005,native_full_plane,1.953125e-05,False
+B0,early useful,0.03550000000000002,0.0005,sas_pad_1,3.6529500000000016e-06,False
+B0,central useful,0.06925000000000005,0.0005,sas_pad_3,2.3752750000000016e-06,False
+B0,late useful,0.10300000000000008,0.0005,sas_pad_4,2.6496750000000023e-06,False
+B0,after measured breakdown,0.10350000000000008,0.0005,sas_pad_4,2.662537500000002e-06,False
+B0,final plane,0.18,0.0005,sas_pad_4,4.6305e-06,False
+V1,before formation,0.015500000000000005,0.0005,native_full_plane,1.953125e-05,False
+V1,early useful,0.05850000000000004,0.0005,sas_pad_3,2.0065500000000016e-06,False
+V1,central useful,0.08075000000000006,0.0005,sas_pad_4,2.0772937500000013e-06,False
+V1,late useful,0.10300000000000008,0.0005,sas_pad_4,2.6496750000000023e-06,False
+V1,after measured breakdown,0.10350000000000008,0.0005,sas_pad_4,2.662537500000002e-06,False
+V1,final plane,0.18,0.0005,sas_pad_4,4.6305e-06,False
+V3,before formation,0.01,0.0005,native_full_plane,1.953125e-05,False
+V3,early useful,0.02,0.0005,sas_pad_1,2.058e-06,False
+V3,central useful,0.06175000000000004,0.0005,sas_pad_3,2.1180250000000016e-06,False
+V3,late useful,0.10350000000000008,0.0005,sas_pad_4,2.662537500000002e-06,False
+V3,after measured breakdown,0.10400000000000008,0.0005,sas_pad_4,2.675400000000002e-06,False
+V3,final plane,0.18,0.0005,sas_pad_4,4.6305e-06,False

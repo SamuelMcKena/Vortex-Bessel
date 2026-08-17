@@ -1,0 +1,181 @@
+requested_mode,selected_objective_solver,selected_interface_solver,claim_type,reason,scalar_allowed,vector_required,calibration_required,metric_reference_solver,beam_case,request_status
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,global_transverse_morphology,Phase 2C permits scalar screening for G0 global_transverse_morphology.,True,False,False,scalar_fft,G0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,global_transverse_morphology,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,False,vector_debye,G0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,global_transverse_morphology,Phase 2C permits scalar screening for G0 global_transverse_morphology.,True,False,False,scalar_fft,G0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,feature_radius,Phase 2C permits scalar screening for G0 feature_radius.,True,False,True,scalar_fft,G0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,feature_radius,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,G0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,feature_radius,Phase 2C permits scalar screening for G0 feature_radius.,True,False,True,scalar_fft,G0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,ring_radius,Phase 2C permits scalar screening for G0 ring_radius.,True,False,True,scalar_fft,G0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,ring_radius,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,G0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,ring_radius,Phase 2C permits scalar screening for G0 ring_radius.,True,False,True,scalar_fft,G0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,peak_location,Phase 2C permits scalar screening for G0 peak_location.,True,False,True,scalar_fft,G0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,peak_location,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,G0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,peak_location,Phase 2C permits scalar screening for G0 peak_location.,True,False,True,scalar_fft,G0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,edge_sharpness,Phase 2C permits scalar screening for G0 edge_sharpness.,True,False,True,scalar_fft,G0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,edge_sharpness,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,G0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,edge_sharpness,Phase 2C permits scalar screening for G0 edge_sharpness.,True,False,True,scalar_fft,G0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,ridge_width,Phase 2C permits scalar screening for G0 ridge_width.,True,False,True,scalar_fft,G0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,ridge_width,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,G0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,ridge_width,Phase 2C permits scalar screening for G0 ridge_width.,True,False,True,scalar_fft,G0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,transition_width,Phase 2C permits scalar screening for G0 transition_width.,True,False,True,scalar_fft,G0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,transition_width,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,G0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,transition_width,Phase 2C permits scalar screening for G0 transition_width.,True,False,True,scalar_fft,G0,allowed
+fast_scalar_screening,,,longitudinal_field,G0/longitudinal_field requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,False,,G0,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,longitudinal_field,Phase 2C requires a vector reference for G0 longitudinal_field.,False,True,False,vector_debye,G0,allowed
+automatic_by_claim,vector_debye,vector_spectral_fresnel,longitudinal_field,Phase 2C requires a vector reference for G0 longitudinal_field.,False,True,False,vector_debye,G0,allowed
+fast_scalar_screening,,,polarisation_component,G0/polarisation_component requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,False,,G0,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,polarisation_component,Phase 2C requires a vector reference for G0 polarisation_component.,False,True,False,vector_debye,G0,allowed
+automatic_by_claim,vector_debye,vector_spectral_fresnel,polarisation_component,Phase 2C requires a vector reference for G0 polarisation_component.,False,True,False,vector_debye,G0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,interface_power,Phase 2C permits scalar screening for G0 interface_power.,True,False,False,scalar_fft,G0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,interface_power,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,False,vector_debye,G0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,interface_power,Phase 2C permits scalar screening for G0 interface_power.,True,False,False,scalar_fft,G0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,absolute_dimensions,Phase 2C permits scalar screening for G0 absolute_dimensions.,True,False,True,scalar_fft,G0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,absolute_dimensions,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,G0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,absolute_dimensions,Phase 2C permits scalar screening for G0 absolute_dimensions.,True,False,True,scalar_fft,G0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,absolute_fluence,Phase 2C permits scalar screening for G0 absolute_fluence.,True,False,True,scalar_fft,G0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,absolute_fluence,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,G0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,absolute_fluence,Phase 2C permits scalar screening for G0 absolute_fluence.,True,False,True,scalar_fft,G0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,global_transverse_morphology,Phase 2C permits scalar screening for B0 global_transverse_morphology.,True,False,False,scalar_fft,B0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,global_transverse_morphology,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,False,vector_debye,B0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,global_transverse_morphology,Phase 2C permits scalar screening for B0 global_transverse_morphology.,True,False,False,scalar_fft,B0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,feature_radius,Phase 2C permits scalar screening for B0 feature_radius.,True,False,True,scalar_fft,B0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,feature_radius,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,B0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,feature_radius,Phase 2C permits scalar screening for B0 feature_radius.,True,False,True,scalar_fft,B0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,ring_radius,Phase 2C permits scalar screening for B0 ring_radius.,True,False,True,scalar_fft,B0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,ring_radius,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,B0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,ring_radius,Phase 2C permits scalar screening for B0 ring_radius.,True,False,True,scalar_fft,B0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,peak_location,Phase 2C permits scalar screening for B0 peak_location.,True,False,True,scalar_fft,B0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,peak_location,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,B0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,peak_location,Phase 2C permits scalar screening for B0 peak_location.,True,False,True,scalar_fft,B0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,edge_sharpness,Phase 2C permits scalar screening for B0 edge_sharpness.,True,False,True,scalar_fft,B0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,edge_sharpness,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,B0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,edge_sharpness,Phase 2C permits scalar screening for B0 edge_sharpness.,True,False,True,scalar_fft,B0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,ridge_width,Phase 2C permits scalar screening for B0 ridge_width.,True,False,True,scalar_fft,B0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,ridge_width,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,B0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,ridge_width,Phase 2C permits scalar screening for B0 ridge_width.,True,False,True,scalar_fft,B0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,transition_width,Phase 2C permits scalar screening for B0 transition_width.,True,False,True,scalar_fft,B0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,transition_width,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,B0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,transition_width,Phase 2C permits scalar screening for B0 transition_width.,True,False,True,scalar_fft,B0,allowed
+fast_scalar_screening,,,longitudinal_field,B0/longitudinal_field requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,False,,B0,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,longitudinal_field,Phase 2C requires a vector reference for B0 longitudinal_field.,False,True,False,vector_debye,B0,allowed
+automatic_by_claim,vector_debye,vector_spectral_fresnel,longitudinal_field,Phase 2C requires a vector reference for B0 longitudinal_field.,False,True,False,vector_debye,B0,allowed
+fast_scalar_screening,,,polarisation_component,B0/polarisation_component requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,False,,B0,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,polarisation_component,Phase 2C requires a vector reference for B0 polarisation_component.,False,True,False,vector_debye,B0,allowed
+automatic_by_claim,vector_debye,vector_spectral_fresnel,polarisation_component,Phase 2C requires a vector reference for B0 polarisation_component.,False,True,False,vector_debye,B0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,interface_power,Phase 2C permits scalar screening for B0 interface_power.,True,False,False,scalar_fft,B0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,interface_power,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,False,vector_debye,B0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,interface_power,Phase 2C permits scalar screening for B0 interface_power.,True,False,False,scalar_fft,B0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,absolute_dimensions,Phase 2C permits scalar screening for B0 absolute_dimensions.,True,False,True,scalar_fft,B0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,absolute_dimensions,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,B0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,absolute_dimensions,Phase 2C permits scalar screening for B0 absolute_dimensions.,True,False,True,scalar_fft,B0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,absolute_fluence,Phase 2C permits scalar screening for B0 absolute_fluence.,True,False,True,scalar_fft,B0,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,absolute_fluence,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,B0,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,absolute_fluence,Phase 2C permits scalar screening for B0 absolute_fluence.,True,False,True,scalar_fft,B0,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,global_transverse_morphology,Phase 2C permits scalar screening for V1 global_transverse_morphology.,True,False,False,scalar_fft,V1,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,global_transverse_morphology,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,False,vector_debye,V1,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,global_transverse_morphology,Phase 2C permits scalar screening for V1 global_transverse_morphology.,True,False,False,scalar_fft,V1,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,feature_radius,Phase 2C permits scalar screening for V1 feature_radius.,True,False,True,scalar_fft,V1,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,feature_radius,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,V1,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,feature_radius,Phase 2C permits scalar screening for V1 feature_radius.,True,False,True,scalar_fft,V1,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,ring_radius,Phase 2C preserved vortex ring radius under both models; the reported value must name its scalar or vector reference.,True,False,True,scalar_fft,V1,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,ring_radius,Phase 2C preserved vortex ring radius under both models; the reported value must name its scalar or vector reference.,True,False,True,vector_debye,V1,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,ring_radius,Phase 2C preserved vortex ring radius under both models; the reported value must name its scalar or vector reference.,True,False,True,scalar_fft,V1,allowed
+fast_scalar_screening,,,peak_location,V1/peak_location requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,True,,V1,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,peak_location,Phase 2C requires a vector reference for V1 peak_location.,False,True,True,vector_debye,V1,allowed
+automatic_by_claim,vector_debye,scalar_normal_incidence_fresnel,peak_location,Phase 2C requires a vector reference for V1 peak_location.,False,True,True,vector_debye,V1,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,edge_sharpness,Phase 2C permits scalar screening for V1 edge_sharpness.,True,False,True,scalar_fft,V1,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,edge_sharpness,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,V1,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,edge_sharpness,Phase 2C permits scalar screening for V1 edge_sharpness.,True,False,True,scalar_fft,V1,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,ridge_width,Phase 2C permits scalar screening for V1 ridge_width.,True,False,True,scalar_fft,V1,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,ridge_width,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,V1,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,ridge_width,Phase 2C permits scalar screening for V1 ridge_width.,True,False,True,scalar_fft,V1,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,transition_width,Phase 2C permits scalar screening for V1 transition_width.,True,False,True,scalar_fft,V1,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,transition_width,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,V1,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,transition_width,Phase 2C permits scalar screening for V1 transition_width.,True,False,True,scalar_fft,V1,allowed
+fast_scalar_screening,,,longitudinal_field,V1/longitudinal_field requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,False,,V1,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,longitudinal_field,Phase 2C requires a vector reference for V1 longitudinal_field.,False,True,False,vector_debye,V1,allowed
+automatic_by_claim,vector_debye,vector_spectral_fresnel,longitudinal_field,Phase 2C requires a vector reference for V1 longitudinal_field.,False,True,False,vector_debye,V1,allowed
+fast_scalar_screening,,,polarisation_component,V1/polarisation_component requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,False,,V1,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,polarisation_component,Phase 2C requires a vector reference for V1 polarisation_component.,False,True,False,vector_debye,V1,allowed
+automatic_by_claim,vector_debye,vector_spectral_fresnel,polarisation_component,Phase 2C requires a vector reference for V1 polarisation_component.,False,True,False,vector_debye,V1,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,interface_power,Phase 2C permits scalar screening for V1 interface_power.,True,False,False,scalar_fft,V1,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,interface_power,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,False,vector_debye,V1,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,interface_power,Phase 2C permits scalar screening for V1 interface_power.,True,False,False,scalar_fft,V1,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,absolute_dimensions,Phase 2C permits scalar screening for V1 absolute_dimensions.,True,False,True,scalar_fft,V1,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,absolute_dimensions,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,V1,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,absolute_dimensions,Phase 2C permits scalar screening for V1 absolute_dimensions.,True,False,True,scalar_fft,V1,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,absolute_fluence,Phase 2C permits scalar screening for V1 absolute_fluence.,True,False,True,scalar_fft,V1,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,absolute_fluence,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,V1,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,absolute_fluence,Phase 2C permits scalar screening for V1 absolute_fluence.,True,False,True,scalar_fft,V1,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,global_transverse_morphology,Phase 2C permits scalar screening for V3 global_transverse_morphology.,True,False,False,scalar_fft,V3,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,global_transverse_morphology,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,False,vector_debye,V3,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,global_transverse_morphology,Phase 2C permits scalar screening for V3 global_transverse_morphology.,True,False,False,scalar_fft,V3,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,feature_radius,Phase 2C permits scalar screening for V3 feature_radius.,True,False,True,scalar_fft,V3,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,feature_radius,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,V3,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,feature_radius,Phase 2C permits scalar screening for V3 feature_radius.,True,False,True,scalar_fft,V3,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,ring_radius,Phase 2C preserved vortex ring radius under both models; the reported value must name its scalar or vector reference.,True,False,True,scalar_fft,V3,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,ring_radius,Phase 2C preserved vortex ring radius under both models; the reported value must name its scalar or vector reference.,True,False,True,vector_debye,V3,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,ring_radius,Phase 2C preserved vortex ring radius under both models; the reported value must name its scalar or vector reference.,True,False,True,scalar_fft,V3,allowed
+fast_scalar_screening,,,peak_location,V3/peak_location requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,True,,V3,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,peak_location,Phase 2C requires a vector reference for V3 peak_location.,False,True,True,vector_debye,V3,allowed
+automatic_by_claim,vector_debye,scalar_normal_incidence_fresnel,peak_location,Phase 2C requires a vector reference for V3 peak_location.,False,True,True,vector_debye,V3,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,edge_sharpness,Phase 2C permits scalar screening for V3 edge_sharpness.,True,False,True,scalar_fft,V3,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,edge_sharpness,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,V3,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,edge_sharpness,Phase 2C permits scalar screening for V3 edge_sharpness.,True,False,True,scalar_fft,V3,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,ridge_width,Phase 2C permits scalar screening for V3 ridge_width.,True,False,True,scalar_fft,V3,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,ridge_width,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,V3,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,ridge_width,Phase 2C permits scalar screening for V3 ridge_width.,True,False,True,scalar_fft,V3,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,transition_width,Phase 2C permits scalar screening for V3 transition_width.,True,False,True,scalar_fft,V3,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,transition_width,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,V3,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,transition_width,Phase 2C permits scalar screening for V3 transition_width.,True,False,True,scalar_fft,V3,allowed
+fast_scalar_screening,,,longitudinal_field,V3/longitudinal_field requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,False,,V3,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,longitudinal_field,Phase 2C requires a vector reference for V3 longitudinal_field.,False,True,False,vector_debye,V3,allowed
+automatic_by_claim,vector_debye,vector_spectral_fresnel,longitudinal_field,Phase 2C requires a vector reference for V3 longitudinal_field.,False,True,False,vector_debye,V3,allowed
+fast_scalar_screening,,,polarisation_component,V3/polarisation_component requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,False,,V3,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,polarisation_component,Phase 2C requires a vector reference for V3 polarisation_component.,False,True,False,vector_debye,V3,allowed
+automatic_by_claim,vector_debye,vector_spectral_fresnel,polarisation_component,Phase 2C requires a vector reference for V3 polarisation_component.,False,True,False,vector_debye,V3,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,interface_power,Phase 2C permits scalar screening for V3 interface_power.,True,False,False,scalar_fft,V3,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,interface_power,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,False,vector_debye,V3,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,interface_power,Phase 2C permits scalar screening for V3 interface_power.,True,False,False,scalar_fft,V3,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,absolute_dimensions,Phase 2C permits scalar screening for V3 absolute_dimensions.,True,False,True,scalar_fft,V3,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,absolute_dimensions,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,V3,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,absolute_dimensions,Phase 2C permits scalar screening for V3 absolute_dimensions.,True,False,True,scalar_fft,V3,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,absolute_fluence,Phase 2C permits scalar screening for V3 absolute_fluence.,True,False,True,scalar_fft,V3,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,absolute_fluence,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,True,vector_debye,V3,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,absolute_fluence,Phase 2C permits scalar screening for V3 absolute_fluence.,True,False,True,scalar_fft,V3,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,global_transverse_morphology,Phase 2C permits scalar screening for H1 global_transverse_morphology.,True,False,False,scalar_fft,H1,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,global_transverse_morphology,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,False,vector_debye,H1,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,global_transverse_morphology,Phase 2C permits scalar screening for H1 global_transverse_morphology.,True,False,False,scalar_fft,H1,allowed
+fast_scalar_screening,,,feature_radius,H1/feature_radius requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,True,,H1,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,feature_radius,Phase 2C requires a vector reference for H1 feature_radius.,False,True,True,vector_debye,H1,allowed
+automatic_by_claim,vector_debye,scalar_normal_incidence_fresnel,feature_radius,Phase 2C requires a vector reference for H1 feature_radius.,False,True,True,vector_debye,H1,allowed
+fast_scalar_screening,,,ring_radius,H1/ring_radius requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,True,,H1,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,ring_radius,Phase 2C requires a vector reference for H1 ring_radius.,False,True,True,vector_debye,H1,allowed
+automatic_by_claim,vector_debye,scalar_normal_incidence_fresnel,ring_radius,Phase 2C requires a vector reference for H1 ring_radius.,False,True,True,vector_debye,H1,allowed
+fast_scalar_screening,,,peak_location,H1/peak_location requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,True,,H1,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,peak_location,Phase 2C requires a vector reference for H1 peak_location.,False,True,True,vector_debye,H1,allowed
+automatic_by_claim,vector_debye,scalar_normal_incidence_fresnel,peak_location,Phase 2C requires a vector reference for H1 peak_location.,False,True,True,vector_debye,H1,allowed
+fast_scalar_screening,,,edge_sharpness,H1/edge_sharpness requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,True,,H1,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,edge_sharpness,Phase 2C requires a vector reference for H1 edge_sharpness.,False,True,True,vector_debye,H1,allowed
+automatic_by_claim,vector_debye,scalar_normal_incidence_fresnel,edge_sharpness,Phase 2C requires a vector reference for H1 edge_sharpness.,False,True,True,vector_debye,H1,allowed
+fast_scalar_screening,,,ridge_width,H1/ridge_width requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,True,,H1,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,ridge_width,Phase 2C requires a vector reference for H1 ridge_width.,False,True,True,vector_debye,H1,allowed
+automatic_by_claim,vector_debye,scalar_normal_incidence_fresnel,ridge_width,Phase 2C requires a vector reference for H1 ridge_width.,False,True,True,vector_debye,H1,allowed
+fast_scalar_screening,,,transition_width,H1/transition_width requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,True,,H1,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,transition_width,Phase 2C requires a vector reference for H1 transition_width.,False,True,True,vector_debye,H1,allowed
+automatic_by_claim,vector_debye,scalar_normal_incidence_fresnel,transition_width,Phase 2C requires a vector reference for H1 transition_width.,False,True,True,vector_debye,H1,allowed
+fast_scalar_screening,,,longitudinal_field,H1/longitudinal_field requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,False,,H1,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,longitudinal_field,Phase 2C requires a vector reference for H1 longitudinal_field.,False,True,False,vector_debye,H1,allowed
+automatic_by_claim,vector_debye,vector_spectral_fresnel,longitudinal_field,Phase 2C requires a vector reference for H1 longitudinal_field.,False,True,False,vector_debye,H1,allowed
+fast_scalar_screening,,,polarisation_component,H1/polarisation_component requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,False,,H1,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,polarisation_component,Phase 2C requires a vector reference for H1 polarisation_component.,False,True,False,vector_debye,H1,allowed
+automatic_by_claim,vector_debye,vector_spectral_fresnel,polarisation_component,Phase 2C requires a vector reference for H1 polarisation_component.,False,True,False,vector_debye,H1,allowed
+fast_scalar_screening,scalar_fft,scalar_normal_incidence_fresnel,interface_power,Phase 2C permits scalar screening for H1 interface_power.,True,False,False,scalar_fft,H1,allowed
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,interface_power,The requested quantitative-vector mode explicitly selects the validated Debye reference.,True,False,False,vector_debye,H1,allowed
+automatic_by_claim,scalar_fft,scalar_normal_incidence_fresnel,interface_power,Phase 2C permits scalar screening for H1 interface_power.,True,False,False,scalar_fft,H1,allowed
+fast_scalar_screening,,,absolute_dimensions,H1/absolute_dimensions requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,True,,H1,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,absolute_dimensions,Phase 2C requires a vector reference for H1 absolute_dimensions.,False,True,True,vector_debye,H1,allowed
+automatic_by_claim,vector_debye,scalar_normal_incidence_fresnel,absolute_dimensions,Phase 2C requires a vector reference for H1 absolute_dimensions.,False,True,True,vector_debye,H1,allowed
+fast_scalar_screening,,,absolute_fluence,H1/absolute_fluence requires the quantitative vector reference; fast scalar screening is not eligible for this claim,False,True,True,,H1,forbidden_lower_fidelity
+quantitative_vector_reference,vector_debye,vector_spectral_fresnel,absolute_fluence,Phase 2C requires a vector reference for H1 absolute_fluence.,False,True,True,vector_debye,H1,allowed
+automatic_by_claim,vector_debye,scalar_normal_incidence_fresnel,absolute_fluence,Phase 2C requires a vector reference for H1 absolute_fluence.,False,True,True,vector_debye,H1,allowed

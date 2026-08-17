@@ -1,0 +1,95 @@
+claim_type,required_measurement,required_or_optional,current_status,current_source,blocks_claim,notes
+global_transverse_morphology,none,not_applicable,ready_without_calibration,Phase 2C solver evidence,False,Relative morphology only.
+feature_radius,laser.wavelength_m,required,available,manufacturer,False,Optical length scale.
+feature_radius,fourier_filter.focal_length_m,required,missing_or_uncalibrated,assumed,True,Measured 4F pupil mapping geometry.
+feature_radius,fourier_filter.iris_radius_m,required,missing_or_uncalibrated,calibration_required,True,Measured selected-order spatial support.
+feature_radius,objective.numerical_aperture,required,available,manufacturer,False,Focal spatial-frequency support.
+feature_radius,objective.focal_length_m,required,missing_or_uncalibrated,calibration_required,True,Objective focal geometry.
+feature_radius,objective.effective_pupil_radius_m,required,missing_or_uncalibrated,calibration_required,True,Effective rather than nominal pupil.
+feature_radius,objective.pupil_fill_fraction,required,missing_or_uncalibrated,calibration_required,True,Measured pupil fill controls focal detail.
+feature_radius,relay.magnification,required,missing_or_uncalibrated,calibration_required,True,Maps objective and observation planes.
+feature_radius,camera.object_plane_scale_m_per_pixel,required,missing_or_uncalibrated,calibration_required,True,Measured object-plane image scale.
+ring_radius,laser.wavelength_m,required,available,manufacturer,False,Optical length scale.
+ring_radius,fourier_filter.focal_length_m,required,missing_or_uncalibrated,assumed,True,Measured 4F pupil mapping geometry.
+ring_radius,fourier_filter.iris_radius_m,required,missing_or_uncalibrated,calibration_required,True,Measured selected-order spatial support.
+ring_radius,objective.numerical_aperture,required,available,manufacturer,False,Focal spatial-frequency support.
+ring_radius,objective.focal_length_m,required,missing_or_uncalibrated,calibration_required,True,Objective focal geometry.
+ring_radius,objective.effective_pupil_radius_m,required,missing_or_uncalibrated,calibration_required,True,Effective rather than nominal pupil.
+ring_radius,objective.pupil_fill_fraction,required,missing_or_uncalibrated,calibration_required,True,Measured pupil fill controls focal detail.
+ring_radius,relay.magnification,required,missing_or_uncalibrated,calibration_required,True,Maps objective and observation planes.
+ring_radius,camera.object_plane_scale_m_per_pixel,required,missing_or_uncalibrated,calibration_required,True,Measured object-plane image scale.
+peak_location,laser.wavelength_m,required,available,manufacturer,False,Optical length scale.
+peak_location,fourier_filter.focal_length_m,required,missing_or_uncalibrated,assumed,True,Measured 4F pupil mapping geometry.
+peak_location,fourier_filter.iris_radius_m,required,missing_or_uncalibrated,calibration_required,True,Measured selected-order spatial support.
+peak_location,objective.numerical_aperture,required,available,manufacturer,False,Focal spatial-frequency support.
+peak_location,objective.focal_length_m,required,missing_or_uncalibrated,calibration_required,True,Objective focal geometry.
+peak_location,objective.effective_pupil_radius_m,required,missing_or_uncalibrated,calibration_required,True,Effective rather than nominal pupil.
+peak_location,objective.pupil_fill_fraction,required,missing_or_uncalibrated,calibration_required,True,Measured pupil fill controls focal detail.
+peak_location,relay.magnification,required,missing_or_uncalibrated,calibration_required,True,Maps objective and observation planes.
+peak_location,camera.object_plane_scale_m_per_pixel,required,missing_or_uncalibrated,calibration_required,True,Measured object-plane image scale.
+edge_sharpness,laser.wavelength_m,required,available,manufacturer,False,Optical length scale.
+edge_sharpness,fourier_filter.focal_length_m,required,missing_or_uncalibrated,assumed,True,Measured 4F pupil mapping geometry.
+edge_sharpness,fourier_filter.iris_radius_m,required,missing_or_uncalibrated,calibration_required,True,Measured selected-order spatial support.
+edge_sharpness,objective.numerical_aperture,required,available,manufacturer,False,Focal spatial-frequency support.
+edge_sharpness,objective.focal_length_m,required,missing_or_uncalibrated,calibration_required,True,Objective focal geometry.
+edge_sharpness,objective.effective_pupil_radius_m,required,missing_or_uncalibrated,calibration_required,True,Effective rather than nominal pupil.
+edge_sharpness,objective.pupil_fill_fraction,required,missing_or_uncalibrated,calibration_required,True,Measured pupil fill controls focal detail.
+edge_sharpness,relay.magnification,required,missing_or_uncalibrated,calibration_required,True,Maps objective and observation planes.
+edge_sharpness,camera.object_plane_scale_m_per_pixel,required,missing_or_uncalibrated,calibration_required,True,Measured object-plane image scale.
+ridge_width,laser.wavelength_m,required,available,manufacturer,False,Optical length scale.
+ridge_width,fourier_filter.focal_length_m,required,missing_or_uncalibrated,assumed,True,Measured 4F pupil mapping geometry.
+ridge_width,fourier_filter.iris_radius_m,required,missing_or_uncalibrated,calibration_required,True,Measured selected-order spatial support.
+ridge_width,objective.numerical_aperture,required,available,manufacturer,False,Focal spatial-frequency support.
+ridge_width,objective.focal_length_m,required,missing_or_uncalibrated,calibration_required,True,Objective focal geometry.
+ridge_width,objective.effective_pupil_radius_m,required,missing_or_uncalibrated,calibration_required,True,Effective rather than nominal pupil.
+ridge_width,objective.pupil_fill_fraction,required,missing_or_uncalibrated,calibration_required,True,Measured pupil fill controls focal detail.
+ridge_width,relay.magnification,required,missing_or_uncalibrated,calibration_required,True,Maps objective and observation planes.
+ridge_width,camera.object_plane_scale_m_per_pixel,required,missing_or_uncalibrated,calibration_required,True,Measured object-plane image scale.
+transition_width,laser.wavelength_m,required,available,manufacturer,False,Optical length scale.
+transition_width,fourier_filter.focal_length_m,required,missing_or_uncalibrated,assumed,True,Measured 4F pupil mapping geometry.
+transition_width,fourier_filter.iris_radius_m,required,missing_or_uncalibrated,calibration_required,True,Measured selected-order spatial support.
+transition_width,objective.numerical_aperture,required,available,manufacturer,False,Focal spatial-frequency support.
+transition_width,objective.focal_length_m,required,missing_or_uncalibrated,calibration_required,True,Objective focal geometry.
+transition_width,objective.effective_pupil_radius_m,required,missing_or_uncalibrated,calibration_required,True,Effective rather than nominal pupil.
+transition_width,objective.pupil_fill_fraction,required,missing_or_uncalibrated,calibration_required,True,Measured pupil fill controls focal detail.
+transition_width,relay.magnification,required,missing_or_uncalibrated,calibration_required,True,Maps objective and observation planes.
+transition_width,camera.object_plane_scale_m_per_pixel,required,missing_or_uncalibrated,calibration_required,True,Measured object-plane image scale.
+longitudinal_field,laser.wavelength_m,required,available,manufacturer,False,Vector Debye wavelength.
+longitudinal_field,objective.numerical_aperture,required,available,manufacturer,False,Sets longitudinal coupling.
+longitudinal_field,objective.pupil_fill_fraction,required,missing_or_uncalibrated,calibration_required,True,Sets illuminated angular support.
+polarisation_component,laser.wavelength_m,required,available,manufacturer,False,Vector propagation wavelength.
+polarisation_component,objective.numerical_aperture,required,available,manufacturer,False,Vector objective geometry.
+polarisation_component,objective.pupil_fill_fraction,required,missing_or_uncalibrated,calibration_required,True,Illuminated vector pupil.
+interface_power,laser.wavelength_m,required,available,manufacturer,False,Interface wavelength.
+interface_power,material.refractive_index,required,missing_or_uncalibrated,placeholder,True,Fresnel material binding.
+interface_power,material.coating_state,required,missing_or_uncalibrated,supplied,True,Unknown coating changes transmission.
+interface_power,material.surface_orientation_verified,required,missing_or_uncalibrated,supplied,True,Defines the interface normal.
+absolute_dimensions,laser.wavelength_m,required,available,manufacturer,False,Optical length scale.
+absolute_dimensions,fourier_filter.focal_length_m,required,missing_or_uncalibrated,assumed,True,Measured 4F pupil mapping geometry.
+absolute_dimensions,fourier_filter.iris_radius_m,required,missing_or_uncalibrated,calibration_required,True,Measured selected-order spatial support.
+absolute_dimensions,objective.numerical_aperture,required,available,manufacturer,False,Focal spatial-frequency support.
+absolute_dimensions,objective.focal_length_m,required,missing_or_uncalibrated,calibration_required,True,Objective focal geometry.
+absolute_dimensions,objective.effective_pupil_radius_m,required,missing_or_uncalibrated,calibration_required,True,Effective rather than nominal pupil.
+absolute_dimensions,objective.pupil_fill_fraction,required,missing_or_uncalibrated,calibration_required,True,Measured pupil fill controls focal detail.
+absolute_dimensions,relay.magnification,required,missing_or_uncalibrated,calibration_required,True,Maps objective and observation planes.
+absolute_dimensions,camera.object_plane_scale_m_per_pixel,required,missing_or_uncalibrated,calibration_required,True,Measured object-plane image scale.
+absolute_fluence,laser.pulse_energy_J,required,missing_or_uncalibrated,calibration_required,True,Measured incident pulse energy.
+absolute_fluence,camera.object_plane_scale_m_per_pixel,required,missing_or_uncalibrated,calibration_required,True,Physical pixel area.
+absolute_fluence,transmissions.slm1,required,missing_or_uncalibrated,calibration_required,True,Measured once in the power ledger.
+absolute_fluence,transmissions.slm2,required,missing_or_uncalibrated,calibration_required,True,Measured once in the power ledger.
+absolute_fluence,transmissions.four_f,required,missing_or_uncalibrated,calibration_required,True,Common 4F throughput excluding selected-order factor.
+absolute_fluence,transmissions.objective,required,missing_or_uncalibrated,calibration_required,True,Objective throughput.
+absolute_fluence,transmissions.interface,required,missing_or_uncalibrated,calibration_required,True,Interface throughput.
+fourier_filter_geometry,laser.wavelength_m,required,available,manufacturer,False,Carrier displacement wavelength.
+fourier_filter_geometry,fourier_filter.focal_length_m,required,missing_or_uncalibrated,assumed,True,Measured carrier-displacement slope.
+fourier_filter_geometry,fourier_filter.iris_radius_m,required,missing_or_uncalibrated,calibration_required,True,Measured selected-order aperture.
+fourier_filter_geometry,fourier_filter.plus_one_position_m,required,missing_or_uncalibrated,calibration_required,True,Measured selected-order centre.
+slm_phase_fidelity,slm.phase_lut_path,required,missing_or_uncalibrated,missing,True,Wavelength-specific panel LUT.
+slm_phase_fidelity,slm.phase_stroke_rad,required,missing_or_uncalibrated,missing,True,Measured phase stroke.
+slm_phase_fidelity,slm.panel_orientation_verified,required,missing_or_uncalibrated,supplied,True,LC director orientation.
+slm_phase_fidelity,slm.calibration_date,required,missing_or_uncalibrated,missing,True,Calibration provenance date.
+slm_phase_fidelity,laser.wavelength_m,required,available,manufacturer,False,LUT operating wavelength.
+bessel_zone_length,laser.beam_radius_on_slm_m,required,missing_or_uncalibrated,calibration_required,True,Measured input radius.
+bessel_zone_length,axicon.base_angle_deg,required,missing_or_uncalibrated,assumed,True,Measured axicon angle.
+bessel_zone_length,axicon.refractive_index,required,missing_or_uncalibrated,assumed,True,Index at operating wavelength.
+bessel_zone_length,axicon.clear_aperture_m,required,missing_or_uncalibrated,calibration_required,True,Clipping bound.

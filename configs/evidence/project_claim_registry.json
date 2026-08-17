@@ -1,0 +1,2398 @@
+{
+  "stage": "9A.3",
+  "purpose": "verified bibliography integration and multi-layer evidence claim-boundary register",
+  "claim_boundary": "evidence integration only; no new optical propagation, no physical 4F, no camera model, no inverse correction, no AI, no material response",
+  "active_route_components": [
+    "source_field",
+    "input_conditioning_boundary",
+    "SLM1_phase_plane",
+    "SLM1_to_SLM2_segment",
+    "SLM2_phase_plane",
+    "SLM2_to_pre_4F_diagnostic_segment",
+    "post_SLM2_pre_4F_diagnostic_plane",
+    "ideal_selected_order_handoff_plane",
+    "physical_axicon_benchmark_plane",
+    "post_axicon_benchmark_segment",
+    "ideal_axicon_benchmark_reference_plane"
+  ],
+  "code_inventory": [
+    {
+      "item_id": "dt_cslm_route",
+      "path": "vbb_study/digital_twin/cslm_route.py",
+      "classification": "canonical_active",
+      "main_purpose": "component-owned CSLM diagnostic route and opt-in physical-axicon benchmark",
+      "current_route_or_study_relevance": "central scalar CSLM -> future 4F -> physical axicon programme",
+      "imports_or_dependencies_checked": [
+        "tests/test_stage8c3r5_cslm_component_route.py",
+        "tests/test_stage8c3r5_1_cslm_axicon_handoff.py",
+        "notebooks/digital_twin/00_full_beam_to_write_cockpit_MVP.ipynb"
+      ],
+      "affects_current_canonical_execution": true,
+      "affects_current_laboratory_decisions": true,
+      "replacement_or_successor": null,
+      "why_retained": "canonical route declaration and claim boundary",
+      "safe_to_archive_later": false
+    },
+    {
+      "item_id": "dt_4f_readiness_inventory",
+      "path": "vbb_study/digital_twin/bench_inventory.py",
+      "classification": "calibration_infrastructure",
+      "main_purpose": "records measured/placeholder bench inventory and 4F readiness blockers",
+      "current_route_or_study_relevance": "prevents fake physical 4F activation",
+      "imports_or_dependencies_checked": [
+        "tests/test_stage8c3r5_3_bench_inventory_and_4f_readiness.py",
+        "configs/hardware/*.json"
+      ],
+      "affects_current_canonical_execution": false,
+      "affects_current_laboratory_decisions": true,
+      "replacement_or_successor": "measured bench inventory overlay",
+      "why_retained": "level C/D readiness gate",
+      "safe_to_archive_later": false
+    },
+    {
+      "item_id": "dt_stage9a_acquisition",
+      "path": "vbb_study/digital_twin/calibration_acquisition.py",
+      "classification": "calibration_infrastructure",
+      "main_purpose": "calibration campaign packages, immutable raw ingestion, pixel metrics",
+      "current_route_or_study_relevance": "first lab-data acquisition path",
+      "imports_or_dependencies_checked": [
+        "tests/test_stage9a_calibration_acquisition_and_ingestion.py"
+      ],
+      "affects_current_canonical_execution": false,
+      "affects_current_laboratory_decisions": true,
+      "replacement_or_successor": null,
+      "why_retained": "creates acquisition evidence without modelling new physics",
+      "safe_to_archive_later": false
+    },
+    {
+      "item_id": "dt_stage9a1_carrier_masks",
+      "path": "vbb_study/digital_twin/slm_calibration_masks.py",
+      "classification": "calibration_infrastructure",
+      "main_purpose": "command-domain SLM2 carrier masks and first Fourier session pack",
+      "current_route_or_study_relevance": "P0 carrier-to-Fourier-plane mapping",
+      "imports_or_dependencies_checked": [
+        "tests/test_stage9a1_fourier_carrier_session_pack.py"
+      ],
+      "affects_current_canonical_execution": false,
+      "affects_current_laboratory_decisions": true,
+      "replacement_or_successor": "measured carrier mapping",
+      "why_retained": "first physical 4F calibration evidence generator",
+      "safe_to_archive_later": false
+    },
+    {
+      "item_id": "dt_measured_image_metrics",
+      "path": "vbb_study/digital_twin/measured_image_metrics.py",
+      "classification": "calibration_infrastructure",
+      "main_purpose": "pixel-space measured-image metrics with physical-unit gate",
+      "current_route_or_study_relevance": "camera z-stack evidence once acquired",
+      "imports_or_dependencies_checked": [
+        "tests/test_stage9a_calibration_acquisition_and_ingestion.py"
+      ],
+      "affects_current_canonical_execution": false,
+      "affects_current_laboratory_decisions": true,
+      "replacement_or_successor": "calibrated camera comparison after scale/reference relation",
+      "why_retained": "safe pre-calibration image QA",
+      "safe_to_archive_later": false
+    },
+    {
+      "item_id": "equations_propagation_holography",
+      "path": "vbb_study/equations/propagation.py; vbb_study/equations/holography.py",
+      "classification": "canonical_active",
+      "main_purpose": "BL-ASM, phase wrapping, SPP, carrier, quantisation helpers",
+      "current_route_or_study_relevance": "core numerical/phase primitives",
+      "imports_or_dependencies_checked": [
+        "digital_twin route modules",
+        "physics validation tests"
+      ],
+      "affects_current_canonical_execution": true,
+      "affects_current_laboratory_decisions": true,
+      "replacement_or_successor": null,
+      "why_retained": "core active numerical methods",
+      "safe_to_archive_later": false
+    },
+    {
+      "item_id": "notebook_full_cockpit",
+      "path": "notebooks/digital_twin/00_full_beam_to_write_cockpit_MVP.ipynb",
+      "classification": "canonical_supporting",
+      "main_purpose": "visible cockpit, route, calibration, and claim-boundary dashboard",
+      "current_route_or_study_relevance": "human-facing canonical status view",
+      "imports_or_dependencies_checked": [
+        "tests/test_stage8c*_notebook*.py",
+        "tests/test_stage9a2_code_to_evidence_audit.py"
+      ],
+      "affects_current_canonical_execution": false,
+      "affects_current_laboratory_decisions": true,
+      "replacement_or_successor": null,
+      "why_retained": "notebook visibility",
+      "safe_to_archive_later": false
+    },
+    {
+      "item_id": "configs_hardware_and_studies",
+      "path": "configs/hardware/*.json; configs/studies/*.json",
+      "classification": "calibration_infrastructure",
+      "main_purpose": "demo/measured templates and first-session calibration plans",
+      "current_route_or_study_relevance": "evidence capture and readiness gating",
+      "imports_or_dependencies_checked": [
+        "bench_inventory.py",
+        "slm_calibration_masks.py",
+        "calibration_acquisition.py"
+      ],
+      "affects_current_canonical_execution": false,
+      "affects_current_laboratory_decisions": true,
+      "replacement_or_successor": "filled measured bench profiles",
+      "why_retained": "structured source of required inputs",
+      "safe_to_archive_later": false
+    },
+    {
+      "item_id": "materials_proxy_branch",
+      "path": "vbb_study/equations/materials.py; vbb_study/config.py; notebooks/materials/*.ipynb; docs/03_materials_application.md",
+      "classification": "legacy_retained",
+      "main_purpose": "Cr:ZnSe/material planning proxies and threshold-style geometry",
+      "current_route_or_study_relevance": "not part of immediate fused-silica CSLM calibration",
+      "imports_or_dependencies_checked": [
+        "tests/test_stage8a1_literature_anchors.py",
+        "publication/materials.py"
+      ],
+      "affects_current_canonical_execution": false,
+      "affects_current_laboratory_decisions": false,
+      "replacement_or_successor": "future calibrated fused-silica evidence profile",
+      "why_retained": "historical exploratory material-planning context",
+      "safe_to_archive_later": true
+    },
+    {
+      "item_id": "vector_branch",
+      "path": "vbb_study/equations/vector_jones.py; vbb_study/publication/vector.py; notebooks/vector/*.ipynb",
+      "classification": "experimental_development",
+      "main_purpose": "optional vector/Jones beam studies",
+      "current_route_or_study_relevance": "excluded from scalar first lab path",
+      "imports_or_dependencies_checked": [
+        "notebooks/vector/*.ipynb",
+        "publication/vector.py"
+      ],
+      "affects_current_canonical_execution": false,
+      "affects_current_laboratory_decisions": false,
+      "replacement_or_successor": "future vector engine if needed",
+      "why_retained": "exploratory structured-beam branch",
+      "safe_to_archive_later": true
+    },
+    {
+      "item_id": "polygonal_discrete_branch",
+      "path": "vbb_study/equations/polygonal.py; vbb_study/studies/*polygonal*; notebooks/advanced/02_*.ipynb; notebooks/advanced/03_*.ipynb",
+      "classification": "experimental_development",
+      "main_purpose": "polygonal, hexagonal, and discrete N-fold studies",
+      "current_route_or_study_relevance": "not prerequisite for scalar CSLM/4F calibration",
+      "imports_or_dependencies_checked": [
+        "advanced notebooks",
+        "publication/advanced.py"
+      ],
+      "affects_current_canonical_execution": false,
+      "affects_current_laboratory_decisions": false,
+      "replacement_or_successor": null,
+      "why_retained": "optional beam-shaping research",
+      "safe_to_archive_later": true
+    },
+    {
+      "item_id": "capsule_weld_branch",
+      "path": "vbb_study/equations/capsule_geometry.py; vbb_study/publication/capsule.py; notebooks/advanced/01_capsule_weld_feature_design.ipynb",
+      "classification": "experimental_development",
+      "main_purpose": "feature-geometry/capsule/weld planning proxy",
+      "current_route_or_study_relevance": "excluded from immediate optical calibration",
+      "imports_or_dependencies_checked": [
+        "advanced capsule notebook",
+        "publication/capsule.py"
+      ],
+      "affects_current_canonical_execution": false,
+      "affects_current_laboratory_decisions": false,
+      "replacement_or_successor": "future material-calibrated geometry model",
+      "why_retained": "advanced geometry exploratory branch",
+      "safe_to_archive_later": true
+    },
+    {
+      "item_id": "generated_outputs",
+      "path": "outputs/**",
+      "classification": "generated_output",
+      "main_purpose": "figures, CSVs, manifests, calibration packages, pytest scratch",
+      "current_route_or_study_relevance": "evidence/preview outputs only",
+      "imports_or_dependencies_checked": [
+        "figure registry",
+        "tests write under tmp outputs"
+      ],
+      "affects_current_canonical_execution": false,
+      "affects_current_laboratory_decisions": false,
+      "replacement_or_successor": "regenerated from source code/configs",
+      "why_retained": "diagnostic previews and generated evidence packages",
+      "safe_to_archive_later": true
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "angular_spectrum_or_bl_asm_propagation",
+      "title": "Band-limited angular-spectrum free-space propagation",
+      "project_component": "scalar optical field engine",
+      "implementation_paths": [
+        "vbb_study/equations/propagation.py",
+        "vbb_study/digital_twin/component_plane_pipeline.py"
+      ],
+      "route_relevance": "canonical_active",
+      "claim_type": "numerical_method",
+      "current_status": "implemented_active",
+      "physics_status": "numerically_modelled",
+      "evidence_category": "textbook_or_standard_reference",
+      "evidence_status": "needs_verified_source",
+      "literature_reference_keys": [
+        "matsushima2009bandlimited"
+      ],
+      "manufacturer_evidence_required": [],
+      "bench_evidence_required": [],
+      "assumption_or_placeholder": "linear scalar free-space propagation, n=1.0 unless explicitly configured",
+      "known_limitations": [
+        "no nonlinear propagation",
+        "finite grid/FOV validity must be checked per case"
+      ],
+      "what_this_does_not_prove": [
+        "bench alignment",
+        "material modification",
+        "camera agreement"
+      ],
+      "validation_required": [
+        "sampling/FOV convergence",
+        "power drift checks",
+        "bench z-stack comparison"
+      ],
+      "publication_claim_readiness": "simulation_claim_possible",
+      "implemented_route_components": [
+        "SLM1_to_SLM2_segment",
+        "SLM2_to_pre_4F_diagnostic_segment",
+        "post_axicon_benchmark_segment"
+      ],
+      "final_export_allowed": false,
+      "verified_literature_keys": [
+        "matsushima2009bandlimited"
+      ],
+      "literature_search_keys": [
+        "search_bl_asm_sampling"
+      ],
+      "literature_status": "verified_principle_only",
+      "manufacturer_specification_status": "not_required",
+      "bench_evidence_status": "not_bench_validated",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Retain as documented boundary until a narrower evidence need is identified.",
+      "evidence_layers": [
+        {
+          "layer_type": "peer_reviewed_primary_source",
+          "status": "verified",
+          "reference_keys": [
+            "matsushima2009bandlimited"
+          ],
+          "what_it_supports": "band-limited angular-spectrum propagation principle and sampling/FOV constraints",
+          "what_it_does_not_support": "specific bench validation, manufacturer specifications, local alignment, or material/process outcome"
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "verified",
+        "numerically_implemented_representation": "implemented",
+        "manufacturer_specified_component": "not_required",
+        "bench_validated_representation": "not_bench_validated"
+      }
+    },
+    {
+      "claim_id": "finite_sampling_and_aliasing_control",
+      "title": "Finite sampling, Nyquist, and aliasing guardrails",
+      "project_component": "sampling utilities and carrier-mask guard",
+      "implementation_paths": [
+        "vbb_study/equations/propagation.py",
+        "vbb_study/digital_twin/slm_calibration_masks.py"
+      ],
+      "route_relevance": "canonical_active",
+      "claim_type": "numerical_method",
+      "current_status": "implemented_active",
+      "physics_status": "numerically_modelled",
+      "evidence_category": "textbook_or_standard_reference",
+      "evidence_status": "needs_verified_source",
+      "literature_reference_keys": [
+        "matsushima2009bandlimited"
+      ],
+      "manufacturer_evidence_required": [
+        "actual SLM display resolution and pixel pitch"
+      ],
+      "bench_evidence_required": [
+        "observed order locations versus command carrier"
+      ],
+      "assumption_or_placeholder": "",
+      "known_limitations": [
+        "guardrails do not validate the real bench by themselves"
+      ],
+      "what_this_does_not_prove": [],
+      "validation_required": [
+        "carrier sweep",
+        "grid convergence"
+      ],
+      "publication_claim_readiness": "simulation_claim_possible",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "verified_literature_keys": [
+        "matsushima2009bandlimited"
+      ],
+      "literature_search_keys": [
+        "search_bl_asm_sampling"
+      ],
+      "literature_status": "verified_principle_only",
+      "manufacturer_specification_status": "needs_manufacturer_data",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Attach manufacturer specification and then run the required bench measurement.",
+      "evidence_layers": [
+        {
+          "layer_type": "peer_reviewed_primary_source",
+          "status": "verified",
+          "reference_keys": [
+            "matsushima2009bandlimited"
+          ],
+          "what_it_supports": "finite-grid sampling and alias-control principle for angular-spectrum propagation",
+          "what_it_does_not_support": "specific bench validation, manufacturer specifications, local alignment, or material/process outcome"
+        },
+        {
+          "layer_type": "manufacturer_specification",
+          "status": "needs_manufacturer_data",
+          "required_items": [
+            "actual SLM display resolution and pixel pitch"
+          ]
+        },
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "observed order locations versus command carrier"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "verified",
+        "numerically_implemented_representation": "implemented",
+        "manufacturer_specified_component": "needs_manufacturer_data",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "phase_only_slm_mask_generation",
+      "title": "Phase-only SLM1/SLM2 mask generation",
+      "project_component": "holography and CSLM route",
+      "implementation_paths": [
+        "vbb_study/equations/holography.py",
+        "vbb_study/digital_twin/cslm_route.py"
+      ],
+      "route_relevance": "canonical_active",
+      "claim_type": "command_model",
+      "current_status": "implemented_command_phase_model",
+      "physics_status": "command_phase_model_unverified_physical_response",
+      "evidence_category": "multi_layer_evidence",
+      "evidence_status": "verified_principle_needs_manufacturer_and_bench_evidence",
+      "literature_reference_keys": [
+        "engstrom2013slmcalibration"
+      ],
+      "manufacturer_evidence_required": [
+        "wavelength-specific phase stroke",
+        "grayscale-to-phase LUT",
+        "input polarisation requirement",
+        "incidence-angle condition",
+        "active area / pixel geometry",
+        "spatial phase non-uniformity",
+        "fill factor",
+        "reflectivity"
+      ],
+      "bench_evidence_required": [
+        "1030 nm grayscale-to-phase calibration",
+        "diffraction-efficiency or interferometric phase response",
+        "zero/order power split on the local bench"
+      ],
+      "assumption_or_placeholder": "Implemented command-phase model only; physical phase response at 1030 nm remains unverified until manufacturer specifications and bench calibration are attached.",
+      "known_limitations": [
+        "mathematical phase command is not calibrated physical SLM phase response",
+        "local polarisation, incidence angle, active area, pixel geometry, and spatial non-uniformity are unresolved"
+      ],
+      "what_this_does_not_prove": [
+        "calibrated physical SLM phase response",
+        "local order efficiency",
+        "local zero-order suppression"
+      ],
+      "validation_required": [
+        "manufacturer SLM specification pack",
+        "1030 nm grayscale-to-phase or diffraction-efficiency bench calibration"
+      ],
+      "publication_claim_readiness": "bench_validation_required",
+      "implemented_route_components": [
+        "SLM1_phase_plane",
+        "SLM2_phase_plane"
+      ],
+      "final_export_allowed": false,
+      "verified_literature_keys": [
+        "engstrom2013slmcalibration"
+      ],
+      "literature_search_keys": [
+        "search_lcos_slm_phase_calibration"
+      ],
+      "literature_status": "verified_principle_only",
+      "manufacturer_specification_status": "needs_manufacturer_data",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "generate mathematically wrapped phase command maps for SLM1/SLM2 with principle-level SLM calibration literature attached",
+      "what_cannot_currently_be_claimed": "claim calibrated physical phase response at 1030 nm, order efficiency, or local SLM non-uniformity correction",
+      "next_action": "Attach manufacturer specification and then run the required bench measurement.",
+      "evidence_layers": [
+        {
+          "layer_type": "peer_reviewed_primary_source",
+          "status": "verified",
+          "reference_keys": [
+            "engstrom2013slmcalibration"
+          ],
+          "what_it_supports": "SLM phase calibration can be spatially varying and must be calibrated",
+          "what_it_does_not_support": "calibrated 1030 nm SLM response, LUT accuracy, bench polarisation, order efficiency, or local SLM non-uniformity"
+        },
+        {
+          "layer_type": "manufacturer_specification",
+          "status": "needs_manufacturer_data",
+          "required_items": [
+            "wavelength-specific phase stroke",
+            "grayscale-to-phase LUT",
+            "input polarisation requirement",
+            "incidence-angle condition",
+            "active area / pixel geometry",
+            "spatial phase non-uniformity",
+            "fill factor",
+            "reflectivity"
+          ]
+        },
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "1030 nm grayscale-to-phase calibration",
+            "diffraction-efficiency or interferometric phase response",
+            "zero/order power split on the local bench"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "verified",
+        "numerically_implemented_representation": "implemented",
+        "manufacturer_specified_component": "needs_manufacturer_data",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "phase_quantisation_and_grayscale_export",
+      "title": "Phase wrapping, quantisation, and grayscale export",
+      "project_component": "SLM command files",
+      "implementation_paths": [
+        "vbb_study/equations/holography.py",
+        "vbb_study/digital_twin/slm_calibration_masks.py"
+      ],
+      "route_relevance": "calibration_infrastructure",
+      "claim_type": "command_model",
+      "current_status": "implemented_command_export_model",
+      "physics_status": "command_quantisation_unverified_physical_response",
+      "evidence_category": "multi_layer_evidence",
+      "evidence_status": "verified_principle_needs_manufacturer_and_bench_evidence",
+      "literature_reference_keys": [
+        "engstrom2013slmcalibration"
+      ],
+      "manufacturer_evidence_required": [
+        "wavelength-specific phase stroke",
+        "grayscale-to-phase LUT",
+        "input polarisation requirement",
+        "incidence-angle condition",
+        "active area / pixel geometry",
+        "spatial phase non-uniformity",
+        "fill factor",
+        "reflectivity"
+      ],
+      "bench_evidence_required": [
+        "1030 nm grayscale-to-phase LUT calibration",
+        "displayed command map verification"
+      ],
+      "assumption_or_placeholder": "Wrapped and quantised command maps are generated, but grayscale-to-physical-phase response at 1030 nm is not yet calibrated.",
+      "known_limitations": [
+        "bit-depth export does not imply physical phase accuracy",
+        "spatial phase non-uniformity and local LUT are unresolved"
+      ],
+      "what_this_does_not_prove": [
+        "calibrated grayscale-to-phase response",
+        "physical diffraction efficiency"
+      ],
+      "validation_required": [
+        "manufacturer LUT or phase-stroke data",
+        "bench grayscale-to-phase calibration"
+      ],
+      "publication_claim_readiness": "bench_validation_required",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "verified_literature_keys": [
+        "engstrom2013slmcalibration"
+      ],
+      "literature_search_keys": [
+        "search_lcos_slm_phase_calibration"
+      ],
+      "literature_status": "verified_principle_only",
+      "manufacturer_specification_status": "needs_manufacturer_data",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "export wrapped/quantised command maps while declaring physical phase response unresolved",
+      "what_cannot_currently_be_claimed": "claim grayscale commands produce calibrated physical phase without manufacturer and bench evidence",
+      "next_action": "Attach manufacturer specification and then run the required bench measurement.",
+      "evidence_layers": [
+        {
+          "layer_type": "peer_reviewed_primary_source",
+          "status": "verified",
+          "reference_keys": [
+            "engstrom2013slmcalibration"
+          ],
+          "what_it_supports": "phase command/calibration principle for spatially varying SLM response",
+          "what_it_does_not_support": "calibrated grayscale-to-phase response, physical diffraction efficiency, or local SLM non-uniformity"
+        },
+        {
+          "layer_type": "manufacturer_specification",
+          "status": "needs_manufacturer_data",
+          "required_items": [
+            "wavelength-specific phase stroke",
+            "grayscale-to-phase LUT",
+            "input polarisation requirement",
+            "incidence-angle condition",
+            "active area / pixel geometry",
+            "spatial phase non-uniformity",
+            "fill factor",
+            "reflectivity"
+          ]
+        },
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "1030 nm grayscale-to-phase LUT calibration",
+            "displayed command map verification"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "verified",
+        "numerically_implemented_representation": "implemented",
+        "manufacturer_specified_component": "needs_manufacturer_data",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "command_domain_carrier_grating",
+      "title": "Command-domain carrier grating for first Fourier session",
+      "project_component": "Stage 9A.1 carrier masks",
+      "implementation_paths": [
+        "vbb_study/digital_twin/slm_calibration_masks.py",
+        "configs/studies/cslm_fourier_carrier_calibration_minimal_v1.json"
+      ],
+      "route_relevance": "calibration_infrastructure",
+      "claim_type": "measurement_method",
+      "current_status": "implemented_command_carrier_model",
+      "physics_status": "command_domain_model_needs_bench_mapping",
+      "evidence_category": "multi_layer_evidence",
+      "evidence_status": "verified_principle_needs_bench_mapping",
+      "literature_reference_keys": [
+        "zhang2009zeroorder"
+      ],
+      "manufacturer_evidence_required": [
+        "SLM display dimensions",
+        "SLM orientation",
+        "pixel pitch or active command area"
+      ],
+      "bench_evidence_required": [
+        "downstream response versus carrier command cycles and, separately, direct Fourier-plane order displacement only if temporary Fourier-plane access exists",
+        "carrier sign convention",
+        "selected-order purity and residual-order power"
+      ],
+      "assumption_or_placeholder": "Carrier units remain command cycles across the displayed area. The installed downstream camera measures empirical response only; direct Fourier-plane order positions require temporary access at or conjugate to the Fourier plane.",
+      "known_limitations": [],
+      "what_this_does_not_prove": [
+        "direct Fourier-plane coordinates from downstream images",
+        "stop position",
+        "selected-order purity",
+        "lens geometry or bench alignment"
+      ],
+      "validation_required": [
+        "first Fourier-plane carrier session"
+      ],
+      "publication_claim_readiness": "bench_validation_required",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "verified_literature_keys": [
+        "zhang2009zeroorder"
+      ],
+      "literature_status": "verified_principle_only",
+      "manufacturer_specification_status": "needs_manufacturer_data",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "generate command-domain carrier sweeps and cite the diffraction-order principle",
+      "what_cannot_currently_be_claimed": "claim local carrier-to-Fourier-plane scaling, stop placement, selected-order purity, or direct Fourier-plane coordinates from downstream images",
+      "next_action": "Attach manufacturer specification and then run the required bench measurement.",
+      "evidence_layers": [
+        {
+          "layer_type": "peer_reviewed_primary_source",
+          "status": "verified",
+          "reference_keys": [
+            "zhang2009zeroorder"
+          ],
+          "what_it_supports": "pixelated SLM diffraction-order and zero-order phenomenon at principle level",
+          "what_it_does_not_support": "local SLM pixel pitch, carrier sign convention, Fourier-plane scale, stop position, order purity, lens geometry, or bench alignment"
+        },
+        {
+          "layer_type": "manufacturer_specification",
+          "status": "needs_manufacturer_data",
+          "required_items": [
+            "SLM display dimensions",
+            "SLM orientation",
+            "pixel pitch or active command area"
+          ]
+        },
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "downstream response versus carrier command cycles and, separately, direct Fourier-plane order displacement only if temporary Fourier-plane access exists",
+            "carrier sign convention",
+            "selected-order purity and residual-order power"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "verified",
+        "numerically_implemented_representation": "implemented",
+        "manufacturer_specified_component": "needs_manufacturer_data",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "pixelated_slm_zero_order_and_unwanted_orders",
+      "title": "Pixelated SLM zero order and unwanted diffraction orders",
+      "project_component": "future 4F/order-selection realism",
+      "implementation_paths": [
+        "vbb_study/digital_twin/cslm_route.py",
+        "vbb_study/digital_twin/slm_calibration_masks.py"
+      ],
+      "route_relevance": "future_planned",
+      "claim_type": "physical_model",
+      "current_status": "planned_future",
+      "physics_status": "future_not_implemented",
+      "evidence_category": "multi_layer_evidence",
+      "evidence_status": "verified_principle_future_bench_required",
+      "literature_reference_keys": [
+        "zhang2009zeroorder"
+      ],
+      "manufacturer_evidence_required": [
+        "fill factor",
+        "reflectivity",
+        "phase LUT"
+      ],
+      "bench_evidence_required": [
+        "zero/+1/residual order power fractions"
+      ],
+      "assumption_or_placeholder": "",
+      "known_limitations": [
+        "literature supports the phenomenon only",
+        "current code records no order efficiency and no zero-order rejection",
+        "real zero/+1/residual-order fractions require bench measurement"
+      ],
+      "what_this_does_not_prove": [
+        "local order power fractions",
+        "selected-order purity",
+        "active physical 4F filter behaviour"
+      ],
+      "validation_required": [],
+      "publication_claim_readiness": "bench_validation_required",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "verified_literature_keys": [
+        "zhang2009zeroorder"
+      ],
+      "literature_search_keys": [
+        "search_pixelated_slm_zero_order"
+      ],
+      "literature_status": "verified_principle_only",
+      "manufacturer_specification_status": "needs_manufacturer_data",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "cite zero-order/unwanted-order behaviour as a future 4F/order-selection concern",
+      "what_cannot_currently_be_claimed": "claim an active validated order-efficiency or physical 4F model",
+      "next_action": "Attach manufacturer specification and then run the required bench measurement.",
+      "evidence_layers": [
+        {
+          "layer_type": "peer_reviewed_primary_source",
+          "status": "verified",
+          "reference_keys": [
+            "zhang2009zeroorder"
+          ],
+          "what_it_supports": "zero-order and unwanted-order behaviour of pixelated SLMs at principle level",
+          "what_it_does_not_support": "local zero/+1/residual order fractions, selected-order purity, or physical 4F filtering"
+        },
+        {
+          "layer_type": "manufacturer_specification",
+          "status": "needs_manufacturer_data",
+          "required_items": [
+            "fill factor",
+            "reflectivity",
+            "phase LUT"
+          ]
+        },
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "zero/+1/residual order power fractions"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "verified",
+        "numerically_implemented_representation": "not_implemented",
+        "manufacturer_specified_component": "needs_manufacturer_data",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "physical_fourier_filtering_future_route",
+      "title": "Component-owned physical 4F filtering",
+      "project_component": "CSLM 4F route",
+      "implementation_paths": [
+        "vbb_study/digital_twin/cslm_route.py",
+        "vbb_study/digital_twin/bench_inventory.py"
+      ],
+      "route_relevance": "future_planned",
+      "claim_type": "physical_model",
+      "current_status": "not_implemented",
+      "physics_status": "future_not_implemented",
+      "evidence_category": "bench_measurement",
+      "evidence_status": "needs_bench_measurement",
+      "literature_reference_keys": [],
+      "manufacturer_evidence_required": [
+        "lens focal lengths",
+        "clear apertures",
+        "coatings"
+      ],
+      "bench_evidence_required": [
+        "lens positions",
+        "Fourier-stop centre/radius",
+        "carrier-to-order mapping"
+      ],
+      "assumption_or_placeholder": "",
+      "known_limitations": [],
+      "what_this_does_not_prove": [],
+      "validation_required": [],
+      "publication_claim_readiness": "bench_validation_required",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "verified_literature_keys": [],
+      "literature_search_keys": [
+        "search_finite_aperture_4f_model"
+      ],
+      "literature_status": "targeted_search_required",
+      "manufacturer_specification_status": "needs_manufacturer_data",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Attach manufacturer specification and then run the required bench measurement.",
+      "evidence_layers": [
+        {
+          "layer_type": "targeted_literature_search",
+          "status": "targeted_search_required",
+          "search_keys": [
+            "search_finite_aperture_4f_model"
+          ],
+          "what_it_supports": "unresolved until a verified source is committed",
+          "what_it_does_not_support": "any current publication claim"
+        },
+        {
+          "layer_type": "manufacturer_specification",
+          "status": "needs_manufacturer_data",
+          "required_items": [
+            "lens focal lengths",
+            "clear apertures",
+            "coatings"
+          ]
+        },
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "lens positions",
+            "Fourier-stop centre/radius",
+            "carrier-to-order mapping"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "targeted_search_required",
+        "numerically_implemented_representation": "not_implemented",
+        "manufacturer_specified_component": "needs_manufacturer_data",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "ideal_selected_order_handoff",
+      "title": "Ideal selected-order handoff before physical 4F validation",
+      "project_component": "CSLM diagnostic route",
+      "implementation_paths": [
+        "vbb_study/digital_twin/cslm_route.py",
+        "docs/39_cslm_to_physical_axicon_handoff.md",
+        "docs/41_measured_bench_inventory_and_4f_readiness.md"
+      ],
+      "route_relevance": "canonical_active",
+      "claim_type": "diagnostic_boundary",
+      "current_status": "implemented_diagnostic_only",
+      "physics_status": "diagnostic_placeholder",
+      "evidence_category": "bench_measurement",
+      "evidence_status": "assumption_declared",
+      "literature_reference_keys": [],
+      "manufacturer_evidence_required": [],
+      "bench_evidence_required": [
+        "measured Fourier-plane order selection and residual-order rejection"
+      ],
+      "assumption_or_placeholder": "selected-order field handoff is ideal until the physical 4F/filter plane is measured and implemented",
+      "known_limitations": [
+        "not a physical 4F filter transform",
+        "does not validate order efficiency or finite-aperture clipping"
+      ],
+      "what_this_does_not_prove": [
+        "physical Fourier filtering",
+        "bench order purity"
+      ],
+      "validation_required": [
+        "first Fourier-plane carrier calibration session",
+        "measured 4F stop centre/radius"
+      ],
+      "publication_claim_readiness": "bench_validation_required",
+      "implemented_route_components": [
+        "ideal_selected_order_handoff_plane"
+      ],
+      "final_export_allowed": false,
+      "verified_literature_keys": [],
+      "literature_status": "not_applicable",
+      "manufacturer_specification_status": "not_required",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Acquire the required bench measurement before narrowing the claim.",
+      "evidence_layers": [
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "measured Fourier-plane order selection and residual-order rejection"
+          ]
+        },
+        {
+          "layer_type": "declared_assumption_or_placeholder",
+          "status": "declared",
+          "statement": "selected-order field handoff is ideal until the physical 4F/filter plane is measured and implemented"
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "not_applicable",
+        "numerically_implemented_representation": "not_implemented",
+        "manufacturer_specified_component": "not_required",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "slm1_to_slm2_propagation",
+      "title": "Free-space propagation from SLM1 to SLM2",
+      "project_component": "CSLM route",
+      "implementation_paths": [
+        "vbb_study/digital_twin/cslm_route.py"
+      ],
+      "route_relevance": "canonical_active",
+      "claim_type": "physical_model",
+      "current_status": "implemented_active",
+      "physics_status": "physically_modelled",
+      "evidence_category": "bench_measurement",
+      "evidence_status": "needs_bench_measurement",
+      "literature_reference_keys": [],
+      "manufacturer_evidence_required": [],
+      "bench_evidence_required": [
+        "actual SLM1-to-SLM2 distance and relay geometry"
+      ],
+      "assumption_or_placeholder": "",
+      "known_limitations": [
+        "demo geometry until bench measured"
+      ],
+      "what_this_does_not_prove": [],
+      "validation_required": [],
+      "publication_claim_readiness": "bench_validation_required",
+      "implemented_route_components": [
+        "SLM1_to_SLM2_segment"
+      ],
+      "final_export_allowed": false,
+      "verified_literature_keys": [],
+      "literature_search_keys": [
+        "search_bl_asm_sampling"
+      ],
+      "literature_status": "targeted_search_required",
+      "manufacturer_specification_status": "not_required",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Acquire the required bench measurement before narrowing the claim.",
+      "evidence_layers": [
+        {
+          "layer_type": "targeted_literature_search",
+          "status": "targeted_search_required",
+          "search_keys": [
+            "search_bl_asm_sampling"
+          ],
+          "what_it_supports": "unresolved until a verified source is committed",
+          "what_it_does_not_support": "any current publication claim"
+        },
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "actual SLM1-to-SLM2 distance and relay geometry"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "targeted_search_required",
+        "numerically_implemented_representation": "implemented",
+        "manufacturer_specified_component": "not_required",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "slm_registration_and_coordinate_frames",
+      "title": "SLM/lab/Fourier/camera coordinate-frame registration",
+      "project_component": "coordinate contract",
+      "implementation_paths": [
+        "vbb_study/digital_twin/coordinate_contract.py",
+        "docs/41_measured_bench_inventory_and_4f_readiness.md"
+      ],
+      "route_relevance": "calibration_infrastructure",
+      "claim_type": "measurement_method",
+      "current_status": "implemented_diagnostic_only",
+      "physics_status": "record_only",
+      "evidence_category": "bench_measurement",
+      "evidence_status": "needs_bench_measurement",
+      "literature_reference_keys": [],
+      "manufacturer_evidence_required": [],
+      "bench_evidence_required": [
+        "SLM2-to-lab transform",
+        "Fourier-plane frame",
+        "camera-frame mapping"
+      ],
+      "assumption_or_placeholder": "",
+      "known_limitations": [],
+      "what_this_does_not_prove": [],
+      "validation_required": [],
+      "publication_claim_readiness": "bench_validation_required",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "verified_literature_keys": [],
+      "literature_status": "not_applicable",
+      "manufacturer_specification_status": "not_required",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Acquire the required bench measurement before narrowing the claim.",
+      "evidence_layers": [
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "SLM2-to-lab transform",
+            "Fourier-plane frame",
+            "camera-frame mapping"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "not_applicable",
+        "numerically_implemented_representation": "not_implemented",
+        "manufacturer_specified_component": "not_required",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "physical_axicon_bessel_conversion",
+      "title": "Thin scalar physical axicon Bessel conversion benchmark",
+      "project_component": "physical axicon branch",
+      "implementation_paths": [
+        "vbb_study/digital_twin/route_aware_axicon.py",
+        "vbb_study/digital_twin/cslm_route.py"
+      ],
+      "route_relevance": "canonical_supporting",
+      "claim_type": "physical_model",
+      "current_status": "implemented_benchmark_only",
+      "physics_status": "physically_modelled",
+      "evidence_category": "manufacturer_specification",
+      "evidence_status": "needs_manufacturer_data",
+      "literature_reference_keys": [],
+      "manufacturer_evidence_required": [
+        "axicon cone angle",
+        "apex quality",
+        "clear aperture",
+        "coating"
+      ],
+      "bench_evidence_required": [
+        "axicon position/orientation",
+        "z-stack validation"
+      ],
+      "assumption_or_placeholder": "",
+      "known_limitations": [],
+      "what_this_does_not_prove": [],
+      "validation_required": [],
+      "publication_claim_readiness": "bench_validation_required",
+      "implemented_route_components": [
+        "physical_axicon_benchmark_plane",
+        "ideal_axicon_benchmark_reference_plane"
+      ],
+      "final_export_allowed": false,
+      "verified_literature_keys": [],
+      "literature_search_keys": [
+        "search_axicon_bessel_tolerance"
+      ],
+      "literature_status": "targeted_search_required",
+      "manufacturer_specification_status": "needs_manufacturer_data",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Attach manufacturer specification and then run the required bench measurement.",
+      "evidence_layers": [
+        {
+          "layer_type": "targeted_literature_search",
+          "status": "targeted_search_required",
+          "search_keys": [
+            "search_axicon_bessel_tolerance"
+          ],
+          "what_it_supports": "unresolved until a verified source is committed",
+          "what_it_does_not_support": "any current publication claim"
+        },
+        {
+          "layer_type": "manufacturer_specification",
+          "status": "needs_manufacturer_data",
+          "required_items": [
+            "axicon cone angle",
+            "apex quality",
+            "clear aperture",
+            "coating"
+          ]
+        },
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "axicon position/orientation",
+            "z-stack validation"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "targeted_search_required",
+        "numerically_implemented_representation": "implemented",
+        "manufacturer_specified_component": "needs_manufacturer_data",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "physical_axicon_aperture_and_decentre",
+      "title": "Physical axicon finite aperture, decentre, and offset diagnostics",
+      "project_component": "physical axicon route",
+      "implementation_paths": [
+        "vbb_study/digital_twin/route_aware_axicon.py"
+      ],
+      "route_relevance": "canonical_supporting",
+      "claim_type": "physical_model",
+      "current_status": "implemented_benchmark_only",
+      "physics_status": "physically_modelled",
+      "evidence_category": "bench_measurement",
+      "evidence_status": "needs_bench_measurement",
+      "literature_reference_keys": [],
+      "manufacturer_evidence_required": [
+        "clear aperture",
+        "mechanical mount tolerances"
+      ],
+      "bench_evidence_required": [
+        "beam-to-axicon centring",
+        "axicon axial/lateral position"
+      ],
+      "assumption_or_placeholder": "",
+      "known_limitations": [],
+      "what_this_does_not_prove": [],
+      "validation_required": [],
+      "publication_claim_readiness": "bench_validation_required",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "verified_literature_keys": [],
+      "literature_search_keys": [
+        "search_axicon_bessel_tolerance"
+      ],
+      "literature_status": "targeted_search_required",
+      "manufacturer_specification_status": "needs_manufacturer_data",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Attach manufacturer specification and then run the required bench measurement.",
+      "evidence_layers": [
+        {
+          "layer_type": "targeted_literature_search",
+          "status": "targeted_search_required",
+          "search_keys": [
+            "search_axicon_bessel_tolerance"
+          ],
+          "what_it_supports": "unresolved until a verified source is committed",
+          "what_it_does_not_support": "any current publication claim"
+        },
+        {
+          "layer_type": "manufacturer_specification",
+          "status": "needs_manufacturer_data",
+          "required_items": [
+            "clear aperture",
+            "mechanical mount tolerances"
+          ]
+        },
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "beam-to-axicon centring",
+            "axicon axial/lateral position"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "targeted_search_required",
+        "numerically_implemented_representation": "implemented",
+        "manufacturer_specified_component": "needs_manufacturer_data",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "vortex_phase_generation",
+      "title": "Vortex/topological-charge phase generation",
+      "project_component": "SLM1 route",
+      "implementation_paths": [
+        "vbb_study/equations/holography.py",
+        "vbb_study/digital_twin/cslm_route.py"
+      ],
+      "route_relevance": "canonical_active",
+      "claim_type": "physical_model",
+      "current_status": "implemented_active",
+      "physics_status": "physically_modelled",
+      "evidence_category": "textbook_or_standard_reference",
+      "evidence_status": "needs_verified_source",
+      "literature_reference_keys": [],
+      "manufacturer_evidence_required": [],
+      "bench_evidence_required": [
+        "measured charge-dependent annular field"
+      ],
+      "assumption_or_placeholder": "",
+      "known_limitations": [],
+      "what_this_does_not_prove": [],
+      "validation_required": [],
+      "publication_claim_readiness": "simulation_claim_possible",
+      "implemented_route_components": [
+        "SLM1_phase_plane"
+      ],
+      "final_export_allowed": false,
+      "verified_literature_keys": [],
+      "literature_search_keys": [
+        "search_vortex_bessel_structured_beams"
+      ],
+      "literature_status": "targeted_search_required",
+      "manufacturer_specification_status": "not_required",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Acquire the required bench measurement before narrowing the claim.",
+      "evidence_layers": [
+        {
+          "layer_type": "targeted_literature_search",
+          "status": "targeted_search_required",
+          "search_keys": [
+            "search_vortex_bessel_structured_beams"
+          ],
+          "what_it_supports": "unresolved until a verified source is committed",
+          "what_it_does_not_support": "any current publication claim"
+        },
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "measured charge-dependent annular field"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "targeted_search_required",
+        "numerically_implemented_representation": "implemented",
+        "manufacturer_specified_component": "not_required",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "energy_and_fluence_accounting",
+      "title": "Energy ledger and optical fluence scaling",
+      "project_component": "digital twin energy/fluence layer",
+      "implementation_paths": [
+        "vbb_study/digital_twin/energy_accounting.py",
+        "vbb_study/digital_twin/field_fluence.py"
+      ],
+      "route_relevance": "canonical_active",
+      "claim_type": "derived_metric",
+      "current_status": "implemented_active",
+      "physics_status": "numerically_modelled",
+      "evidence_category": "engineering_estimate",
+      "evidence_status": "assumption_declared",
+      "literature_reference_keys": [],
+      "manufacturer_evidence_required": [],
+      "bench_evidence_required": [
+        "pulse energy before optics",
+        "transmission through actual chain"
+      ],
+      "assumption_or_placeholder": "",
+      "known_limitations": [
+        "fluence is not absorbed energy or material dose"
+      ],
+      "what_this_does_not_prove": [],
+      "validation_required": [],
+      "publication_claim_readiness": "simulation_claim_possible",
+      "implemented_route_components": [
+        "source_field",
+        "input_conditioning_boundary",
+        "post_SLM2_pre_4F_diagnostic_plane"
+      ],
+      "final_export_allowed": false,
+      "verified_literature_keys": [],
+      "literature_status": "not_applicable",
+      "manufacturer_specification_status": "not_required",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Acquire the required bench measurement before narrowing the claim.",
+      "evidence_layers": [
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "pulse energy before optics",
+            "transmission through actual chain"
+          ]
+        },
+        {
+          "layer_type": "declared_assumption_or_placeholder",
+          "status": "declared",
+          "statement": "diagnostic placeholder; not validated"
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "not_applicable",
+        "numerically_implemented_representation": "implemented",
+        "manufacturer_specified_component": "not_required",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "ring_centre_radius_dark_core_and_uniformity_metrics",
+      "title": "Annular ring centre/radius/dark-core/uniformity metrics",
+      "project_component": "axis tracking and measured image metrics",
+      "implementation_paths": [
+        "vbb_study/digital_twin/annular_axis_tracking.py",
+        "vbb_study/digital_twin/measured_image_metrics.py"
+      ],
+      "route_relevance": "canonical_active",
+      "claim_type": "derived_metric",
+      "current_status": "implemented_active",
+      "physics_status": "numerically_modelled",
+      "evidence_category": "bench_measurement",
+      "evidence_status": "needs_bench_measurement",
+      "literature_reference_keys": [],
+      "manufacturer_evidence_required": [],
+      "bench_evidence_required": [
+        "camera z-stack images and scale/orientation calibration"
+      ],
+      "assumption_or_placeholder": "",
+      "known_limitations": [
+        "pixel metrics are not physical metrics until calibrated"
+      ],
+      "what_this_does_not_prove": [],
+      "validation_required": [],
+      "publication_claim_readiness": "bench_validation_required",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "verified_literature_keys": [],
+      "literature_search_keys": [
+        "search_camera_annular_beam_profiling"
+      ],
+      "literature_status": "targeted_search_required",
+      "manufacturer_specification_status": "not_required",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Acquire the required bench measurement before narrowing the claim.",
+      "evidence_layers": [
+        {
+          "layer_type": "targeted_literature_search",
+          "status": "targeted_search_required",
+          "search_keys": [
+            "search_camera_annular_beam_profiling"
+          ],
+          "what_it_supports": "unresolved until a verified source is committed",
+          "what_it_does_not_support": "any current publication claim"
+        },
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "camera z-stack images and scale/orientation calibration"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "targeted_search_required",
+        "numerically_implemented_representation": "implemented",
+        "manufacturer_specified_component": "not_required",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "camera_z_stack_acquisition",
+      "title": "Camera z-stack acquisition records",
+      "project_component": "Stage 9A acquisition plan",
+      "implementation_paths": [
+        "vbb_study/digital_twin/calibration_acquisition.py",
+        "configs/studies/cslm_physical_axicon_calibration_campaign_v1.json"
+      ],
+      "route_relevance": "calibration_infrastructure",
+      "claim_type": "measurement_method",
+      "current_status": "implemented_diagnostic_only",
+      "physics_status": "measurement_only",
+      "evidence_category": "bench_measurement",
+      "evidence_status": "needs_bench_measurement",
+      "literature_reference_keys": [],
+      "manufacturer_evidence_required": [],
+      "bench_evidence_required": [
+        "raw camera files",
+        "z positions",
+        "exposure/gain logs"
+      ],
+      "assumption_or_placeholder": "",
+      "known_limitations": [],
+      "what_this_does_not_prove": [],
+      "validation_required": [],
+      "publication_claim_readiness": "bench_validation_required",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "verified_literature_keys": [],
+      "literature_status": "not_applicable",
+      "manufacturer_specification_status": "not_required",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Acquire the required bench measurement before narrowing the claim.",
+      "evidence_layers": [
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "raw camera files",
+            "z positions",
+            "exposure/gain logs"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "not_applicable",
+        "numerically_implemented_representation": "not_implemented",
+        "manufacturer_specified_component": "not_required",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "camera_coordinate_calibration",
+      "title": "Camera coordinate calibration and physical-unit metric gate",
+      "project_component": "measured image metrics",
+      "implementation_paths": [
+        "vbb_study/digital_twin/measured_image_metrics.py",
+        "docs/42_calibration_acquisition_and_measured_data_ingestion.md"
+      ],
+      "route_relevance": "calibration_infrastructure",
+      "claim_type": "measurement_method",
+      "current_status": "implemented_diagnostic_only",
+      "physics_status": "measurement_only",
+      "evidence_category": "bench_measurement",
+      "evidence_status": "needs_bench_measurement",
+      "literature_reference_keys": [],
+      "manufacturer_evidence_required": [
+        "camera pixel pitch",
+        "sensor format"
+      ],
+      "bench_evidence_required": [
+        "magnification",
+        "orientation",
+        "reference-plane relation"
+      ],
+      "assumption_or_placeholder": "",
+      "known_limitations": [],
+      "what_this_does_not_prove": [],
+      "validation_required": [],
+      "publication_claim_readiness": "bench_validation_required",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "verified_literature_keys": [],
+      "literature_status": "not_applicable",
+      "manufacturer_specification_status": "needs_manufacturer_data",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Attach manufacturer specification and then run the required bench measurement.",
+      "evidence_layers": [
+        {
+          "layer_type": "manufacturer_specification",
+          "status": "needs_manufacturer_data",
+          "required_items": [
+            "camera pixel pitch",
+            "sensor format"
+          ]
+        },
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "magnification",
+            "orientation",
+            "reference-plane relation"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "not_applicable",
+        "numerically_implemented_representation": "not_implemented",
+        "manufacturer_specified_component": "needs_manufacturer_data",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "multi_plane_phase_retrieval_future",
+      "title": "Multi-plane phase retrieval from measured intensity z-stacks",
+      "project_component": "future correction research",
+      "implementation_paths": [
+        "docs/42_calibration_acquisition_and_measured_data_ingestion.md"
+      ],
+      "route_relevance": "future_planned",
+      "claim_type": "future_capability",
+      "current_status": "planned_future",
+      "physics_status": "future_not_implemented",
+      "evidence_category": "unsupported_future_work",
+      "evidence_status": "needs_verified_source",
+      "literature_reference_keys": [
+        "miao2022besselretrieval"
+      ],
+      "manufacturer_evidence_required": [],
+      "bench_evidence_required": [
+        "calibrated multi-plane z-stack"
+      ],
+      "assumption_or_placeholder": "",
+      "known_limitations": [],
+      "what_this_does_not_prove": [],
+      "validation_required": [],
+      "publication_claim_readiness": "not_claimable",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "verified_literature_keys": [
+        "miao2022besselretrieval"
+      ],
+      "literature_search_keys": [
+        "search_multi_plane_phase_retrieval"
+      ],
+      "literature_status": "verified_principle_only",
+      "manufacturer_specification_status": "not_required",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Acquire the required bench measurement before narrowing the claim.",
+      "evidence_layers": [
+        {
+          "layer_type": "peer_reviewed_primary_source",
+          "status": "verified",
+          "reference_keys": [
+            "miao2022besselretrieval"
+          ],
+          "what_it_supports": "Bessel-beam phase-front retrieval and correction as a future method principle",
+          "what_it_does_not_support": "specific bench validation, manufacturer specifications, local alignment, or material/process outcome"
+        },
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "calibrated multi-plane z-stack"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "verified",
+        "numerically_implemented_representation": "not_implemented",
+        "manufacturer_specified_component": "not_required",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "effective_aberration_inference_future",
+      "title": "Effective aberration inference from measured/model mismatch",
+      "project_component": "future correction research",
+      "implementation_paths": [
+        "docs/42_calibration_acquisition_and_measured_data_ingestion.md"
+      ],
+      "route_relevance": "future_planned",
+      "claim_type": "future_capability",
+      "current_status": "planned_future",
+      "physics_status": "future_not_implemented",
+      "evidence_category": "unsupported_future_work",
+      "evidence_status": "needs_verified_source",
+      "literature_reference_keys": [
+        "neil2000closedloop"
+      ],
+      "manufacturer_evidence_required": [],
+      "bench_evidence_required": [
+        "repeatable calibrated z-stacks"
+      ],
+      "assumption_or_placeholder": "",
+      "known_limitations": [],
+      "what_this_does_not_prove": [],
+      "validation_required": [],
+      "publication_claim_readiness": "not_claimable",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "verified_literature_keys": [
+        "neil2000closedloop"
+      ],
+      "literature_search_keys": [
+        "search_phase_diversity_zernike"
+      ],
+      "literature_status": "verified_principle_only",
+      "manufacturer_specification_status": "not_required",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Acquire the required bench measurement before narrowing the claim.",
+      "evidence_layers": [
+        {
+          "layer_type": "peer_reviewed_primary_source",
+          "status": "verified",
+          "reference_keys": [
+            "neil2000closedloop"
+          ],
+          "what_it_supports": "closed-loop/modal aberration-correction principle only",
+          "what_it_does_not_support": "specific bench validation, manufacturer specifications, local alignment, or material/process outcome"
+        },
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "repeatable calibrated z-stacks"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "verified",
+        "numerically_implemented_representation": "not_implemented",
+        "manufacturer_specified_component": "not_required",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "zernike_or_phase_conjugate_correction_future",
+      "title": "Zernike or phase-conjugate SLM correction",
+      "project_component": "future SLM correction",
+      "implementation_paths": [
+        "vbb_study/digital_twin/control_contract.py",
+        "docs/40_editable_hardware_geometry_contract.md"
+      ],
+      "route_relevance": "future_planned",
+      "claim_type": "future_capability",
+      "current_status": "planned_future",
+      "physics_status": "future_not_implemented",
+      "evidence_category": "unsupported_future_work",
+      "evidence_status": "needs_verified_source",
+      "literature_reference_keys": [
+        "neil2000closedloop",
+        "lopezquesada2009slmcorrection"
+      ],
+      "manufacturer_evidence_required": [
+        "SLM phase response"
+      ],
+      "bench_evidence_required": [
+        "identified correction target and validation capture"
+      ],
+      "assumption_or_placeholder": "",
+      "known_limitations": [],
+      "what_this_does_not_prove": [],
+      "validation_required": [],
+      "publication_claim_readiness": "not_claimable",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "verified_literature_keys": [
+        "neil2000closedloop",
+        "lopezquesada2009slmcorrection"
+      ],
+      "literature_search_keys": [
+        "search_phase_diversity_zernike"
+      ],
+      "literature_status": "verified_principle_only",
+      "manufacturer_specification_status": "needs_manufacturer_data",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Attach manufacturer specification and then run the required bench measurement.",
+      "evidence_layers": [
+        {
+          "layer_type": "peer_reviewed_primary_source",
+          "status": "verified",
+          "reference_keys": [
+            "neil2000closedloop",
+            "lopezquesada2009slmcorrection"
+          ],
+          "what_it_supports": "Zernike/SLM aberration-correction principle only",
+          "what_it_does_not_support": "specific bench validation, manufacturer specifications, local alignment, or material/process outcome"
+        },
+        {
+          "layer_type": "manufacturer_specification",
+          "status": "needs_manufacturer_data",
+          "required_items": [
+            "SLM phase response"
+          ]
+        },
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "identified correction target and validation capture"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "verified",
+        "numerically_implemented_representation": "not_implemented",
+        "manufacturer_specified_component": "needs_manufacturer_data",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "neural_fast_estimator_future",
+      "title": "Neural fast estimator for alignment/correction",
+      "project_component": "future optional research",
+      "implementation_paths": [
+        "docs/42_calibration_acquisition_and_measured_data_ingestion.md"
+      ],
+      "route_relevance": "future_planned",
+      "claim_type": "future_capability",
+      "current_status": "not_implemented",
+      "physics_status": "future_not_implemented",
+      "evidence_category": "unsupported_future_work",
+      "evidence_status": "needs_verified_source",
+      "literature_reference_keys": [],
+      "manufacturer_evidence_required": [],
+      "bench_evidence_required": [
+        "large calibrated dataset with uncertainty labels"
+      ],
+      "assumption_or_placeholder": "",
+      "known_limitations": [],
+      "what_this_does_not_prove": [],
+      "validation_required": [],
+      "publication_claim_readiness": "not_claimable",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "verified_literature_keys": [],
+      "literature_search_keys": [
+        "search_synthetic_to_real_uncertainty"
+      ],
+      "literature_status": "targeted_search_required",
+      "manufacturer_specification_status": "not_required",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Acquire the required bench measurement before narrowing the claim.",
+      "evidence_layers": [
+        {
+          "layer_type": "targeted_literature_search",
+          "status": "targeted_search_required",
+          "search_keys": [
+            "search_synthetic_to_real_uncertainty"
+          ],
+          "what_it_supports": "unresolved until a verified source is committed",
+          "what_it_does_not_support": "any current publication claim"
+        },
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "large calibrated dataset with uncertainty labels"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "targeted_search_required",
+        "numerically_implemented_representation": "not_implemented",
+        "manufacturer_specified_component": "not_required",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "fused_silica_application_boundary",
+      "title": "Fused-silica application boundary and evidence template",
+      "project_component": "future material application",
+      "implementation_paths": [
+        "configs/materials/fused_silica_evidence_template.json",
+        "docs/44_code_to_evidence_audit.md"
+      ],
+      "route_relevance": "future_planned",
+      "claim_type": "material_application_hypothesis",
+      "current_status": "superseded_by_specific_application_claims",
+      "physics_status": "future_not_implemented",
+      "evidence_category": "unsupported_future_work",
+      "evidence_status": "superseded_by_specific_application_claims",
+      "literature_reference_keys": [],
+      "manufacturer_evidence_required": [],
+      "bench_evidence_required": [],
+      "assumption_or_placeholder": "",
+      "known_limitations": [
+        "broad fused-silica boundary is retained only for backwards compatibility",
+        "specific channel/TGV, waveguide, and welding claims carry application evidence requirements"
+      ],
+      "what_this_does_not_prove": [],
+      "validation_required": [],
+      "publication_claim_readiness": "not_claimable",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "superseded_by": [
+        "fused_silica_bessel_channel_or_tgv_future",
+        "fused_silica_waveguide_future",
+        "fused_silica_welding_future"
+      ],
+      "verified_literature_keys": [],
+      "literature_status": "not_applicable",
+      "manufacturer_specification_status": "not_required",
+      "bench_evidence_status": "not_bench_validated",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "state only that the broad fused-silica boundary has been superseded by specific future application claims",
+      "what_cannot_currently_be_claimed": "claim any fused-silica TGV/channel, waveguide, welding, or modification outcome",
+      "next_action": "Use the specific fused-silica application claims instead.",
+      "evidence_layers": [],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "not_applicable",
+        "numerically_implemented_representation": "not_implemented",
+        "manufacturer_specified_component": "not_required",
+        "bench_validated_representation": "not_bench_validated"
+      }
+    },
+    {
+      "claim_id": "legacy_crznse_material_proxy_branch",
+      "title": "Legacy Cr:ZnSe material proxy branch",
+      "project_component": "legacy materials work",
+      "implementation_paths": [
+        "vbb_study/equations/materials.py",
+        "vbb_study/config.py",
+        "notebooks/materials/01_material_proxy_fluence_and_thresholds.ipynb"
+      ],
+      "route_relevance": "legacy_retained",
+      "claim_type": "material_application_hypothesis",
+      "current_status": "implemented_legacy",
+      "physics_status": "diagnostic_placeholder",
+      "evidence_category": "diagnostic_placeholder",
+      "evidence_status": "assumption_declared",
+      "literature_reference_keys": [],
+      "manufacturer_evidence_required": [],
+      "bench_evidence_required": [],
+      "assumption_or_placeholder": "Cr:ZnSe-specific proxy assumptions; not valid for fused silica decision-making",
+      "known_limitations": [
+        "not calibrated",
+        "not transferable to fused silica"
+      ],
+      "what_this_does_not_prove": [],
+      "validation_required": [],
+      "publication_claim_readiness": "not_claimable",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "verified_literature_keys": [],
+      "literature_search_keys": [
+        "search_crznse_material_proxy_recheck"
+      ],
+      "literature_status": "targeted_search_required",
+      "manufacturer_specification_status": "not_required",
+      "bench_evidence_status": "not_bench_validated",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Complete targeted source search without filling gaps from generic papers.",
+      "evidence_layers": [
+        {
+          "layer_type": "targeted_literature_search",
+          "status": "targeted_search_required",
+          "search_keys": [
+            "search_crznse_material_proxy_recheck"
+          ],
+          "what_it_supports": "unresolved until a verified source is committed",
+          "what_it_does_not_support": "any current publication claim"
+        },
+        {
+          "layer_type": "declared_assumption_or_placeholder",
+          "status": "declared",
+          "statement": "Cr:ZnSe-specific proxy assumptions; not valid for fused silica decision-making"
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "targeted_search_required",
+        "numerically_implemented_representation": "not_implemented",
+        "manufacturer_specified_component": "not_required",
+        "bench_validated_representation": "not_bench_validated"
+      }
+    },
+    {
+      "claim_id": "vector_beam_branch",
+      "title": "Vector/Jones beam branch",
+      "project_component": "legacy or optional vector studies",
+      "implementation_paths": [
+        "vbb_study/equations/vector_jones.py",
+        "vbb_study/publication/vector.py",
+        "notebooks/vector/01_vector_beam_theory_atlas.ipynb"
+      ],
+      "route_relevance": "experimental_development",
+      "claim_type": "physical_model",
+      "current_status": "implemented_legacy",
+      "physics_status": "numerically_modelled",
+      "evidence_category": "textbook_or_standard_reference",
+      "evidence_status": "needs_verified_source",
+      "literature_reference_keys": [],
+      "manufacturer_evidence_required": [],
+      "bench_evidence_required": [],
+      "assumption_or_placeholder": "",
+      "known_limitations": [
+        "not part of current scalar CSLM -> 4F -> physical-axicon campaign"
+      ],
+      "what_this_does_not_prove": [],
+      "validation_required": [],
+      "publication_claim_readiness": "method_principle_only",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "verified_literature_keys": [],
+      "literature_search_keys": [
+        "search_vector_beam_jones_reference"
+      ],
+      "literature_status": "targeted_search_required",
+      "manufacturer_specification_status": "not_required",
+      "bench_evidence_status": "not_bench_validated",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Complete targeted source search without filling gaps from generic papers.",
+      "evidence_layers": [
+        {
+          "layer_type": "targeted_literature_search",
+          "status": "targeted_search_required",
+          "search_keys": [
+            "search_vector_beam_jones_reference"
+          ],
+          "what_it_supports": "unresolved until a verified source is committed",
+          "what_it_does_not_support": "any current publication claim"
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "targeted_search_required",
+        "numerically_implemented_representation": "not_implemented",
+        "manufacturer_specified_component": "not_required",
+        "bench_validated_representation": "not_bench_validated"
+      }
+    },
+    {
+      "claim_id": "hexagonal_polygonal_discrete_beam_branch",
+      "title": "Hexagonal, polygonal, and discrete N-fold beam studies",
+      "project_component": "advanced exploratory beam shaping",
+      "implementation_paths": [
+        "vbb_study/equations/polygonal.py",
+        "vbb_study/studies/polygonal_cases.py",
+        "notebooks/advanced/03_discrete_nfold_beams.ipynb"
+      ],
+      "route_relevance": "experimental_development",
+      "claim_type": "numerical_method",
+      "current_status": "implemented_legacy",
+      "physics_status": "numerically_modelled",
+      "evidence_category": "engineering_estimate",
+      "evidence_status": "assumption_declared",
+      "literature_reference_keys": [],
+      "manufacturer_evidence_required": [],
+      "bench_evidence_required": [],
+      "assumption_or_placeholder": "",
+      "known_limitations": [
+        "not prerequisite for first scalar CSLM/4F calibration"
+      ],
+      "what_this_does_not_prove": [],
+      "validation_required": [],
+      "publication_claim_readiness": "method_principle_only",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "verified_literature_keys": [],
+      "literature_status": "not_applicable",
+      "manufacturer_specification_status": "not_required",
+      "bench_evidence_status": "not_bench_validated",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Retain as documented boundary until a narrower evidence need is identified.",
+      "evidence_layers": [
+        {
+          "layer_type": "declared_assumption_or_placeholder",
+          "status": "declared",
+          "statement": "diagnostic placeholder; not validated"
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "not_applicable",
+        "numerically_implemented_representation": "not_implemented",
+        "manufacturer_specified_component": "not_required",
+        "bench_validated_representation": "not_bench_validated"
+      }
+    },
+    {
+      "claim_id": "capsule_or_weld_feature_geometry_branch",
+      "title": "Capsule/weld feature geometry branch",
+      "project_component": "advanced material-geometry proxy",
+      "implementation_paths": [
+        "vbb_study/equations/capsule_geometry.py",
+        "vbb_study/publication/capsule.py",
+        "notebooks/advanced/01_capsule_weld_feature_design.ipynb"
+      ],
+      "route_relevance": "experimental_development",
+      "claim_type": "material_application_hypothesis",
+      "current_status": "implemented_legacy",
+      "physics_status": "diagnostic_placeholder",
+      "evidence_category": "diagnostic_placeholder",
+      "evidence_status": "assumption_declared",
+      "literature_reference_keys": [],
+      "manufacturer_evidence_required": [],
+      "bench_evidence_required": [],
+      "assumption_or_placeholder": "",
+      "known_limitations": [
+        "geometric planning only; no weld/material response model"
+      ],
+      "what_this_does_not_prove": [],
+      "validation_required": [],
+      "publication_claim_readiness": "not_claimable",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "verified_literature_keys": [],
+      "literature_status": "not_applicable",
+      "manufacturer_specification_status": "not_required",
+      "bench_evidence_status": "not_bench_validated",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "only the implemented diagnostic or method-boundary statement described by current_status and evidence layers",
+      "what_cannot_currently_be_claimed": "local bench validation, manufacturer calibration, or material/process outcome unless separately evidenced",
+      "next_action": "Retain as documented boundary until a narrower evidence need is identified.",
+      "evidence_layers": [
+        {
+          "layer_type": "declared_assumption_or_placeholder",
+          "status": "declared",
+          "statement": "diagnostic placeholder; not validated"
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "not_applicable",
+        "numerically_implemented_representation": "not_implemented",
+        "manufacturer_specified_component": "not_required",
+        "bench_validated_representation": "not_bench_validated"
+      }
+    },
+    {
+      "claim_id": "fused_silica_bessel_channel_or_tgv_future",
+      "title": "Future fused-silica Bessel channel / TGV-like processing path",
+      "project_component": "future fused-silica application branch",
+      "implementation_paths": [
+        "configs/materials/fused_silica_evidence_template.json",
+        "docs/44_code_to_evidence_audit.md"
+      ],
+      "route_relevance": "future_planned",
+      "claim_type": "material_application_hypothesis",
+      "current_status": "planned_future",
+      "physics_status": "future_not_implemented",
+      "evidence_category": "multi_layer_evidence",
+      "evidence_status": "verified_principle_needs_material_bench_evidence",
+      "literature_reference_keys": [
+        "bhuyan2010microchannels"
+      ],
+      "manufacturer_evidence_required": [],
+      "bench_evidence_required": [
+        "fused-silica sample grade/thickness/surface condition",
+        "laser pulse conditions and calibrated optical field at sample entry",
+        "channel/TGV morphology after processing",
+        "etching or through-hole confirmation where relevant"
+      ],
+      "assumption_or_placeholder": "",
+      "known_limitations": [
+        "principle-level Bessel microchannel literature only",
+        "no local fused-silica process model or outcome measurement"
+      ],
+      "what_this_does_not_prove": [
+        "this wavelength or pulse format",
+        "vortex-Bessel channel formation",
+        "sample geometry validity",
+        "TGV yield or etch selectivity"
+      ],
+      "validation_required": [
+        "targeted fused-silica material/process literature review",
+        "bench process trial",
+        "microscopy and metrology"
+      ],
+      "publication_claim_readiness": "not_claimable",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "research_question": "Can the calibrated apparatus produce Bessel-assisted channel/TGV-like features in fused silica?",
+      "optical_target": "calibrated Bessel or vortex-Bessel optical field at the fused-silica sample entry plane",
+      "material_process_unknowns": [
+        "modification threshold",
+        "etch selectivity",
+        "crack formation",
+        "debris/redeposition",
+        "aspect ratio and taper"
+      ],
+      "required_material_metrology": [
+        "optical microscopy",
+        "SEM or confocal profile",
+        "etch/through-hole verification"
+      ],
+      "claim_boundary": "Bhuyan 2010 supports Bessel microchannel principle only; it does not validate this bench or process.",
+      "literature_support_status": "verified_principle_only",
+      "verified_literature_keys": [
+        "bhuyan2010microchannels"
+      ],
+      "literature_status": "verified_principle_only",
+      "manufacturer_specification_status": "not_required",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "cite Bessel microchannel fabrication as a principle-level future application direction",
+      "what_cannot_currently_be_claimed": "claim TGV/channel formation in this apparatus or any fused-silica process window",
+      "next_action": "Acquire the required bench measurement before narrowing the claim.",
+      "evidence_layers": [
+        {
+          "layer_type": "peer_reviewed_primary_source",
+          "status": "verified",
+          "reference_keys": [
+            "bhuyan2010microchannels"
+          ],
+          "what_it_supports": "Bessel-beam high-aspect-ratio microchannel fabrication principle only",
+          "what_it_does_not_support": "this wavelength, pulse format, vortex configuration, sample geometry, etch result, or local fused-silica process outcome"
+        },
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "fused-silica sample grade/thickness/surface condition",
+            "laser pulse conditions and calibrated optical field at sample entry",
+            "channel/TGV morphology after processing",
+            "etching or through-hole confirmation where relevant"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "verified",
+        "numerically_implemented_representation": "not_implemented",
+        "manufacturer_specified_component": "not_required",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "fused_silica_waveguide_future",
+      "title": "Future fused-silica waveguide writing path",
+      "project_component": "future fused-silica application branch",
+      "implementation_paths": [
+        "configs/materials/fused_silica_evidence_template.json",
+        "docs/44_code_to_evidence_audit.md"
+      ],
+      "route_relevance": "future_planned",
+      "claim_type": "material_application_hypothesis",
+      "current_status": "planned_future",
+      "physics_status": "future_not_implemented",
+      "evidence_category": "unsupported_future_work",
+      "evidence_status": "targeted_search_required",
+      "literature_reference_keys": [],
+      "literature_search_keys": [
+        "search_fused_silica_waveguide_direct_source"
+      ],
+      "manufacturer_evidence_required": [],
+      "bench_evidence_required": [
+        "fused-silica sample grade/thickness/surface condition",
+        "written-track microscopy",
+        "index-change or mode-guidance measurement",
+        "propagation-loss measurement"
+      ],
+      "assumption_or_placeholder": "",
+      "known_limitations": [
+        "no verified direct waveguide source in the seed bibliography",
+        "no local waveguide process model or metrology"
+      ],
+      "what_this_does_not_prove": [
+        "waveguide writing",
+        "index change",
+        "mode quality",
+        "loss or coupling efficiency"
+      ],
+      "validation_required": [
+        "targeted primary-source search",
+        "bench writing trial",
+        "mode/loss metrology"
+      ],
+      "publication_claim_readiness": "not_claimable",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "research_question": "Can a future calibrated optical route write useful waveguides in fused silica?",
+      "optical_target": "application-specific intensity/fluence distribution for waveguide writing, not defined yet",
+      "material_process_unknowns": [
+        "index-change regime",
+        "damage threshold",
+        "mode confinement",
+        "propagation loss",
+        "stress/birefringence"
+      ],
+      "required_material_metrology": [
+        "near-field/far-field mode image",
+        "propagation loss",
+        "microscopy",
+        "index-profile estimate"
+      ],
+      "claim_boundary": "No verified direct waveguide source is integrated; this branch remains unresolved.",
+      "literature_support_status": "targeted_search_required",
+      "verified_literature_keys": [],
+      "literature_status": "targeted_search_required",
+      "manufacturer_specification_status": "not_required",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "state only that a targeted fused-silica waveguide source search is still required",
+      "what_cannot_currently_be_claimed": "claim waveguide writing, index change, loss, or mode quality",
+      "next_action": "Acquire the required bench measurement before narrowing the claim.",
+      "evidence_layers": [
+        {
+          "layer_type": "targeted_literature_search",
+          "status": "targeted_search_required",
+          "search_keys": [
+            "search_fused_silica_waveguide_direct_source"
+          ],
+          "what_it_supports": "unresolved until a verified source is committed",
+          "what_it_does_not_support": "any current publication claim"
+        },
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "fused-silica sample grade/thickness/surface condition",
+            "written-track microscopy",
+            "index-change or mode-guidance measurement",
+            "propagation-loss measurement"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "targeted_search_required",
+        "numerically_implemented_representation": "not_implemented",
+        "manufacturer_specified_component": "not_required",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    },
+    {
+      "claim_id": "fused_silica_welding_future",
+      "title": "Future fused-silica / glass welding path",
+      "project_component": "future fused-silica application branch",
+      "implementation_paths": [
+        "configs/materials/fused_silica_evidence_template.json",
+        "docs/44_code_to_evidence_audit.md",
+        "vbb_study/equations/capsule_geometry.py"
+      ],
+      "route_relevance": "future_planned",
+      "claim_type": "material_application_hypothesis",
+      "current_status": "planned_future",
+      "physics_status": "future_not_implemented",
+      "evidence_category": "multi_layer_evidence",
+      "evidence_status": "verified_principle_needs_material_bench_evidence",
+      "literature_reference_keys": [
+        "zhang2018besselwelding"
+      ],
+      "manufacturer_evidence_required": [],
+      "bench_evidence_required": [
+        "interface preparation and contact condition",
+        "pulse conditions and calibrated optical field at interface",
+        "weld cross-section microscopy",
+        "mechanical or leak/strength test where relevant"
+      ],
+      "assumption_or_placeholder": "",
+      "known_limitations": [
+        "principle-level Bessel welding literature only",
+        "capsule/weld branch remains geometry-only"
+      ],
+      "what_this_does_not_prove": [
+        "interface preparation validity",
+        "local focal geometry",
+        "weld strength",
+        "feature symmetry"
+      ],
+      "validation_required": [
+        "targeted glass-welding literature review",
+        "bench welding trial",
+        "cross-section and strength/leak metrology"
+      ],
+      "publication_claim_readiness": "not_claimable",
+      "implemented_route_components": [],
+      "final_export_allowed": false,
+      "research_question": "Can a future calibrated Bessel-like route weld transparent/non-transparent or glass interfaces?",
+      "optical_target": "calibrated elongated Bessel-like focus at a prepared interface",
+      "material_process_unknowns": [
+        "interface absorption/contact",
+        "heat affected zone",
+        "void/crack formation",
+        "joint strength",
+        "feature symmetry"
+      ],
+      "required_material_metrology": [
+        "cross-section microscopy",
+        "void/crack inspection",
+        "joint strength or leak test"
+      ],
+      "claim_boundary": "Zhang 2018 supports Bessel welding principle only; it does not validate this apparatus or interface.",
+      "literature_support_status": "verified_principle_only",
+      "verified_literature_keys": [
+        "zhang2018besselwelding"
+      ],
+      "literature_status": "verified_principle_only",
+      "manufacturer_specification_status": "not_required",
+      "bench_evidence_status": "needs_bench_measurement",
+      "local_bench_validation_status": "not_bench_validated",
+      "what_can_currently_be_claimed": "cite Bessel welding as a principle-level future application direction",
+      "what_cannot_currently_be_claimed": "claim weld strength, interface quality, symmetry, or local process validity",
+      "next_action": "Acquire the required bench measurement before narrowing the claim.",
+      "evidence_layers": [
+        {
+          "layer_type": "peer_reviewed_primary_source",
+          "status": "verified",
+          "reference_keys": [
+            "zhang2018besselwelding"
+          ],
+          "what_it_supports": "Bessel-beam transparent/non-transparent welding principle only",
+          "what_it_does_not_support": "this interface preparation, focal geometry, pulse format, weld strength, feature symmetry, or local apparatus"
+        },
+        {
+          "layer_type": "bench_measurement",
+          "status": "needs_bench_measurement",
+          "required_items": [
+            "interface preparation and contact condition",
+            "pulse conditions and calibrated optical field at interface",
+            "weld cross-section microscopy",
+            "mechanical or leak/strength test where relevant"
+          ]
+        }
+      ],
+      "evidence_layer_summary": {
+        "literature_supported_principle": "verified",
+        "numerically_implemented_representation": "not_implemented",
+        "manufacturer_specified_component": "not_required",
+        "bench_validated_representation": "needs_bench_measurement"
+      }
+    }
+  ],
+  "evidence_layer_vocabulary": [
+    "peer_reviewed_primary_source",
+    "targeted_literature_search",
+    "manufacturer_specification",
+    "bench_measurement",
+    "declared_assumption_or_placeholder",
+    "material_process_metrology"
+  ],
+  "machine_readable_claim_distinctions": [
+    "literature_supported_principle",
+    "numerically_implemented_representation",
+    "manufacturer_specified_component",
+    "bench_validated_representation"
+  ],
+  "seed_scope": "Method-principle seed references only. They do not validate the specific bench, geometry, material process, or correction engine.",
+  "verified_seed_claim_map": {
+    "angular_spectrum_or_bl_asm_propagation": [
+      "matsushima2009bandlimited"
+    ],
+    "finite_sampling_and_aliasing_control": [
+      "matsushima2009bandlimited"
+    ],
+    "phase_only_slm_mask_generation": [
+      "engstrom2013slmcalibration"
+    ],
+    "phase_quantisation_and_grayscale_export": [
+      "engstrom2013slmcalibration"
+    ],
+    "command_domain_carrier_grating": [
+      "zhang2009zeroorder"
+    ],
+    "pixelated_slm_zero_order_and_unwanted_orders": [
+      "zhang2009zeroorder"
+    ],
+    "multi_plane_phase_retrieval_future": [
+      "miao2022besselretrieval"
+    ],
+    "effective_aberration_inference_future": [
+      "neil2000closedloop"
+    ],
+    "zernike_or_phase_conjugate_correction_future": [
+      "neil2000closedloop",
+      "lopezquesada2009slmcorrection"
+    ],
+    "fused_silica_bessel_channel_or_tgv_future": [
+      "bhuyan2010microchannels"
+    ],
+    "fused_silica_welding_future": [
+      "zhang2018besselwelding"
+    ]
+  },
+  "verified_reference_key_to_claim_ids": {
+    "matsushima2009bandlimited": [
+      "angular_spectrum_or_bl_asm_propagation",
+      "finite_sampling_and_aliasing_control"
+    ],
+    "engstrom2013slmcalibration": [
+      "phase_only_slm_mask_generation",
+      "phase_quantisation_and_grayscale_export"
+    ],
+    "zhang2009zeroorder": [
+      "command_domain_carrier_grating",
+      "pixelated_slm_zero_order_and_unwanted_orders"
+    ],
+    "miao2022besselretrieval": [
+      "multi_plane_phase_retrieval_future"
+    ],
+    "neil2000closedloop": [
+      "effective_aberration_inference_future",
+      "zernike_or_phase_conjugate_correction_future"
+    ],
+    "lopezquesada2009slmcorrection": [
+      "zernike_or_phase_conjugate_correction_future"
+    ],
+    "bhuyan2010microchannels": [
+      "fused_silica_bessel_channel_or_tgv_future"
+    ],
+    "zhang2018besselwelding": [
+      "fused_silica_welding_future"
+    ]
+  }
+}

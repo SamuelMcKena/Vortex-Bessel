@@ -1,0 +1,120 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at_utc": "2026-07-15T19:00:44.218930+00:00",
+  "outcome": "PHASE1R-B",
+  "affected_record_count": 85,
+  "artifact_disposition_counts": {
+    "reexport_metadata_only": 3,
+    "regenerate_unchanged_sampling": 21,
+    "rerun_with_convergence_repair": 57,
+    "retain_blocked_historical_diagnostic": 4
+  },
+  "mapping_metadata_reexport_file_count": 34,
+  "mapping_metadata_reexport_files": [
+    "outputs/csv/publication_exports/scalar_calibration_template.csv",
+    "outputs/csv/publication_exports/scalar_ell_family_comparison.csv",
+    "outputs/csv/publication_exports/scalar_oat_sensitivity_raw.csv",
+    "outputs/csv/publication_exports/scalar_shortlist_ideal_vs_lab_comparison.csv",
+    "outputs/csv/publication_exports/scalar_shortlist_realistic_summary.csv",
+    "outputs/csv/publication_exports/scalar_vortex_charge_length_sensitivity.csv",
+    "outputs/csv/publication_study/03_sweep_device_realism_atlas.csv",
+    "outputs/csv/publication_study/03_sweep_device_realism_publication.csv",
+    "outputs/csv/publication_study/03_sweep_ell_family_atlas.csv",
+    "outputs/csv/publication_study/03_sweep_ell_family_publication.csv",
+    "outputs/csv/publication_study/03_sweep_interface_depth_atlas.csv",
+    "outputs/csv/publication_study/03_sweep_interface_depth_publication.csv",
+    "outputs/csv/publication_study/03_sweep_oat_sensitivity_atlas.csv",
+    "outputs/csv/publication_study/03_sweep_oat_sensitivity_publication.csv",
+    "outputs/csv/publication_study/03_sweep_sampling_atlas.csv",
+    "outputs/csv/publication_study/03_sweep_sampling_publication.csv",
+    "outputs/csv/publication_study/03_sweep_tradeoff_atlas.csv",
+    "outputs/csv/publication_study/03_sweep_tradeoff_publication.csv",
+    "outputs/csv/publication_study/calibration_template.csv",
+    "outputs/csv/publication_study/ell_family_comparison.csv",
+    "outputs/csv/publication_study/oat_sensitivity_raw.csv",
+    "outputs/csv/publication_study/scalar_shortlist_realistic_summary.csv",
+    "outputs/csv/publication_study/scalar_shortlist_realistic_summary_publication.csv",
+    "outputs/csv/publication_study/shortlist_extended_comparison.csv",
+    "outputs/csv/publication_study/shortlist_realistic_summary.csv",
+    "outputs/csv/publication_study/stage6_fidelity_ladder_summary.csv",
+    "outputs/csv/publication_study/stage6_paper_replica_vector_summary.csv",
+    "outputs/csv/publication_study/stage6_slm_encoded_vector_summary.csv",
+    "outputs/csv/publication_study/vector_atlas_jones_summary.csv",
+    "outputs/csv/publication_study/vector_atlas_scalar_sas_summary.csv",
+    "outputs/csv/publication_study/vortex_charge_length_sensitivity.csv",
+    "outputs/csv/quicklook/four_condition_phase_comparison_metrics.csv",
+    "outputs/csv/quicklook/quicklook_four_condition_phase_comparison_summary.csv",
+    "outputs/csv/quicklook/quicklook_metric_summary.csv"
+  ],
+  "regenerated_notebooks": [
+    "notebooks/lab_realism/02_physical_axicon_route.ipynb",
+    "notebooks/lab_realism/03_holographic_vs_physical_axicon.ipynb",
+    "notebooks/lab_realism/04_objective_pupil_and_first_order_filtering.ipynb",
+    "notebooks/lab_realism/05_through_sample_interface.ipynb",
+    "notebooks/lab_realism/06_full_source_to_sample_journey.ipynb"
+  ],
+  "legacy_artifacts_retained_historical": [
+    "NB_full_journey.ipynb",
+    "NB_through_sample.ipynb",
+    "outputs/csv/stage_d/NB_through_sample_summary.csv",
+    "outputs/csv/stage_e/NB_full_journey_summary.csv"
+  ],
+  "vortex_winding_before": 0.0,
+  "vortex_winding_after": 3.0,
+  "vortex_winding_tolerance": 0.1,
+  "fourier_before_after_mm": {
+    "general": {
+      "before": 8238.245119,
+      "after": 0.008477154227779409
+    },
+    "limits": {
+      "before": 37072.103037,
+      "after": 0.038147194025007346
+    }
+  },
+  "canonical_carrier_displacement_mm": 1.929375,
+  "regression": [
+    {
+      "scope": "focused Phase 1R artifact tests",
+      "passed": 10,
+      "failed": 0,
+      "duration_seconds": 6.99
+    },
+    {
+      "scope": "focused Phase 1 plus Phase 1R plus vortex end-to-end",
+      "passed": 32,
+      "failed": 0,
+      "duration_seconds": 22.58
+    },
+    {
+      "scope": "core physics, characterisation locks, vortex and Phase 1/1R",
+      "passed": 89,
+      "failed": 0,
+      "xfailed": 4,
+      "duration_seconds": 1011.17
+    },
+    {
+      "scope": "objective/Fourier/carrier-stop/F300",
+      "passed": 96,
+      "failed": 0,
+      "deselected": 1,
+      "duration_seconds": 138.22,
+      "note": "dirty-file guard deselected because Phase 1 intentionally changes guarded core files"
+    },
+    {
+      "scope": "broader Nathan MODE 2 regression",
+      "passed": 195,
+      "failed": 0,
+      "duration_seconds": 140.09
+    },
+    {
+      "scope": "authoritative tests collection",
+      "collected": 1043,
+      "collection_errors": 0,
+      "duration_seconds": 5.9
+    }
+  ],
+  "test_environment_note": "Windows sandbox tmp_path ACL failures were reproduced in fixture setup only; the exact affected objective and Nathan selections passed in approved unsandboxed reruns",
+  "accepted_outputs_silently_regenerated": false,
+  "commit_created": false
+}

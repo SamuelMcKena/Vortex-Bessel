@@ -1,0 +1,1494 @@
+{
+  "schema_version": "1.0.0",
+  "freeze_name": "vortex_report_first",
+  "hash_algorithm": "SHA-256",
+  "repository_path": "C:\\PhD\\Code\\Publication_Study",
+  "parent_git_repository": "C:\\PhD\\Code",
+  "current_branch": "phd-code-physics-audit-phase2a",
+  "current_commit_before_report_preparation": "c5662861689e7a1edd6e6e5b0fcf25843277440e",
+  "working_tree_commit_created": false,
+  "accepted_numerical_results_regenerated": false,
+  "python": {
+    "version": "3.13.7 (tags/v3.13.7:bcee1c3, Aug 14 2025, 14:15:11) [MSC v.1944 64 bit (AMD64)]",
+    "implementation": "CPython",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "package_versions": {
+    "numpy": "2.4.1",
+    "scipy": "1.17.0",
+    "pandas": "3.0.3",
+    "matplotlib": "3.10.8",
+    "plotly": "6.5.2",
+    "nbformat": "5.10.4",
+    "pillow": "12.1.0",
+    "ipython": "9.9.0",
+    "pytest": "9.0.3",
+    "papermill": "2.7.0",
+    "ipykernel": "7.1.0",
+    "jupyter": "1.1.1",
+    "colorcet": "3.2.1",
+    "cmocean": null
+  },
+  "test_commands": [
+    "python -m pytest tests/test_phase1_critical_physics_repairs.py -q",
+    "python -m pytest tests/test_phase1r_reconciliation.py -q",
+    "python -m pytest tests/test_phase2a_canonical_lab_realism.py -q",
+    "python -m pytest tests/test_phase2b_visual_diagnostics.py -q",
+    "python -m pytest tests/test_phase2c_objective_interface.py -q",
+    "python -m pytest tests/test_slm2_preserve_vortex.py tests/test_slm2_preserve_vortex_end_to_end.py -q",
+    "python -m pytest tests/test_vortex_report_freeze.py -q",
+    "python -m pytest --collect-only tests -q",
+    "python -m compileall -q vbb_study tools tests",
+    "git diff --check"
+  ],
+  "numerical_precision": {
+    "phase2a_propagated_intensity_stack": "float32 storage",
+    "phase2a_power_and_export_metrics": "Python/NumPy floating point",
+    "phase2c_vector_working_arrays": "complex128/float64 unless source states otherwise",
+    "metrics_source": "governed CSV/JSON/native arrays; never display pixels"
+  },
+  "canonical_hardware_manifest_path": "outputs/validation/phase2a/canonical_hardware_manifest.json",
+  "solver_policy_provenance": [
+    "vbb_study/solver_policy.py",
+    "outputs/validation/phase2c/phase2c_claim_registry.csv"
+  ],
+  "unresolved_calibration_blockers": [
+    "axicon.base_angle_deg",
+    "axicon.clear_aperture_m",
+    "axicon.refractive_index",
+    "camera.object_plane_scale_m_per_pixel",
+    "fourier_filter.focal_length_m",
+    "fourier_filter.iris_radius_m",
+    "fourier_filter.plus_one_position_m",
+    "laser.beam_radius_on_slm_m",
+    "laser.pulse_energy_J",
+    "material.coating_state",
+    "material.refractive_index",
+    "material.surface_orientation_verified",
+    "objective.effective_pupil_radius_m",
+    "objective.focal_length_m",
+    "objective.pupil_fill_fraction",
+    "relay.magnification",
+    "slm.calibration_date",
+    "slm.panel_orientation_verified",
+    "slm.phase_lut_path",
+    "slm.phase_stroke_rad",
+    "transmissions.four_f",
+    "transmissions.interface",
+    "transmissions.objective",
+    "transmissions.slm1",
+    "transmissions.slm2"
+  ],
+  "selected_evidence_count": 150,
+  "selected_evidence_bytes": 29797122,
+  "selected_evidence": [
+    {
+      "path": ".gitignore",
+      "category": "unknown",
+      "role": "vortex_report_evidence",
+      "sha256": "0b5893920f3ca3902d02c6ef55e28a4a7c9bb74ff81a30062752dba8e45dd13f",
+      "size_bytes": 192,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "AGENTS.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "cd7372fe6bf99e637fbc9f24720720a2c10715e348e77d92200d1823e1dcb45b",
+      "size_bytes": 3486,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "README.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "6f6290e0474fb466d31e3ff394c72b594a0104750fc16d96f2f696fe2b4c3e5b",
+      "size_bytes": 6399,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "calibration/templates/beam_radius_measurement_template.csv",
+      "category": "calibration templates",
+      "role": "vortex_report_evidence",
+      "sha256": "3b43eb2fbe508c46b8c607db3b833242aab5449330f2ca6d8d3d33f59ef18069",
+      "size_bytes": 200,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "calibration/templates/camera_scale_template.csv",
+      "category": "calibration templates",
+      "role": "vortex_report_evidence",
+      "sha256": "c5dad2c667306ccfa970499aaaf13019dca41c4cd169e479551dcc09c4937217",
+      "size_bytes": 255,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "calibration/templates/canonical_lab_calibration_template.json",
+      "category": "calibration templates",
+      "role": "vortex_report_evidence",
+      "sha256": "602b976059b590f4ebec84cfbcd581b70669555e90ce5ae3a20e534e18a590ca",
+      "size_bytes": 4353,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "calibration/templates/energy_transmission_template.csv",
+      "category": "calibration templates",
+      "role": "vortex_report_evidence",
+      "sha256": "a44db5fc4a5208c7dd3c93af782193d81e6a4f6d29d0f73c443cae97b05036e9",
+      "size_bytes": 222,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "calibration/templates/material_interface_template.csv",
+      "category": "calibration templates",
+      "role": "vortex_report_evidence",
+      "sha256": "e28b2720cf057232a13fcdb416a0fb69e41268771d96d6142cd940bb0da58185",
+      "size_bytes": 217,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "calibration/templates/objective_relay_template.csv",
+      "category": "calibration templates",
+      "role": "vortex_report_evidence",
+      "sha256": "540c83722e74736abeb1476f8b95dedaffc7b6847199b4fbe422215a928885dc",
+      "size_bytes": 398,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "calibration/templates/slm_phase_lut_template.csv",
+      "category": "calibration templates",
+      "role": "vortex_report_evidence",
+      "sha256": "03808fd000a8ea13a24ef05894301e0f6c69c3d33ca86f8727573d5780f7ab10",
+      "size_bytes": 197,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/00_theory.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "f00860b4e911dd1de40e4abb2e71a8e66996c08def4e0a977eb6f082c9e13f05",
+      "size_bytes": 8138,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/01_conventions.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "67b627da4409ea88bcbc16d92298d3e71ae7d926d61b1c09056537f70f4a1e89",
+      "size_bytes": 7178,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/04_model_limitations.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "7893c315c5e1e53c49c9090328795ec203ede789ea2ce36c5b1d23938c4ff568",
+      "size_bytes": 5479,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/88_phase1_critical_physics_repairs.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "c7f19dab29f38dec778a1a560f22358d2c448ab975649b2ab36d15a3dd23621a",
+      "size_bytes": 7465,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/88_phase1_fourier_geometry_impact_audit.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "46fecb3e8e337eb2106a69e39ff134b2fd98dfad60811fd0d4b43c8875ca516b",
+      "size_bytes": 2556,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/89_phase1r_regeneration_recovery_and_reconciliation.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "83209dc8d8b5be31ce654c0107e8dbdf479aa2b4f4b7c163668108e4d5c0fd38",
+      "size_bytes": 8031,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/90_phase2a_canonical_lab_realism.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "433da9720283158997f8dd3bf9df508d45666a36c1209f2ccff5a0d55e1d9e93",
+      "size_bytes": 4744,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/91_phase2b_visual_diagnostics_and_beam_volume_maps.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "46474765b4d5889bb5c3594888fd2377793d72cb2f613953e61149afa3ac3ff0",
+      "size_bytes": 3832,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/92_phase2c_vectorial_objective_and_interface.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "1d52d4ab2d304528f4bdae6f8ddd530a01f0a0f08751cfebe76e4a391c5b0ef0",
+      "size_bytes": 6877,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/93_phase2d_experimental_calibration_bridge.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "6d0e1c352fff31542790846e0dee3e4b8995e3c8e59f80f379ac38e91e9c3d9c",
+      "size_bytes": 4804,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/calibration/01_beam_radius_measurement.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "28685f22deedd33a06dcdec6a7b3e4a6b0cd5e127ea8676822187410e20f4ff1",
+      "size_bytes": 2135,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/calibration/02_pulse_energy_and_transmission.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "699527eefd6db085b8d65ede3cc1a468aea83418614022c3f0f3470c69da9e97",
+      "size_bytes": 2178,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/calibration/03_slm_phase_lut_and_stroke.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "cf6e73158333522d00b26344f48502936c35c4e79a366fbbdd22676834b6e3b8",
+      "size_bytes": 2061,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/calibration/04_fourier_plane_and_iris.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "bda843c4ca7ca584b4f96817b2c8292f46a5146a73a079c3a4db9f24134d0541",
+      "size_bytes": 2051,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/calibration/05_objective_relay_and_camera_scale.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "d2d45616fc4073e119e13b5bb9c35349ef7a48ed1ad35a849d1ba699e57dc3ca",
+      "size_bytes": 2134,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/calibration/06_axicon_alignment_and_clear_aperture.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "0faf3cef5b634827b121038d38f018fbd81d48a5f2e263e38141c821b557eaf7",
+      "size_bytes": 2063,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/calibration/07_material_index_and_interface_state.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "d8eb9e33493a246365e0eb5a2a209a1f157deb68c31d16a2035d274e65c13405",
+      "size_bytes": 2184,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/calibration/08_complete_calibration_acceptance.md",
+      "category": "reports and documentation",
+      "role": "vortex_report_evidence",
+      "sha256": "5b64865cc6a566317a82bf068ae46b27a28c0963f8aaa3334ba1bc9f27aadd5f",
+      "size_bytes": 2493,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/reporting/REPORT_SCOPE_AND_MATURITY.md",
+      "category": "report evidence",
+      "role": "vortex_report_evidence",
+      "sha256": "a42165cdab1e98ff621b8c73d4d43f0e630de32a26bde6f330f04fdef234b9d9",
+      "size_bytes": 2836,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/reporting/REPOSITORY_MAP.md",
+      "category": "report evidence",
+      "role": "vortex_report_evidence",
+      "sha256": "e91fbf0fd86aef2adc3f1484bf83b4137d300bac0ca31ad078879f8a4e905587",
+      "size_bytes": 5120,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/reporting/SOFTWARE_AND_REPRODUCIBILITY.md",
+      "category": "report evidence",
+      "role": "vortex_report_evidence",
+      "sha256": "f762d3670e51d0cc934b65578e84721e28fd85c804d4a37de215ff60b53ede2a",
+      "size_bytes": 2854,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/reporting/VORTEX_CLAIM_TO_EVIDENCE.csv",
+      "category": "report evidence",
+      "role": "vortex_report_evidence",
+      "sha256": "552fd5742add0fb2cb13623717f87867b30afeb56154b2ba79c8007009065aca",
+      "size_bytes": 13063,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/reporting/VORTEX_FIGURE_AND_TABLE_PLAN.md",
+      "category": "report evidence",
+      "role": "vortex_report_evidence",
+      "sha256": "a0f3a47674216c507e5a2b0ebc2419612f8cae3bf1903b2da43f7723794b35c9",
+      "size_bytes": 2940,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "docs/reporting/VORTEX_REPORT_EVIDENCE_INDEX.md",
+      "category": "report evidence",
+      "role": "vortex_report_evidence",
+      "sha256": "07f6f54c18d7a5fb17a51f79fa4f3ba9e5f83c6dbe393dcb3b9830baead51003",
+      "size_bytes": 3992,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/00_manifests/figure_provenance.csv",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "2cdc7a349b619b2237d28a27b6acb11efacab6cba307c99cf14d2c528a0ed938",
+      "size_bytes": 13145,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/00_manifests/figure_provenance.json",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "e12a283d95c2c33a507c45cc99b7ab8bd56eb56b228006f9d481bd61cf405370",
+      "size_bytes": 24535,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/00_manifests/phase2b_final_manifest.json",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "2a895d43db087a44175f4ef04ab3f2c1cc92bd6c8ff587050e1a9b78a9b7f882",
+      "size_bytes": 24666,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/02_xy_planes/b0_xy_landmarks_and_sas_focus.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "db55667c906b2b166afa2b8dde5cf3a1a95588d8f0a999d68d81781556cff062",
+      "size_bytes": 1192283,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/02_xy_planes/g0_xy_landmarks_and_sas_focus.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "bf8f36e2afe9de11166ed5869bdbb42feb3a9408c40f6d1ccd48aef9ade74f79",
+      "size_bytes": 2878741,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/02_xy_planes/v1_xy_landmarks_and_sas_focus.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "a01d993510f9f3228709decd857fdd2581b7e60ac4669d497e086080d9bc6458",
+      "size_bytes": 1927045,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/02_xy_planes/v3_xy_landmarks_and_sas_focus.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "1117277523f4c7c3778adefad324f5021bc11889e9263da2a16907e20fe93ce4",
+      "size_bytes": 2557014,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/03_xz_yz_slices/b0_xz_yz_and_power.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "6114e4428e347dd85f777176ecbd110953f9bd2d1940d1a4d2ba990cdd1bd24c",
+      "size_bytes": 621867,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/03_xz_yz_slices/g0_xz_yz_and_power.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "6878253ecc7e2a931d8b27c3ffceac0380a05bf2326c92a10d221caf58ed201e",
+      "size_bytes": 712347,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/03_xz_yz_slices/v1_xz_yz_and_power.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "b2901bab1fc0bf4e35787796d9f53056ef68674edbb7fff4dd796ef776fe2b0f",
+      "size_bytes": 751119,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/03_xz_yz_slices/v3_xz_yz_and_power.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "c48b2c24b29c5bdce3c5c571e2aafbaa512dd7289fcb15262d9cae5731dd851b",
+      "size_bytes": 894768,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/04_profiles/b0_native_profiles.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "5f8b7263b7e58af163d9412fafc9177f11c58a690c5e1338f6f8c54122c74eed",
+      "size_bytes": 480996,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/04_profiles/g0_native_profiles.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "e53999dec2f08d0cc38d963462ba7e1c5042ae5cc568c580cb059ba67caa676f",
+      "size_bytes": 508065,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/04_profiles/v1_native_profiles.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "0093196d9d139681d590bffea24821dd9ad11e6c8b2fcb6094c177b7afc786db",
+      "size_bytes": 527875,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/04_profiles/v3_native_profiles.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "715594af3e67208d9953c1070025c8dc12bd3cad0afbfdf7950d75ab99f5ed43",
+      "size_bytes": 571471,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/05_3d_maps/b0_3d_intensity_surface.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "f2aac0a9348f4ec5de8be6e5db5fcf7a55abf3f9c47b9652000dd4ab91228383",
+      "size_bytes": 2837453,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/05_3d_maps/v1_3d_intensity_surface.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "5caef9f1562fb48f4de8bf13196dc73b6e114b31123ef5b214272504dc02408e",
+      "size_bytes": 2985503,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/05_3d_maps/v3_3d_intensity_surface.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "de997830de623892dbf050e12f48e4ea59510264d68a808c2f1eee58db506286",
+      "size_bytes": 2756444,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/07_energy_ledgers/phase2a_energy_and_throughput_diagnostics.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "ff180fd521ba970465b428556c1b68884f873d0dc6529757b75f14fbc1f5efcb",
+      "size_bytes": 579478,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/08_summary_tables/phase2b_case_summary.csv",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "e737ac363ce80f4bc41ada6adb9502771d5e09ccd5ca0e0e261a38ef16487053",
+      "size_bytes": 3179,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/08_summary_tables/phase2b_endpoint_reproduction_audit.csv",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "12b11661073a7cdca417d3e6ae71c3baa471319340a5b038a496de60bcd8e0bb",
+      "size_bytes": 4037,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2b_visual_diagnostics/09_final_reports/phase2b_outcome_report.json",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "f2f0d2254ffccca5fb63c476c9fcc371693d32bfe4e760803dcd1f690da05556",
+      "size_bytes": 6752,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2c/components/b0_debye_components.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "2d0f34fb5f729b708bdd16289036ebeb6d57c0b9aa4f3fea94d886e3e950bde9",
+      "size_bytes": 179837,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2c/components/g0_debye_components.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "45d825d829f315d69623562b7e3ce07d64c31ecc086c907a60684265e4e485b7",
+      "size_bytes": 121124,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2c/components/v1_debye_components.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "947389adc4e94b6cd24bea9e1a00adf7e6b265470310884b069e40b344e6dd1e",
+      "size_bytes": 217765,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2c/components/v3_debye_components.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "d49fdbaba3fde3b7964f6a626ec630bdc57f391e51083360586030dd8733c64a",
+      "size_bytes": 247681,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2c/interface/b0_scalar_vs_vector_fresnel.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "0caa5a4df4556e7d7bcb154e6d94545ec5c1403d653f2fe3547043fb4b2285c4",
+      "size_bytes": 407007,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2c/interface/g0_scalar_vs_vector_fresnel.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "30fbb832cbc74fe8f726061a77308a87243b458b7ee4e5e8ada7b7ad04e3fde9",
+      "size_bytes": 230025,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2c/interface/v1_scalar_vs_vector_fresnel.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "29fce9f116c35a9c1a25476ba285d462dde7abfbb564e3aad5d9334af780b02e",
+      "size_bytes": 479989,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2c/interface/v3_scalar_vs_vector_fresnel.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "fe60b277475546353c7db8d4cf88c3d41457281ccbb3a41b2e912e99cfa861ef",
+      "size_bytes": 549844,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2c/objective/b0_scalar_vs_debye.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "3b62082a215cc0e1ba91094e0e3aedf60063f538693d3741cbea4f6de9d7d305",
+      "size_bytes": 216290,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2c/objective/g0_scalar_vs_debye.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "864bb4987242953713d1e12502d997076ed2b8b1de355f1eb20cba487c708361",
+      "size_bytes": 128521,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2c/objective/v1_scalar_vs_debye.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "efa11fe9899273e6a113865b990d8b97cd5f926a164c9ac9524284c3f5ec768f",
+      "size_bytes": 258046,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2c/objective/v3_scalar_vs_debye.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "c5cb2f0c7e4b254456d5ad4a3a37150c06f92ffedc5727cea4c40a6ecb5bb395",
+      "size_bytes": 296174,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2c/profiles/b0_objective_profiles.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "42481ea644ae69ae66ab4def2c95cfdcbd078df278e3256da015984172fda2c7",
+      "size_bytes": 253759,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2c/profiles/g0_objective_profiles.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "d267485a0b2c31351fe6e220a3509e673597f4b5381bd7a29e33ca4a07d16d6d",
+      "size_bytes": 173983,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2c/profiles/v1_objective_profiles.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "3c94396c943e3b30c9cb7df803bf72a7a130b7b0bacd7673f564e7a8c84ad214",
+      "size_bytes": 347430,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2c/profiles/v3_objective_profiles.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "d52d8abb07b08586d97353f3015066edaeeb5ad2800e0b1b88721394a2ed43e9",
+      "size_bytes": 393985,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/phase2d/calibration_readiness.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "5267d40b1adce5186ac1e666b77aebaf52805b115bd82bd487367a41eee3210e",
+      "size_bytes": 726663,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/figures/publication_study/stage6_phase_masks.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "c433b4a1064664a978315e299209294b0ec1bb5f9951010389560487eebf7bb1",
+      "size_bytes": 324876,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/holograms/publication_study/ell3_core3_L150.json",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "bc3cca16a98c2602e370cd1a0bb7adcf1a2fe5b9a85486767ed79dfed5b46b39",
+      "size_bytes": 3028,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/holograms/publication_study/ell3_core3_L150.png",
+      "category": "figures",
+      "role": "vortex_report_evidence",
+      "sha256": "a316d1272baa5f75fe3acbc2346a84db52fd021cb1b91bc53cb15d11147050a5",
+      "size_bytes": 182737,
+      "git_ignored": true,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase1_critical_repairs/phase1_claim_status.csv",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "533df61f0ad4b3fb6c3eee007d6a0feb5f339815c70566622f224d2e9fdb42f6",
+      "size_bytes": 2451,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase1_critical_repairs/phase1_repair_summary.json",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "5856da7fc324a45bc10d518f4e8051ab9342ec68df24bd23db43287fbe80a0f6",
+      "size_bytes": 2061,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase1_reconciliation/phase1r_convergence_runs.csv",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "b6ac19f736585777a21a22d43552f637bab102c829c2c7827472039d8bbf9fcd",
+      "size_bytes": 11908,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase1_reconciliation/phase1r_final_claim_registry.csv",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "533ef55b1e5a95cf5eea86f65412596ff071c84556ba82ea564f2236e06de3fe",
+      "size_bytes": 5425,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase1_reconciliation/phase1r_regeneration_manifest.json",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "74cd4f0741a90c2b6d509e21920356dc055b597df28ad3e7efdb3c2e75ae45cf",
+      "size_bytes": 5286,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase1_reconciliation/phase1r_selected_convergence_results.json",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "1196d2df129f4f6e0980d03b10d5081a9319de81377b519ebc7d83243844f6b3",
+      "size_bytes": 8651,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2a/canonical_case_summary.csv",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "ddf2c6738e24c1f596e369f94c0dd6bea2fd9352714fcda7887ef280fd130421",
+      "size_bytes": 19902,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2a/canonical_hardware_manifest.json",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "f5400c6ff8d1fdb735903a29b13309f36b7aaa36f6f37e55a5c5a6581615013c",
+      "size_bytes": 10506,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2a/canonical_power_ledgers.csv",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "89dea98ce4b72e6e81b639e7fbd226b45c60246b314db0a3c4ab85879ebf759a",
+      "size_bytes": 56146,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2a/phase2a_claim_registry.csv",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "f8b5b23c83a72c92df66ad9fcee0bf273296c451c744df257bc81198cf310704",
+      "size_bytes": 2864,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2a/phase2a_outcome_report.json",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "07ef80340eff46c9d60846428242f9f26d898514ccb0f8f7ffa13fb744fe3ed9",
+      "size_bytes": 2849,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2a/slm_model_comparison.csv",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "ae44bd4a6ded58534932ea9bef44851e1b3c368d8f03078e0311c30eeb3f0e66",
+      "size_bytes": 892,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2c/phase2c_case_summary.csv",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "e25a8decc685b2039f49578fbf031a77052a521426cc0d491c85db4518a8ff18",
+      "size_bytes": 1585,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2c/phase2c_claim_registry.csv",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "2b15565ed93f914e6d54c0010a912c411fad8ea59608f4c2792b4805386f75fb",
+      "size_bytes": 6454,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2c/phase2c_figure_manifest.json",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "ad4e1580415634657362059295a74231540eb57cd7c0aaa5991a98a84bb3754f",
+      "size_bytes": 86904,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2c/phase2c_interface_benchmark.csv",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "73afd7ac1fcbea17919281048d24053c93936034e6a2bd962c88f74e8587162a",
+      "size_bytes": 7675,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2c/phase2c_objective_benchmark.csv",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "65e54328b66065a0f66202d0ea56b80dc2e9960d639522a7aebb4e84628811d8",
+      "size_bytes": 5044,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2c/phase2c_outcome_report.json",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "04a4098fbd8d68ee6f80b54a2c09baadb3be286912f0b7113df15124c2b14c4a",
+      "size_bytes": 30496,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2c/phase2c_quadrature_convergence.csv",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "42ca8b7afa073ae00916bc3f5b5891007aa033cfa9ae8c348eb171a68d3ff1fc",
+      "size_bytes": 620,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2c/phase2c_solver_validation.json",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "0c5fa5e514cbf8c91b5407e8b6d98c16b5e0447a14224c6a4ff29e3c6b493107",
+      "size_bytes": 11770,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2d/calibration_dependency_graph.csv",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "2b2efd3dd5cc809f122246ba700c681a112fb0766471fb2684898a0e8068eace",
+      "size_bytes": 12271,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2d/calibration_readiness.json",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "f61a089641ad3e5a76bafa450734c71384c2db488f939d291cc1ece331b23cef",
+      "size_bytes": 7729,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2d/canonical_case_summary.csv",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "bc26b9a07d641e8781d927d0f18c635fbe553401507a2974546b7be18f88c5e5",
+      "size_bytes": 5002,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2d/claim_maturity_registry.csv",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "737c0c09850f6f3fbe06a61582534fa83b9b7744ef111e9f8bb8a950df08a5cb",
+      "size_bytes": 11958,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2d/phase2d_claim_registry.csv",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "4c84d3113d1defdc7c1af3b178040e1c1cab5ee1a7d96447dbe963ec9aeea5f5",
+      "size_bytes": 8106,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2d/phase2d_manifest.json",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "7d9fd9684e913038981428002a4162506286d0df9d118f6434959fbe725cadc1",
+      "size_bytes": 9685,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2d/phase2d_outcome_report.json",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "fa6242917d3f7e18c8509c35f314b2dc31bf86dcaf410ffd23bf41c66a209375",
+      "size_bytes": 1670,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2d/solver_claim_policy.csv",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "271f01a4221f64e5ac33fcca4608edd15a55053d5adaddba767a78d25d8d73ad",
+      "size_bytes": 34966,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "outputs/validation/phase2d/uncertainty_validation.csv",
+      "category": "governed numerical outputs",
+      "role": "vortex_report_evidence",
+      "sha256": "1c1e23013bb17399bcf948f6b3f3042a34061a0e440dfae1ec2bcfd77a3c4b14",
+      "size_bytes": 40459,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "pyproject.toml",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "bb5a025681f3e17aa5e324299f90557d9ddcd177b61145463736eae8d601bfea",
+      "size_bytes": 703,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "requirements-report.txt",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "f1a13974ab9b58372c6292d7254eedeb62b9afdf13b7fb809a8f67fb68a03ec1",
+      "size_bytes": 451,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tests/test_phase1_critical_physics_repairs.py",
+      "category": "tests",
+      "role": "vortex_report_evidence",
+      "sha256": "c407e0b0356e0bb7b3bab11304f315c7d072fdc17f968cbb4db17985e79e79a4",
+      "size_bytes": 7573,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tests/test_phase1r_reconciliation.py",
+      "category": "tests",
+      "role": "vortex_report_evidence",
+      "sha256": "028dbd595360eb12a671e8063c002979a7216146dfaa9e66176350fd097d4575",
+      "size_bytes": 7486,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tests/test_phase2a_canonical_lab_realism.py",
+      "category": "tests",
+      "role": "vortex_report_evidence",
+      "sha256": "82bca74f5cfa76f1006557c515735c19a3f58cc1cc6aad51702d492d6bbd7578",
+      "size_bytes": 8505,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tests/test_phase2b_visual_diagnostics.py",
+      "category": "tests",
+      "role": "vortex_report_evidence",
+      "sha256": "0a9bd3c77cb36721d0db4ba4ce94757f53392becbbf0702c3b7423b93c8a41cc",
+      "size_bytes": 7530,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tests/test_phase2c_objective_interface.py",
+      "category": "tests",
+      "role": "vortex_report_evidence",
+      "sha256": "40cbf143a9e5b5be01102cc3bb12eddd0be0e6295a60401cfb580b2d0891aac9",
+      "size_bytes": 22078,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tests/test_phase2d_calibration_bridge.py",
+      "category": "tests",
+      "role": "vortex_report_evidence",
+      "sha256": "ce941108f6312837fed5e111bd9a651415096d9f7d7546142b1e63c488f0a4f6",
+      "size_bytes": 14062,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tests/test_physics_validation.py",
+      "category": "tests",
+      "role": "vortex_report_evidence",
+      "sha256": "2dc327dbae0433bf0760a5186153646be8d6688ac0a69d7890d2dfb15e1bf10e",
+      "size_bytes": 42877,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tests/test_slm2_preserve_vortex.py",
+      "category": "tests",
+      "role": "vortex_report_evidence",
+      "sha256": "e85d4ad690fe192f3de8481e9767a1278b9866f696d8ec65c32c24af9e67724f",
+      "size_bytes": 2153,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tests/test_slm2_preserve_vortex_end_to_end.py",
+      "category": "tests",
+      "role": "vortex_report_evidence",
+      "sha256": "d1ee332222dc52c2de2146323bba834b47efa9edf77b17317d774bf9a75d67ac",
+      "size_bytes": 2699,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tests/test_vortex_report_freeze.py",
+      "category": "tests",
+      "role": "vortex_report_evidence",
+      "sha256": "a676f860d473595493e58cd057676d9bcd5c9451abd782d57181523879262f7e",
+      "size_bytes": 3515,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tools/build_vortex_report_freeze.py",
+      "category": "tools",
+      "role": "vortex_report_evidence",
+      "sha256": "961a68b307b2712e5206dcf42afea0abf18740c59cde4b497298bbc211448b8a",
+      "size_bytes": 25219,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tools/prepare_phase1r_lab_notebooks.py",
+      "category": "tools",
+      "role": "vortex_report_evidence",
+      "sha256": "878afc8956bdb58dbcc8865ec8e2e17ae754091443a16ef379e7820603b1bde3",
+      "size_bytes": 10810,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tools/reconcile_phase1r_artifacts.py",
+      "category": "tools",
+      "role": "vortex_report_evidence",
+      "sha256": "845863e872192b4354bc89f4990334d181392cdc8f3388745134f443dcb1b62f",
+      "size_bytes": 23779,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tools/run_phase1r_convergence.py",
+      "category": "tools",
+      "role": "vortex_report_evidence",
+      "sha256": "b1910e58eb48265cf0423833eb3c23777e7844aeeba2990baa3f738f7ddaa5c7",
+      "size_bytes": 11507,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tools/run_phase1r_realistic_window_recovery.py",
+      "category": "tools",
+      "role": "vortex_report_evidence",
+      "sha256": "5eb898931b31b5ef75355a48df2eff617498f55147a914061fdd599b64af1dbd",
+      "size_bytes": 3069,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tools/run_phase2a_canonical.py",
+      "category": "tools",
+      "role": "vortex_report_evidence",
+      "sha256": "18135a4e1e5e3c5d62ecc88d655a24eeee05e4b85222ecd6146e0f4993a62e57",
+      "size_bytes": 332,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tools/run_phase2b_visual_diagnostics.py",
+      "category": "tools",
+      "role": "vortex_report_evidence",
+      "sha256": "8120b0a242a1ce796eeb1b62b76a0fc74f6f55f0bad0a6c6a7519f5582007b6b",
+      "size_bytes": 356,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tools/run_phase2c_objective_interface.py",
+      "category": "tools",
+      "role": "vortex_report_evidence",
+      "sha256": "22ae5850bfd78da5a637ad5851b520bb21944ca5a729b5e9fa58184f5bf3e880",
+      "size_bytes": 782,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tools/run_phase2d_calibration_bridge.py",
+      "category": "tools",
+      "role": "vortex_report_evidence",
+      "sha256": "553dee67a48a11415888c6daf0cf5d628cc998da087bb34c1601d99e4fa35856",
+      "size_bytes": 20319,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "tools/validate_calibration_bundle.py",
+      "category": "tools",
+      "role": "vortex_report_evidence",
+      "sha256": "0f8e64aef088c7b4f75ca06b4ac2aae29887ddada3c4d4720974fddda7e7a677",
+      "size_bytes": 1835,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/calibration/__init__.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "35389c6d6ae6886068263fa6a639cda459e608d87af0b68bd3e0b7e0720c9adf",
+      "size_bytes": 784,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/calibration/io.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "fa7ca05259ca3dc9a6ea0e136acd95b6c83c349ad9b903686c06d77a903609ec",
+      "size_bytes": 1056,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/calibration/schema.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "b3b09746a2944421d8538128534108f0351d5aa7d6f7a5989345efae6c8945d3",
+      "size_bytes": 5909,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/calibration/uncertainty.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "c11b8a3455c9e734fb8b11a6dc1e952a065e2b6c9b9e2d91e8f90ef1ca703521",
+      "size_bytes": 10978,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/calibration/validation.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "1ab2e8bac170e2a05e908b00541217235fc47e678375d0ac314ab190a3ab05a4",
+      "size_bytes": 14931,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/digital_twin/phase2a_canonical.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "54fa9a3d995a8c2905db4518b7d6e692f1da943b4fa10dcd20fdf70c557409f4",
+      "size_bytes": 44394,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/digital_twin/phase2a_contracts.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "c11138f86e611d1b04054033bd860dcc61d49239afd6831ff003115761e22a2e",
+      "size_bytes": 24111,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/digital_twin/phase2b_figures.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "7dec159ab8d66890fba0bdc5f772eeaf145df5eeedcfd60ad3d689bf5e053f98",
+      "size_bytes": 34507,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/digital_twin/phase2b_visual_cases.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "db2a410333b968e4713c545a13adcbc65a4a0b9d2701ce6eaad7a07f504ca246",
+      "size_bytes": 34013,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/digital_twin/phase2b_visual_diagnostics.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "088b114a13619dd89f08777554f539d3b4723a4c31b10e216d0d43924d4c733f",
+      "size_bytes": 22796,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/digital_twin/phase2c_figures.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "35844fe09e9198bd6cbbb3cd0f9b37db5381d5ee62911d0689330273c8861749",
+      "size_bytes": 28827,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/digital_twin/phase2c_objective_interface.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "2e9cfb761b8f1ea5df2d0896aed17537cca8793a40cd9be03e1cd1d65ecebd52",
+      "size_bytes": 102321,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/digital_twin/phase2d_canonical_pipeline.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "1ff8ea5bdb1ae59036095f60981a39c0f37fc1fe2dde9d9d782055cffc091b6a",
+      "size_bytes": 17358,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/digital_twin/phase2d_figures.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "d08904b199d628ea3bb73f6b6f07cc624a9dccaee14bce75d6c993a4846f7b52",
+      "size_bytes": 6259,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/equations/fields.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "dbd6a91ac4531ceb6eed97faa14d9eb44edbdd30621f87f14aca92e6fa09a724",
+      "size_bytes": 3284,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/equations/holography.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "cb9696300d82f56439ec6f696efd1c37c5560361e8714cf0a4e54d707b7d1f48",
+      "size_bytes": 4770,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/equations/metrics.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "a5357f0849fdb7b8cd917a33516553daf4b1cbed76975bc85c44b557daf65aa0",
+      "size_bytes": 6449,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/equations/propagation.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "9f21201433f5c0efa733b2cc2abeada859e7c54baeaff67911d86e3b348d2965",
+      "size_bytes": 14100,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/equations/scalar_bessel.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "922eadfdc8849b26a26dbf359e2640c57d9e68be4175ea54768df6146803d112",
+      "size_bytes": 10499,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/equations/vector_debye.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "f32ea21f12ddeab8059c1a60ef79d9cf0a7797b11850163f6f52f6b6dec439c9",
+      "size_bytes": 22079,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/equations/vector_fresnel_interface.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "e8fb638026746880ee1e90d1bb1d49fc94cf6c149ef25e62d3e49f00f340c1c7",
+      "size_bytes": 11670,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/solver_policy.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "d0d12e3b0b1bcf01a9dd011d3e01648d1058390631a21e6cede78e27d0a018c6",
+      "size_bytes": 5901,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    },
+    {
+      "path": "vbb_study/vbb_axicon.py",
+      "category": "source code",
+      "role": "vortex_report_evidence",
+      "sha256": "237ba2831c7fe72b7b7940f3ff1a0a98f766600eb919d30bf1549d7006ca30ac",
+      "size_bytes": 20477,
+      "git_ignored": false,
+      "notes": "Referenced in claim matrix or core report-freeze contract."
+    }
+  ],
+  "claims_path": "outputs/validation/report_freeze/vortex_report_claims.csv",
+  "claims_sha256": "c570c0f6a4f81cf7ab97a1879c94bf203c43d05621f9980d35491655a0d1b5eb",
+  "files_index_path": "outputs/validation/report_freeze/vortex_report_files.csv",
+  "files_index_sha256": "11306551e455f664133ec0eb04f0fa9448c2e758c85680681adbeaad2d796676",
+  "repository_inventory_path": "outputs/validation/report_freeze/repository_inventory.csv",
+  "path_reference_audit_path": "outputs/validation/report_freeze/path_reference_audit.csv",
+  "audit": {
+    "disk_file_count": 9872,
+    "disk_bytes": 2584726734,
+    "category_counts": {
+      "calibration templates": 7,
+      "duplicate legacy notebook": 41,
+      "figures": 1706,
+      "governed numerical outputs": 1747,
+      "historical or superseded diagnostics": 155,
+      "large binary": 16,
+      "patch": 1,
+      "report evidence": 45,
+      "reports and documentation": 409,
+      "source code": 140,
+      "temporary/cache": 5045,
+      "tests": 80,
+      "tools": 35,
+      "unknown": 445
+    },
+    "git_status_counts": {
+      "ignored": 8794,
+      "tracked": 1003,
+      "untracked": 75
+    },
+    "files_over_90mb": [
+      {
+        "path": "outputs.zip",
+        "size_bytes": 668913381
+      },
+      {
+        "path": "archive/backups/pre_refactor_baseline_20260531_172040.zip",
+        "size_bytes": 182909639
+      }
+    ],
+    "secret_signature_findings": [],
+    "broken_reference_count": 68,
+    "report_ready_broken_reference_count": 0,
+    "report_ready_broken_references": []
+  },
+  "standalone_export": {
+    "raw_directory_copy_ready": false,
+    "curated_git_export_ready": true,
+    "required_exclusions": [
+      "temporary/cache trees",
+      "root duplicate notebooks",
+      "vbb_study - Copy",
+      "bulk ZIP archives",
+      "files above GitHub size limits"
+    ],
+    "ignored_selected_figures_require_force_add": true
+  },
+  "scope_boundary": "Numerical and fixed-bench nominal vortex-Bessel evidence only; no experimental validation or nonlinear material-modification claim."
+}

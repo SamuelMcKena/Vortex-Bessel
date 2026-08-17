@@ -1,0 +1,4 @@
+z_sampling_id,z_step_m,z_max_m,on_axis_trace_normalised_l2_change_to_dz0p25,fixed_core_power_trace_correlation_to_dz0p25,maximum_hwhm_radius_relative_change_to_dz0p25,acceptance_pass
+dz0p5,0.0005,0.18,0.004111072536444849,0.9999996406541729,0.05505052387447547,False
+dz1p0,0.001,0.18,0.006831997823213138,0.9999941794071379,0.1013454994237783,False
+dz0p25,0.00025,0.18,0.0,1.0,0.0,True

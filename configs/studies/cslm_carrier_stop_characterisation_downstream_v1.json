@@ -1,0 +1,206 @@
+{
+  "study_name": "cslm_carrier_stop_characterisation_downstream_v1",
+  "stage": "9A.1B",
+  "calibration_mode": "downstream_focus_empirical",
+  "available_calibration_modes": [
+    "direct_fourier_plane_access",
+    "downstream_focus_empirical"
+  ],
+  "calibration_access_modes": {
+    "direct_fourier_plane_access": {
+      "mode_id": "direct_fourier_plane_access",
+      "measurement_plane_label": "Fourier_plane_or_conjugate_diagnostic_plane",
+      "measurement_plane_relationship_to_fourier_plane": "camera, profiler, IR card, or power meter temporarily at or conjugate to the Fourier plane",
+      "camera_access_status": "not_current_installed_camera_default; temporary diagnostic access required",
+      "what_is_observable": [
+        "observed zero/+1/-1 order positions in camera pixels",
+        "carrier sign convention at Fourier plane",
+        "carrier command-to-order displacement in camera pixels",
+        "future physical Fourier-plane calibration once camera scale is known"
+      ],
+      "what_is_not_observable": [
+        "material response",
+        "physical 4F propagation validation",
+        "camera-model parameters",
+        "selected-order purity without separate power/order evidence"
+      ],
+      "physical_4f_readiness_effect": "can contribute to physical_fourier_plane_coordinate_calibrated only after scale and geometry are recorded",
+      "claim_boundary": "direct diagnostic access mode; still no physical 4F model or final export",
+      "required_capture_metadata": [
+        "capture_id",
+        "capture_family",
+        "calibration_mode",
+        "camera_plane_label",
+        "camera_plane_relationship_to_fourier_plane",
+        "physical_axicon_state",
+        "downstream_optics_state",
+        "fourier_stop_state",
+        "fourier_stop_centre_command_or_stage_x",
+        "fourier_stop_centre_command_or_stage_y",
+        "fourier_stop_radius_command_or_aperture_label",
+        "carrier_cycles_x",
+        "carrier_cycles_y",
+        "SLM1 mask ID",
+        "SLM2 mask ID",
+        "camera position",
+        "exposure",
+        "gain",
+        "neutral-density/filter state",
+        "laser energy setting where available",
+        "manual notes",
+        "metadata_value_status",
+        "raw_target_path"
+      ]
+    },
+    "downstream_focus_empirical": {
+      "mode_id": "downstream_focus_empirical",
+      "measurement_plane_label": "downstream_final_focus",
+      "measurement_plane_relationship_to_fourier_plane": "not at the Fourier plane; records final response of the fixed downstream optical route",
+      "camera_access_status": "current_installed_camera_default",
+      "what_is_observable": [
+        "final output centroid in camera pixels",
+        "final output morphology",
+        "relative transmitted intensity",
+        "saturation/clipping flags",
+        "empirical sensitivity to carrier settings",
+        "empirical sensitivity to stop x/y/radius settings",
+        "identification of repeatable usable operating points"
+      ],
+      "what_is_not_observable": [
+        "direct Fourier-plane order positions",
+        "physical Fourier-plane x/y coordinates",
+        "direct stop radius in Fourier-plane mm",
+        "direct order-power fractions at the stop",
+        "physical 4F readiness being marked READY solely from downstream images"
+      ],
+      "physical_4f_readiness_effect": "supports practical operating-point selection, repeatability assessment, and later comparison; does not make physical_4f_readiness_ready",
+      "claim_boundary": "empirical downstream response only; not_direct_fourier_plane_calibration; not_physical_4f_model_validation; no camera model; no inverse correction; no AI; no material response; final_export_allowed=False",
+      "required_capture_metadata": [
+        "capture_id",
+        "capture_family",
+        "calibration_mode",
+        "camera_plane_label",
+        "camera_plane_relationship_to_fourier_plane",
+        "physical_axicon_state",
+        "downstream_optics_state",
+        "fourier_stop_state",
+        "fourier_stop_centre_command_or_stage_x",
+        "fourier_stop_centre_command_or_stage_y",
+        "fourier_stop_radius_command_or_aperture_label",
+        "carrier_cycles_x",
+        "carrier_cycles_y",
+        "SLM1 mask ID",
+        "SLM2 mask ID",
+        "camera position",
+        "exposure",
+        "gain",
+        "neutral-density/filter state",
+        "laser energy setting where available",
+        "manual notes",
+        "metadata_value_status",
+        "raw_target_path"
+      ]
+    }
+  },
+  "camera_plane_label": "downstream_final_focus",
+  "camera_plane_relationship_to_fourier_plane": "not_at_fourier_plane; installed camera records complete downstream optical response",
+  "fourier_stop_state": "recorded_and_user_editable",
+  "physical_axicon_state": "recorded_and_user_editable",
+  "allowed_physical_axicon_recorded_states": [
+    "axicon_bypassed",
+    "axicon_present_fixed",
+    "axicon_removed",
+    "unknown_recorded"
+  ],
+  "default_physical_axicon_recorded_state": "unknown_recorded",
+  "downstream_optics_state": "recorded_fixed_existing_route",
+  "capture_families": [
+    {
+      "family_id": "D0_dark_frames",
+      "purpose": "dark/background frames at intended exposure/gain"
+    },
+    {
+      "family_id": "D1_flat_reference",
+      "purpose": "SLM1-flat / SLM2-flat downstream output reference"
+    },
+    {
+      "family_id": "D2_carrier_sweep_fixed_stop",
+      "purpose": "carrier sweep with one recorded fixed stop baseline"
+    },
+    {
+      "family_id": "D3_stop_position_sweep_fixed_carrier",
+      "purpose": "empirical stop-centre x/y sensitivity at one carrier"
+    },
+    {
+      "family_id": "D4_stop_radius_or_aperture_sweep_fixed_carrier",
+      "purpose": "empirical stop-size/aperture sensitivity at one carrier"
+    },
+    {
+      "family_id": "D5_repeatability_reference",
+      "purpose": "repeat apparent best configuration at least three times"
+    }
+  ],
+  "carrier_sweep_definition": {
+    "carrier_cycles": [
+      -24,
+      -16,
+      -8,
+      0,
+      8,
+      16,
+      24
+    ],
+    "command_axes": [
+      "x",
+      "y"
+    ],
+    "units": "command_cycles_across_displayed_area",
+    "physical_frequency_status": "uncalibrated_command_domain"
+  },
+  "fixed_stop_baseline": {
+    "fourier_stop_centre_command_or_stage_x": "baseline_recorded",
+    "fourier_stop_centre_command_or_stage_y": "baseline_recorded",
+    "fourier_stop_radius_command_or_aperture_label": "baseline_recorded"
+  },
+  "selected_carrier_for_stop_sweeps": {
+    "carrier_cycles_x": 8,
+    "carrier_cycles_y": 0
+  },
+  "required_capture_metadata": [
+    "capture_id",
+    "capture_family",
+    "calibration_mode",
+    "camera_plane_label",
+    "camera_plane_relationship_to_fourier_plane",
+    "physical_axicon_state",
+    "downstream_optics_state",
+    "fourier_stop_state",
+    "fourier_stop_centre_command_or_stage_x",
+    "fourier_stop_centre_command_or_stage_y",
+    "fourier_stop_radius_command_or_aperture_label",
+    "carrier_cycles_x",
+    "carrier_cycles_y",
+    "SLM1 mask ID",
+    "SLM2 mask ID",
+    "camera position",
+    "exposure",
+    "gain",
+    "neutral-density/filter state",
+    "laser energy setting where available",
+    "manual notes",
+    "metadata_value_status",
+    "raw_target_path"
+  ],
+  "warning": "With the installed downstream camera, this experiment characterises the final response to carrier and stop settings. It does not directly measure Fourier-plane order positions or by itself calibrate the physical 4F coordinate system.",
+  "claim_boundary": "empirical downstream response only; not_direct_fourier_plane_calibration; not_physical_4f_model_validation; no camera model; no inverse correction; no AI; no material response; final_export_allowed=False",
+  "governance": {
+    "physical_4f_filter_modelled": false,
+    "fourier_filter_physics_available": false,
+    "camera_model_enabled": false,
+    "material_model_enabled": false,
+    "inverse_correction_enabled": false,
+    "ai_enabled": false,
+    "diagnostic_only": true,
+    "final_export_allowed": false
+  }
+}

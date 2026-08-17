@@ -1,0 +1,2 @@
+measurement_id,timestamp_utc,stage,input_energy_J,u_input_energy_J,output_energy_J,u_output_energy_J,transmission,u_transmission,repeats,source_file_sha256,operator,data_classification
+,,,,,,,,,,,,laboratory_measurement

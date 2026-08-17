@@ -1,0 +1,30 @@
+{
+  "wavelength_nm": 1030.0,
+  "camera_pixel_um": 5.5,
+  "z_step_mm": 1.0,
+  "z0_absolute_mm": null,
+  "ell_slm1": 10,
+  "ell_slm2": -10,
+  "ell_effective_bench_convention": 20,
+  "n_planes": 18,
+  "frames_per_plane_observed": {
+    "0": 4,
+    "1": 4,
+    "2": 4,
+    "3": 4,
+    "4": 4,
+    "5": 4,
+    "6": 4,
+    "7": 4,
+    "8": 4,
+    "9": 4,
+    "10": 4,
+    "11": 4,
+    "12": 4,
+    "13": 4,
+    "14": 4,
+    "15": 4,
+    "16": 4,
+    "17": 4
+  }
+}

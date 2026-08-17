@@ -1,0 +1,8 @@
+plot,hashes_equal
+b0_canonical_propagation_primary,True
+v1_canonical_propagation_primary,True
+v3_canonical_propagation_primary,True
+b0_low_intensity_diagnostic,True
+b0_canonical_vs_direct_route,True
+b0_pupil_model_audit,True
+canonical_vs_current_input,True

@@ -1,0 +1,2 @@
+measurement_id,timestamp_utc,wx_m,wy_m,u_wx_m,u_wy_m,covariance_xy_m2,residual_rms,saturation_fraction,fit_crop_px,source_file_sha256,operator,data_classification
+,,,,,,,,,,,,laboratory_measurement

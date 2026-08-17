@@ -1,0 +1,3 @@
+panel_id,calibration_date,wavelength_m,drive_code,phase_rad,u_phase_rad,interferogram_sha256,operator,data_classification
+SLM-H,,,,,,,,laboratory_measurement
+SLM-V,,,,,,,,laboratory_measurement
