@@ -2,7 +2,7 @@
 
 This thin wrapper exists so that new scripts can call::
 
-    python Publication_Study/finalize_outputs.py
+    python finalize_outputs.py
 
 while the underlying implementation stays in
 ``finalize_publication_outputs.py``, which is imported by the runner and

@@ -38,7 +38,7 @@ def new_csv_run_id() -> str:
 
 
 def _git_commit_or_empty() -> str:
-    commit = setup_study.code_version(Path(__file__).resolve().parent.parent)
+    commit = setup_study.code_version(Path(__file__).resolve().parent)
     return str(commit or "")
 
 

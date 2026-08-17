@@ -171,7 +171,7 @@ def finalize_outputs(
     Parameters
     ----------
     output_root:
-        The ``Publication_Study/outputs`` folder.
+        The repository ``outputs`` folder.
     run_id:
         Optional current-run identifier from ``run_publication_study.py``.
     run_started_at:
@@ -214,7 +214,7 @@ def finalize_outputs(
             "artifact_run_id": run_id if generated else None,
             "generated_in_current_run": generated,
             "metadata": {
-                "finalized_by": "Publication_Study.finalize_publication_outputs",
+                "finalized_by": "Vortex-Bessel.finalize_publication_outputs",
                 "project_schema_version": _proj_ver,
                 "source_schema_version": _scalar_ver,
                 "run_association": "current_run" if generated else "preexisting_or_unknown",
@@ -244,7 +244,7 @@ def finalize_outputs(
     meta_manifest.write_text(
         json.dumps(
             {
-                "finalized_by": "Publication_Study.finalize_publication_outputs",
+                "finalized_by": "Vortex-Bessel.finalize_publication_outputs",
                 "generated_at_utc": datetime.now(timezone.utc).isoformat(),
                 "run_id": run_id or "",
                 "project_schema_version": _proj_ver,
