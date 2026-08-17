@@ -27,6 +27,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements-report.txt
           python -m pip install -r notebooks/experimental/axicon_aberration_correction/requirements.txt
+          python -m pip install -e . --no-deps
 
       - name: Compile current source
         run: python -m compileall -q vbb_study tools tests bessel_twin_core.py publication_diagnostics.py interface_correction_diagnosis.py run_study.py run_publication_study.py
@@ -50,9 +51,10 @@ jobs:
           print('workspace bootstrap: clean standalone layout OK')
           PY
 
-      - name: Check canonical runner registry
+      - name: Check canonical runner registry and installed CLI
         run: |
           python run_study.py --list
+          vortex-bessel --list
           python run_study.py --stage all --dry-run
           python run_study.py --stage experimental --dry-run
 
