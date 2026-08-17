@@ -1,7 +1,7 @@
 """Canonical runner for the Vortex-Bessel structured-beam study.
 
 The old Publication_Study grew several generations of notebook names and runner
-scripts.  This runner deliberately discovers the notebooks that actually exist
+scripts. This runner deliberately discovers the notebooks that actually exist
 in this repository, so there is one place to run the current code without
 remembering which historical file was newest.
 
@@ -11,7 +11,11 @@ List the available stages and notebooks::
 
     python run_study.py --list
 
-Run the scalar publication workflow::
+Run the current replacement for the original numbered Publication_Study::
+
+    python run_study.py --stage publication
+
+Run the scalar workflow::
 
     python run_study.py --stage scalar
 
@@ -43,16 +47,16 @@ import sys
 from collections import OrderedDict
 from pathlib import Path
 
-PROJECT_SCHEMA_VERSION = "3.0.0"
+PROJECT_SCHEMA_VERSION = "3.1.0"
 ROOT = Path(__file__).resolve().parent
 NOTEBOOK_ROOT = ROOT / "notebooks"
 OUTPUT_ROOT = ROOT / "outputs"
 EXECUTED_ROOT = OUTPUT_ROOT / "executed_notebooks"
 STUDY_OVERVIEW_NOTEBOOK = "notebooks/00_study_overview_and_conventions.ipynb"
 
-# Canonical topic directories.  Their contents are discovered at runtime so a
+# Canonical topic directories. Their contents are discovered at runtime so a
 # renamed/added notebook cannot silently leave the runner pointing at a dead
-# path.  Experimental is intentionally opt-in because it depends on local
+# path. Experimental is intentionally opt-in because it depends on local
 # measurement data that should not be committed to Git.
 STAGE_DIRS: OrderedDict[str, str] = OrderedDict([
     ("scalar", "scalar"),
@@ -66,6 +70,26 @@ STAGE_DIRS: OrderedDict[str, str] = OrderedDict([
 DEFAULT_STAGES = tuple(name for name in STAGE_DIRS if name != "experimental")
 DEFAULT_CLEAN_OUTPUTS = ("executed_notebooks", "jupyter_runtime")
 
+# Current replacements for the original numbered 00--10 Publication_Study
+# workflow. Some historical notebooks have been split into two clearer current
+# notebooks, so this intentionally has more than eleven entries. The mapping is
+# documented in docs/PUBLICATION_STUDY_MAP.md.
+PUBLICATION_NOTEBOOKS = [
+    STUDY_OVERVIEW_NOTEBOOK,
+    "notebooks/scalar/02_scalar_ideal_vs_lab_diagnostics.ipynb",
+    "notebooks/scalar/03_scalar_robustness_and_self_healing.ipynb",
+    "notebooks/scalar/04_scalar_parameter_sweeps.ipynb",
+    "notebooks/scalar/05_scalar_validation_suite.ipynb",
+    "notebooks/vector/01_vector_beam_theory_atlas.ipynb",
+    "notebooks/vector/02_vector_ideal_vs_lab_case1.ipynb",
+    "notebooks/vector/03_vector_hardware_routes.ipynb",
+    "notebooks/materials/01_material_proxy_fluence_and_thresholds.ipynb",
+    "notebooks/materials/02_material_calibration_template.ipynb",
+    "notebooks/materials/03_application_design_tables.ipynb",
+    "notebooks/advanced/01_capsule_weld_feature_design.ipynb",
+    "notebooks/advanced/03_discrete_nfold_beams.ipynb",
+]
+
 
 def _relative(path: Path) -> str:
     return path.relative_to(ROOT).as_posix()
@@ -73,7 +97,7 @@ def _relative(path: Path) -> str:
 
 def _discover_stage(stage: str) -> list[str]:
     if stage not in STAGE_DIRS:
-        raise ValueError(f"Unknown stage {stage!r}. Choose from: {', '.join(STAGE_DIRS)}, all")
+        raise ValueError(f"Unknown stage {stage!r}. Choose from: {', '.join(STAGE_DIRS)}, publication, all")
     folder = NOTEBOOK_ROOT / STAGE_DIRS[stage]
     if not folder.exists():
         return []
@@ -93,10 +117,13 @@ ORDERED_NOTEBOOKS = [STUDY_OVERVIEW_NOTEBOOK] + [
 def notebooks_for_stage(stage: str) -> list[str]:
     """Return the current notebook list for one stage.
 
-    ``all`` means all numerical/model stages and deliberately excludes the
-    measured experimental stage.  The overview notebook is prepended whenever
-    it exists.
+    ``publication`` is the maintained replacement for the original numbered
+    Publication_Study workflow. ``all`` means all numerical/model topic stages
+    and deliberately excludes the measured experimental stage. The overview
+    notebook is prepended to normal numerical topic stages when it exists.
     """
+    if stage == "publication":
+        return list(PUBLICATION_NOTEBOOKS)
     if stage == "all":
         notebooks = [nb for name in DEFAULT_STAGES for nb in STAGE_NOTEBOOKS[name]]
     else:
@@ -112,7 +139,7 @@ def notebooks_for_stage(stage: str) -> list[str]:
 def selected_notebooks(*, stage: str | None = None, only: str | None = None, **_: object) -> list[str]:
     """Compatibility helper retained for older imports.
 
-    New code should use ``--stage`` or ``--only``.  Historical start/stop slice
+    New code should use ``--stage`` or ``--only``. Historical start/stop slice
     arguments are intentionally no longer part of the public CLI because they
     encouraged dependence on stale notebook orderings.
     """
@@ -128,6 +155,9 @@ def selected_notebooks(*, stage: str | None = None, only: str | None = None, **_
 def print_notebook_order() -> None:
     print("Vortex-Bessel runnable notebook map")
     print(f"  overview: {STUDY_OVERVIEW_NOTEBOOK}")
+    print("\n[publication] (current replacement for original numbered Publication_Study)")
+    for notebook in PUBLICATION_NOTEBOOKS:
+        print(f"  {notebook}")
     for stage, notebooks in STAGE_NOTEBOOKS.items():
         suffix = " (local measurement data required)" if stage == "experimental" else ""
         print(f"\n[{stage}]{suffix}")
@@ -230,7 +260,7 @@ def run_notebooks(
     return {"requested": requested, "completed": completed, "failed": failed}
 
 
-# Compatibility alias: older code imported RunResult as a named object.  The
+# Compatibility alias: older code imported RunResult as a named object. The
 # clean runner returns a plain serialisable summary instead.
 RunResult = dict
 
@@ -240,9 +270,12 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--list", action="store_true", help="list current runnable notebooks")
     parser.add_argument(
         "--stage",
-        choices=[*STAGE_DIRS.keys(), "all"],
+        choices=[*STAGE_DIRS.keys(), "publication", "all"],
         default="all",
-        help="topic workflow to execute; 'all' excludes local-data experimental notebooks",
+        help=(
+            "workflow to execute; 'publication' replaces the original numbered "
+            "Publication_Study and 'all' excludes local-data experimental notebooks"
+        ),
     )
     parser.add_argument("--only", help="execute one repository-relative notebook")
     parser.add_argument("--timeout-s", type=int, default=1800, help="per-notebook timeout")
