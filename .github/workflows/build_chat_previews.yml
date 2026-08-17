@@ -25,45 +25,54 @@ jobs:
       - name: Install Pillow
         run: python -m pip install pillow
 
-      - name: Build compact JPEG previews
+      - name: Build compact previews and full-resolution display exports
         shell: python
         run: |
           from pathlib import Path
           from PIL import Image
 
           root = Path.cwd()
-          out = root / 'figures/chat_previews'
-          out.mkdir(parents=True, exist_ok=True)
+          preview_out = root / 'figures/chat_previews'
+          full_out = root / 'figures/chat_fullres'
+          preview_out.mkdir(parents=True, exist_ok=True)
+          full_out.mkdir(parents=True, exist_ok=True)
 
           files = {
-              '01_B0_V1_V3.jpg': root / 'figures/presentation/02_beam_profile_shaping_B0_V1_V3_thermal_tight.png',
-              '02_axicon_decentre.jpg': root / 'figures/presentation/04_V1_axicon_decentre_fixed_lab_thermal_tight.png',
-              '03_nonideal_tip.jpg': root / 'figures/presentation/05_V1_nonideal_tip_fixed_lab_thermal_tight.png',
-              '04_q20_reconstruction.jpg': root / 'figures/experimental/q20_aberration/reconstruction/polar_measured_fit_corrected.png',
-              '05_q20_xz_yz.jpg': root / 'figures/experimental/q20_aberration/validation/all_z_full_signed_xz_yz_maps.png',
+              '01_B0_V1_V3': root / 'figures/presentation/02_beam_profile_shaping_B0_V1_V3_thermal_tight.png',
+              '02_axicon_decentre': root / 'figures/presentation/04_V1_axicon_decentre_fixed_lab_thermal_tight.png',
+              '03_nonideal_tip': root / 'figures/presentation/05_V1_nonideal_tip_fixed_lab_thermal_tight.png',
+              '04_q20_reconstruction': root / 'figures/experimental/q20_aberration/reconstruction/polar_measured_fit_corrected.png',
+              '05_q20_xz_yz': root / 'figures/experimental/q20_aberration/validation/all_z_full_signed_xz_yz_maps.png',
           }
 
-          for name, src in files.items():
-              im = Image.open(src).convert('RGB')
-              max_w = 300
-              if im.width > max_w:
-                  h = round(im.height * max_w / im.width)
-                  im = im.resize((max_w, h), Image.Resampling.LANCZOS)
-              dst = out / name
-              im.save(dst, 'JPEG', quality=7, optimize=True, progressive=False)
-              print(name, dst.stat().st_size)
+          for stem, src in files.items():
+              original = Image.open(src).convert('RGB')
 
-      - name: Commit previews
+              preview = original.copy()
+              max_w = 300
+              if preview.width > max_w:
+                  h = round(preview.height * max_w / preview.width)
+                  preview = preview.resize((max_w, h), Image.Resampling.LANCZOS)
+              preview_dst = preview_out / f'{stem}.jpg'
+              preview.save(preview_dst, 'JPEG', quality=7, optimize=True, progressive=False)
+
+              # Same pixel dimensions as the canonical source PNG, but WebP-compressed
+              # so it can be rendered directly in chat without downsampling.
+              full_dst = full_out / f'{stem}.webp'
+              original.save(full_dst, 'WEBP', quality=42, method=6)
+              print(stem, original.size, preview_dst.stat().st_size, full_dst.stat().st_size)
+
+      - name: Commit display exports
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add figures/chat_previews
+          git add figures/chat_previews figures/chat_fullres
           if git diff --cached --quiet; then
-            echo 'Preview figures already current.'
+            echo 'Chat display figures already current.'
             exit 0
           fi
-          git commit -m 'Make chat preview figures tiny for direct rendering'
+          git commit -m 'Build full-resolution chat display figures'
           git pull --rebase origin main
           git push origin main
