@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vbb_study"
-version = "0.1.0"
-description = "Vortex-Bessel beam publication study tools and scalar engine."
+version = "0.2.0"
+description = "Validated numerical and experimental tooling for Vortex-Bessel structured-beam studies."
 requires-python = ">=3.13,<3.14"
 dependencies = [
     "numpy==2.4.1",
@@ -20,17 +20,29 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "papermill",
-    "ipykernel",
-    "jupyter",
+    "pytest==9.0.3",
+    "papermill==2.7.0",
+    "ipykernel==7.1.0",
+    "jupyter==1.1.1",
 ]
 viz = [
     "colorcet>=3.1",
     "cmocean>=4.0",
 ]
 
+[project.scripts]
+vortex-bessel = "run_study:main"
+
 [tool.setuptools]
-py-modules = ["bessel_twin_core"]
+py-modules = [
+    "bessel_twin_core",
+    "run_study",
+    "run_publication_study",
+    "publication_diagnostics",
+    "interface_correction_diagnosis",
+    "finalize_outputs",
+    "finalize_publication_outputs",
+]
 
 [tool.setuptools.packages.find]
 include = ["vbb_study*"]
