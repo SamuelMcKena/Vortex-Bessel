@@ -1,0 +1,206 @@
+{
+  "outcome": "PHASE2J-PRESENTATION-VISUAL-STANDARDISATION-V2",
+  "physics_source": "current repository dual-SLM -> explicit 4F -> physical axicon model",
+  "grid_n": 2048,
+  "inverse_grid_n": 512,
+  "visual_policy": {
+    "intensity_colormap": "phase2j_thermal",
+    "palette": "black -> deep red -> red -> orange -> amber -> yellow; no blue/cyan/green/purple segment",
+    "palette_hex": [
+      "#000000",
+      "#180000",
+      "#4d0000",
+      "#8f0800",
+      "#cf1d00",
+      "#f04400",
+      "#ff7600",
+      "#ffab00",
+      "#ffd13a",
+      "#fff176"
+    ],
+    "save_dpi": 480,
+    "display_interpolation": "lanczos",
+    "display_interpolation_changes_numerical_field": false,
+    "z_samples_for_main_longitudinal_maps": 72,
+    "fixed_lab_longitudinal": true,
+    "per_z_recentering": false,
+    "ideal_transverse_halfwidth_m": 0.00018,
+    "tip_output_transverse_halfwidth_m": 0.00024,
+    "decentre_and_error_output_transverse_halfwidth_m": 0.00052,
+    "decentre_longitudinal_halfwidth_m": 0.00062,
+    "tip_longitudinal_halfwidth_m": 0.0003,
+    "error_longitudinal_halfwidth_m": 0.00052
+  },
+  "figures": [
+    "outputs/figures/presentation_phase2j/01_computational_route_phase2j.png",
+    "outputs/figures/presentation_phase2j/02_beam_profile_shaping_B0_V1_V3_thermal_tight.png",
+    "outputs/figures/presentation_phase2j/04_V1_axicon_decentre_fixed_lab_thermal_tight.png",
+    "outputs/figures/presentation_phase2j/05_V1_nonideal_tip_fixed_lab_thermal_tight.png",
+    "outputs/figures/presentation_phase2j/06_simulation_experiment_closure_phase2j.png",
+    "outputs/figures/presentation_phase2j/08_V1_real_error_fingerprints_thermal_tight.png",
+    "outputs/figures/presentation_phase2j/09_tip_avoidance_planning_proxy_thermal.png",
+    "outputs/figures/presentation_phase2j/10_synthetic_zstack_inverse_recovery_thermal.png"
+  ],
+  "visual_audit_contact_sheet": "outputs/figures/presentation_phase2j/00_phase2j_visual_audit_contact_sheet.jpg",
+  "axicon_decentre_metrics": [
+    {
+      "decentre_m": -0.0005,
+      "label": "\u2212500 \u00b5m",
+      "centroid_x_m": -0.00029059848951751294,
+      "centroid_y_m": -3.897786550864924e-08,
+      "fixed_lab_line_centroid_slope_rad": -0.0005856430017236518,
+      "fixed_support_retained_power_fraction": 0.9999995641463878
+    },
+    {
+      "decentre_m": 0.0,
+      "label": "aligned",
+      "centroid_x_m": 7.568870218811776e-08,
+      "centroid_y_m": -4.766238379965599e-09,
+      "fixed_lab_line_centroid_slope_rad": -6.296734199042186e-08,
+      "fixed_support_retained_power_fraction": 0.999999929776872
+    },
+    {
+      "decentre_m": 0.0005,
+      "label": "+500 \u00b5m",
+      "centroid_x_m": 0.0002907451088218217,
+      "centroid_y_m": -3.581663501277139e-08,
+      "fixed_lab_line_centroid_slope_rad": 0.0005846559779036651,
+      "fixed_support_retained_power_fraction": 0.9999995760107139
+    }
+  ],
+  "axicon_tip_metrics": [
+    {
+      "radial_rounding_scale_m": 0.0,
+      "label": "ideal sharp tip",
+      "tip_radius_pixels": 0.0,
+      "passes_12_pixel_resolution_gate": true,
+      "fixed_support_retained_power_fraction": 0.999999929776872
+    },
+    {
+      "radial_rounding_scale_m": 0.0002,
+      "label": "200 \u00b5m radial rounding",
+      "tip_radius_pixels": 40.96,
+      "passes_12_pixel_resolution_gate": true,
+      "fixed_support_retained_power_fraction": 0.9999999330497593
+    },
+    {
+      "radial_rounding_scale_m": 0.0008,
+      "label": "800 \u00b5m radial rounding",
+      "tip_radius_pixels": 163.84,
+      "passes_12_pixel_resolution_gate": true,
+      "fixed_support_retained_power_fraction": 0.999999933311771
+    }
+  ],
+  "real_error_fingerprints": [
+    {
+      "label": "nominal",
+      "centroid_x_m": 7.568870218811776e-08,
+      "centroid_y_m": -4.766238379965599e-09,
+      "fixed_support_retained_power_fraction": 0.999999929776872
+    },
+    {
+      "label": "beam pointing +0.75 mrad",
+      "centroid_x_m": -4.475317695970575e-05,
+      "centroid_y_m": 7.930543209493732e-07,
+      "fixed_support_retained_power_fraction": 0.999999885000802
+    },
+    {
+      "label": "SLM1 registration +250 \u00b5m",
+      "centroid_x_m": -1.982154760335274e-06,
+      "centroid_y_m": 1.2006374924426442e-06,
+      "fixed_support_retained_power_fraction": 0.9999994099250046
+    },
+    {
+      "label": "4F iris offset +0.35 R",
+      "centroid_x_m": -5.1231046800797547e-08,
+      "centroid_y_m": -1.073518491630841e-06,
+      "fixed_support_retained_power_fraction": 0.9999999052145432
+    }
+  ],
+  "tip_avoidance_planning_proxy": {
+    "tip_radius_m": 0.0002,
+    "annular_proxy_strength": 0.75,
+    "nominal_fractional_power_inside_tip": 0.01465788965723334,
+    "annular_fractional_power_inside_tip": 0.0034618396019710125,
+    "annular_mask_light_cost_before_equal_power_rescale": 0.30971669352789366,
+    "equal_total_power_for_shape_comparison_only": true,
+    "fixed_support_retained_power_fraction": [
+      0.9999999330497593,
+      0.9999999999996241
+    ],
+    "claim_boundary": "Planning proxy only. Rigorous implementation requires complex-amplitude SLM encoding or a separate amplitude modulator."
+  },
+  "synthetic_inverse_recovery": {
+    "truth_axicon_decentre_m": 0.0003,
+    "candidate_axicon_decentre_m": [
+      -0.0005,
+      -0.0004,
+      -0.00030000000000000003,
+      -0.00020000000000000004,
+      -0.00010000000000000005,
+      0.0,
+      9.999999999999994e-05,
+      0.00019999999999999987,
+      0.0002999999999999999,
+      0.00039999999999999996,
+      0.0005
+    ],
+    "costs": [
+      0.16130907645155737,
+      0.17992755126874674,
+      0.17785339806972422,
+      0.17659037454736926,
+      0.17338402461397265,
+      0.1689221040164061,
+      0.1617416191710591,
+      0.14494573479594516,
+      4.815229677487345e-16,
+      0.1433964866990569,
+      0.1438168967674724
+    ],
+    "recovered_axicon_decentre_m": 0.0002999999999999999,
+    "z_planes_m": [
+      0.02,
+      0.025,
+      0.03,
+      0.035,
+      0.04,
+      0.045,
+      0.05,
+      0.05500000000000001,
+      0.06,
+      0.065,
+      0.07,
+      0.075,
+      0.08,
+      0.085,
+      0.09000000000000001,
+      0.095,
+      0.1
+    ],
+    "grid_n": 512,
+    "fixed_support_retained_power_fraction_truth": 1.0,
+    "fixed_support_retained_power_fraction_candidates": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "claim_boundary": "synthetic model-to-model inverse proof-of-principle; not experimental aberration recovery"
+  },
+  "claim_boundaries": [
+    "presentation rendering changes do not alter optical physics",
+    "phase panels remain cyclic because phase is not an intensity quantity",
+    "signed residual panels remain diverging because residual sign must be visible",
+    "axicon perturbation magnitudes remain sensitivity examples unless independently calibrated",
+    "tip-avoidance image remains a planning proxy rather than calibrated SLM efficiency evidence",
+    "inverse-recovery image remains synthetic model-to-model validation until calibrated camera data are fitted"
+  ]
+}
