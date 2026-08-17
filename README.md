@@ -1,54 +1,97 @@
-# Structured-Beam PhD Study — clean working tree
+# Vortex-Bessel
 
-This branch is a clean, current working tree for the structured-beam PhD codebase. It is built from the Phase 2K mathematical/physics audit and then integrates the current experimental axicon-aberration correction study.
+Clean, consolidated research code for numerical and experimental structured-beam work.
 
-## Scientific status
+This repository is intended to be the **day-to-day source of truth**: one current package, one organised notebook tree and one normal runner, rather than searching through dated Publication_Study backups and old phase branches for whichever implementation was newest.
 
-The repository deliberately separates four levels of evidence:
+It is built from the Phase 2K mathematical/physics-audited codebase and includes the current measured q=20 axicon-aberration correction work.
 
-1. **Analytic / numerical reference** — equations and independent numerical checks used to validate solvers.
-2. **Nominal optical-system prediction** — simulations of the dual-SLM, 4F and physical-axicon route before complete bench calibration.
-3. **Measured experimental evidence** — camera/BeamGage data and quantities derived directly from those measurements.
-4. **Hardware-validated correction** — requires calibrated camera-to-SLM mapping, SLM LUT/phase stroke, beam footprint/parity and a new post-correction z-scan that passes the experimental acceptance gates.
+## Start here
 
-The current aberration-correction phase maps are **model predictions**, not post-correction camera measurements.
-
-## Canonical source layout
-
-- `vbb_study/` — authoritative beam models, propagation, optical-route and digital-twin source.
-- `notebooks/` — curated analysis notebooks by topic; quicklook/export-only notebooks are omitted.
-- `notebooks/experimental/axicon_aberration_correction/` — current measured q=20 z-scan reconstruction and correction work.
-- `reference_kernels/` — independent/reference numerical kernels.
-- `tests/` — numerical, physics-contract and regression tests.
-- `tools/` — reproducibility, validation and audit utilities.
-- `calibration/` — calibration contracts/templates and bench-calibration support.
-- `docs/` — theory, conventions, limitations, calibration and reporting documentation.
-- `references/` — literature/reference material used by the codebase.
-- `outputs/validation/` — governed validation records only; bulk historical generated outputs are excluded from this clean tree.
-
-## Figure policy
-
-The clean tree does not keep every historical render. For the current q=20 aberration-correction study, figures are curated under:
-
-`notebooks/experimental/axicon_aberration_correction/figures/current_q20/`
-
-That directory favours the newest realigned, comprehensive-validation, single-mask, phase-error-recreation and closed-loop outputs. Pre-realignment duplicates and the earliest root-level correction plots are intentionally omitted.
-
-Older non-aberration figure families are not promoted here merely because they exist. Phase 2K requires their generating paths to satisfy the relevant analytic/reference, independent numerical, convergence and hardware-provenance gates before they are treated as current scientific evidence.
-
-## Reproducibility
-
-Install the report environment with `requirements-report.txt`; the experimental q=20 correction package also has its own local `requirements.txt`.
-
-Run core checks with pytest and compileall, e.g.:
+Install the audited numerical environment:
 
 ```powershell
-python -m pytest tests -q
-python -m compileall -q vbb_study tools tests
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements-report.txt
 ```
 
-The experimental axicon-correction package contains additional controller tests and explicit hardware-readiness blockers.
+See the current runnable study map:
 
-## Provenance
+```powershell
+python run_study.py --list
+```
 
-See `CLEANROOM_PROVENANCE.md` for the source branches, integration strategy and claim boundaries used to build this clean working tree.
+Run a topic directly:
+
+```powershell
+python run_study.py --stage scalar
+python run_study.py --stage lab_realism
+python run_study.py --stage vector
+python run_study.py --stage materials
+python run_study.py --stage advanced
+python run_study.py --stage digital_twin
+```
+
+Run every numerical/model stage:
+
+```powershell
+python run_study.py --stage all
+```
+
+The measured experimental stage is intentionally separate because the raw camera/BeamGage data are local:
+
+```powershell
+$env:BESSEL_ZSCAN_DATA_DIR = 'D:\path\to\z-scan'
+python run_study.py --stage experimental
+```
+
+Executed notebooks are written under `outputs/executed_notebooks/`; the source notebooks are left untouched.
+
+See **`docs/RUN_GUIDE.md`** for the full run instructions and **`docs/PUBLICATION_STUDY_MAP.md`** for a direct map from the old numbered Publication_Study notebooks and `NB_*` workflows to their current locations.
+
+## Repository layout
+
+- `vbb_study/` — authoritative beam models, propagation, SLM/4F/axicon routes, calibration and digital-twin source.
+- `notebooks/scalar/` — ideal and lab-realistic scalar Bessel/vortex-Bessel diagnostics, robustness, sweeps and validation.
+- `notebooks/lab_realism/` — holographic and physical axicon routes, first-order filtering, sample interface and full optical journey.
+- `notebooks/vector/` — vector/Jones-field and hardware-route studies.
+- `notebooks/materials/` — material/application proxy calculations and calibration templates.
+- `notebooks/advanced/` — capsule/weld, hexagonal/polygonal and discrete N-fold studies.
+- `notebooks/digital_twin/` — later bench/digital-twin and structured-vector route work.
+- `notebooks/experimental/axicon_aberration_correction/` — measured z-scan analysis, q=20 modal retrieval, inverse-error validation and correction proposal work.
+- `tests/` — numerical, physics-contract and regression tests.
+- `reference_kernels/` — independent numerical/reference implementations.
+- `tools/` — validation, reproducibility and evidence utilities.
+- `calibration/` and `configs/` — bench-calibration contracts and study configuration.
+- `outputs/validation/` — governed machine-readable validation evidence retained from the audited codebase.
+
+Compatibility modules such as `bessel_twin_core.py`, `publication_diagnostics.py`, `interface_correction_diagnosis.py` and `run_publication_study.py` remain so older notebooks/scripts can still resolve their established imports, but new work should start from `vbb_study/` and `run_study.py`.
+
+## Publication_Study cleanup
+
+The useful Publication_Study functionality has been carried forward, but the duplicate `vbb_study - Copy`, dated `backups/`, Python caches, `run_* - Copy.py` files and bulk historical generated-output tree are not treated as competing current implementations.
+
+The original numbered workflows are mapped here:
+
+`docs/PUBLICATION_STUDY_MAP.md`
+
+The historical `phd-structured-beam-study` repository should be kept as the provenance/history store; routine development and analysis should happen here.
+
+## Scientific claim boundary
+
+The repository separates analytic/numerical reference calculations, nominal optical-system prediction, measured experimental evidence and hardware-validated correction.
+
+For the q=20 aberration work, the measured z-stack is experimental evidence, while the recovered modal phase and proposed SLM correction remain model inference.  Files marked `UNCALIBRATED_DO_NOT_APPLY` or `NOMINAL_PREVIEW_NOT_FOR_DISPLAY` are not hardware-ready until the SLM LUT/phase stroke, illuminated footprint, coordinate parity/rotation and camera-to-SLM transform are calibrated and a fresh post-correction z-scan verifies the result.
+
+## Checks
+
+```powershell
+python -m compileall -q vbb_study tools tests
+python -m pytest tests -q
+python run_study.py --list
+python run_study.py --stage scalar --dry-run
+```
+
+See `CLEANROOM_PROVENANCE.md` for the source branches and migration/claim-boundary decisions.
