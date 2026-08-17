@@ -16,6 +16,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: canonical-figure-regeneration
+  cancel-in-progress: true
+
 jobs:
   regenerate:
     runs-on: ubuntu-latest
@@ -163,4 +167,8 @@ jobs:
             exit 0
           fi
           git commit -m 'Regenerate current canonical presentation figures'
-          git push origin main
+          # Main may move while the heavy renderer is running. Rebase the figure
+          # commit onto the latest main before pushing so documentation/CI edits
+          # made in parallel are not overwritten or rejected.
+          git pull --rebase origin main
+          git push origin HEAD:main
