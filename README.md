@@ -24,6 +24,18 @@ See everything that is currently runnable:
 vortex-bessel --list
 ```
 
+To run the **current replacement for the original numbered Publication_Study workflow** in one command:
+
+```powershell
+vortex-bessel --stage publication
+```
+
+The old command also remains meaningful and defaults to that same current publication suite:
+
+```powershell
+python run_publication_study.py
+```
+
 Run a topic directly:
 
 ```powershell
@@ -35,7 +47,7 @@ vortex-bessel --stage advanced
 vortex-bessel --stage digital_twin
 ```
 
-Run every numerical/model stage:
+Run every numerical/model topic stage:
 
 ```powershell
 vortex-bessel --stage all
@@ -55,6 +67,7 @@ vortex-bessel --stage experimental
 - `docs/CURRENT_CODE_INDEX.md` — practical “I want to do X — which code do I run?” index, including ideal beams, system errors, lateral axicon decentre, rounded tips, vector beams, materials, digital twin, q=20 correction and presentation figures.
 - `docs/RUN_GUIDE.md` — environment and execution instructions.
 - `docs/PUBLICATION_STUDY_MAP.md` — maps the old numbered Publication_Study and `NB_*` workflows to their current replacements.
+- `docs/PUBLICATION_STUDY_COVERAGE.md` — migration coverage audit and deliberate exclusions.
 - `docs/TOOLS_GUIDE.md` — specialist validation/error-study/figure utilities.
 - `CLEANROOM_PROVENANCE.md` — source branches and migration/claim-boundary decisions.
 
@@ -94,9 +107,10 @@ For the q=20 aberration work, the measured z-stack is experimental evidence, whi
 
 ```powershell
 python -m compileall -q vbb_study tools tests
+python tools\audit_publication_study_coverage.py
 python tools\audit_clean_layout.py
 python tools\audit_notebook_runtime_paths.py
 python -m pytest tests -q
 vortex-bessel --list
-vortex-bessel --stage scalar --dry-run
+vortex-bessel --stage publication --dry-run
 ```
