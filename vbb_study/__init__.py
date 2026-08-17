@@ -1,8 +1,10 @@
-"""Shared helpers for the vortex-Bessel-beam publication study.
+"""Shared helpers for the Vortex-Bessel structured-beam study.
 
-I keep this package separate from the physics engine so that the core model can
-stay importable by older notebooks while the publication workflow gains a clean
-place for style, validation, metrics, and vector-analysis utilities.
+The package remains lazily imported so lightweight commands such as
+``python run_study.py --list`` do not load the full numerical stack.  The
+workspace path is the directory containing ``vbb_study``; this is correct both
+for the standalone Vortex-Bessel repository and for older checkouts where the
+workspace happened to be named ``Publication_Study``.
 """
 
 from __future__ import annotations
@@ -11,9 +13,11 @@ import importlib
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+WORKSPACE = Path(__file__).resolve().parents[1]
+# ROOT is retained as a compatibility name used by a few historical helpers.
+ROOT = WORKSPACE
+if str(WORKSPACE) not in sys.path:
+    sys.path.insert(0, str(WORKSPACE))
 
 _SUBMODULES = [
     "config",
@@ -49,11 +53,7 @@ __all__ = list(_SUBMODULES)
 
 
 def __getattr__(name: str):
-    """Import helper submodules on first use.
-
-    This keeps lightweight runner commands such as ``--list`` from importing
-    the full scientific stack before notebooks actually need it.
-    """
+    """Import helper submodules on first use."""
 
     if name in _SUBMODULES:
         module = importlib.import_module(f"{__name__}.{name}")
