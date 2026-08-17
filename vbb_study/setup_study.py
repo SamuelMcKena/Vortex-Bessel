@@ -1,20 +1,17 @@
-"""Workspace bootstrap and manifest helpers for the structured-beam study.
+"""Workspace bootstrap, validation and manifest helpers.
 
-The notebooks, scripts, and smoke tests all need the same path contract:
+The current repository is self-contained: its checkout root is the study
+workspace.  Older development checkouts placed the same material beneath a
+``Publication_Study/`` directory, so the bootstrap still recognises that layout
+for compatibility, but no current code should require it.
 
-* ``root`` is the checkout root that contains ``Publication_Study``.
-* ``publication`` is the study workspace (``Publication_Study/``).
-* ``vbb_study`` and ``bessel_twin_core.py`` inside ``Publication_Study`` are
-  the active source.
-* ``docs`` is ``Publication_Study/docs``.
-* ``outputs`` and its named children are generated folders.
+The path contract returned by :func:`bootstrap` is deliberately stable:
 
-Keeping the contract here prevents notebooks from drifting back to local
-absolute paths.
-
-Notebooks now live in ``Publication_Study/notebooks/`` subdirectories.  All
-entries in ``REQUIRED_NOTEBOOKS`` are relative to the ``publication`` path,
-e.g. ``"notebooks/scalar/02_scalar_ideal_vs_lab_diagnostics.ipynb"``.
+* ``root``: Git checkout root;
+* ``publication``: active study workspace (the same as ``root`` in this repo);
+* ``vbb_study`` source and ``bessel_twin_core.py`` live in that workspace;
+* ``docs`` and ``reference_kernels`` live directly beneath the workspace;
+* ``outputs`` contains generated artefacts and governed validation records.
 """
 
 from __future__ import annotations
@@ -22,6 +19,7 @@ from __future__ import annotations
 import dataclasses
 import hashlib
 import json
+import os
 import platform
 import subprocess
 import sys
@@ -30,145 +28,143 @@ from pathlib import Path
 from typing import Any, Mapping
 
 
-# Canonical notebook list — paths relative to the publication directory.
-# These are the minimum notebooks required for workspace validation.
-# The full ordered execution sequence lives in run_study.ORDERED_NOTEBOOKS.
+# Minimum current notebook skeleton.  The complete runnable registry is
+# discovered dynamically by run_study.py; this list exists only for workspace
+# health checks and therefore must not contain deleted historical notebooks.
 REQUIRED_NOTEBOOKS = [
     "notebooks/00_study_overview_and_conventions.ipynb",
-    # quicklook branch
-    "notebooks/quicklook/00_quick_beam_to_sample_simulator.ipynb",
-    # scalar branch
     "notebooks/scalar/02_scalar_ideal_vs_lab_diagnostics.ipynb",
     "notebooks/scalar/03_scalar_robustness_and_self_healing.ipynb",
     "notebooks/scalar/04_scalar_parameter_sweeps.ipynb",
     "notebooks/scalar/05_scalar_validation_suite.ipynb",
-    # lab-realism branch
     "notebooks/lab_realism/01_holographic_axicon_route.ipynb",
     "notebooks/lab_realism/02_physical_axicon_route.ipynb",
     "notebooks/lab_realism/03_holographic_vs_physical_axicon.ipynb",
     "notebooks/lab_realism/04_objective_pupil_and_first_order_filtering.ipynb",
     "notebooks/lab_realism/05_through_sample_interface.ipynb",
     "notebooks/lab_realism/06_full_source_to_sample_journey.ipynb",
-    # vector branch
     "notebooks/vector/01_vector_beam_theory_atlas.ipynb",
     "notebooks/vector/02_vector_ideal_vs_lab_case1.ipynb",
     "notebooks/vector/03_vector_hardware_routes.ipynb",
-    # materials branch
+    "notebooks/vector/04_vector_arm_hexagon.ipynb",
     "notebooks/materials/01_material_proxy_fluence_and_thresholds.ipynb",
     "notebooks/materials/02_material_calibration_template.ipynb",
     "notebooks/materials/03_application_design_tables.ipynb",
-    # publication exports
-    "notebooks/publication_exports/03_report_export.ipynb",
-    # advanced branch
     "notebooks/advanced/01_capsule_weld_feature_design.ipynb",
+    "notebooks/advanced/02_hexagonal_polygonal_beams.ipynb",
     "notebooks/advanced/03_discrete_nfold_beams.ipynb",
-    # digital-twin vector hexagon branch
-    "notebooks/digital_twin/03_nathan_vector_hexagon_target_field.ipynb",
-    "notebooks/digital_twin/04_patterned_hwp_vector_route.ipynb",
-    "notebooks/digital_twin/05_serial_dual_slm_vector_route.ipynb",
-    "notebooks/digital_twin/06_shared_axicon_hexagon_propagation.ipynb",
-    "notebooks/digital_twin/07_nathan_vector_hexagon_robustness_and_equivalence.ipynb",
+    "notebooks/digital_twin/00_full_beam_to_write_cockpit_MVP.ipynb",
+    "notebooks/experimental/axicon_aberration_correction/Bessel_zscan_alignment_correction.ipynb",
 ]
 
 REQUIRED_DOCS = [
-    # Original docs — kept under old names until Phase 7 renaming.
     "00_theory.md",
     "01_conventions.md",
-    "02_validation.md",
-    "03_materials_application.md",
-    "04_actual_lab_vector_case1.md",
-    "05_study_taxonomy.md",
-    "16_figure_output_governance.md",
-    # New docs added in Phase 2.
-    "00_project_overview.md",
-    "08_refactor_plan.md",
+    "04_model_limitations.md",
 ]
 
+# Paths are relative to the active study workspace, not to an assumed parent
+# directory called Publication_Study.
 REQUIRED_SOURCE_FILES = [
-    "Publication_Study/bessel_twin_core.py",
-    # New canonical runner.
-    "Publication_Study/run_study.py",
-    # Compatibility wrapper (delegates to run_study.py).
-    "Publication_Study/run_publication_study.py",
-    "Publication_Study/finalize_publication_outputs.py",
-    "Publication_Study/vbb_study/__init__.py",
-    "Publication_Study/vbb_study/setup_study.py",
-    "Publication_Study/vbb_study/publication/quicklook.py",
-    "Publication_Study/vbb_study/publication/visuals.py",
-    "Publication_Study/vbb_study/study_taxonomy.py",
-    # Root-level compatibility shims.
     "bessel_twin_core.py",
+    "run_study.py",
+    "run_publication_study.py",
+    "finalize_publication_outputs.py",
     "vbb_study/__init__.py",
+    "vbb_study/setup_study.py",
+    "vbb_study/publication/visuals.py",
+    "vbb_study/study_taxonomy.py",
 ]
+
+
+def _looks_like_current_workspace(candidate: Path) -> bool:
+    return (
+        (candidate / "bessel_twin_core.py").is_file()
+        and (candidate / "vbb_study" / "__init__.py").is_file()
+        and (candidate / "notebooks").is_dir()
+    )
+
+
+def _looks_like_legacy_parent(candidate: Path) -> bool:
+    workspace = candidate / "Publication_Study"
+    return (
+        (workspace / "bessel_twin_core.py").is_file()
+        and (workspace / "vbb_study" / "__init__.py").is_file()
+    )
 
 
 def find_repo_root(start: str | Path | None = None) -> Path:
-    """Find the repository root by walking upward from ``start``.
+    """Find the checkout root for either the clean or legacy layout."""
 
-    Anchors on ``Publication_Study/bessel_twin_core.py``, which is the
-    authoritative scalar-physics source.  The root-level compatibility shim
-    is also tolerated for older checkouts.
-    """
-
-    here = Path.cwd() if start is None else Path(start).resolve()
+    here = Path.cwd() if start is None else Path(start).expanduser().resolve()
     if here.is_file():
         here = here.parent
+
     for candidate in (here, *here.parents):
-        if (candidate / "Publication_Study" / "bessel_twin_core.py").exists():
+        # In an old checkout, prefer the parent of Publication_Study so git
+        # provenance still refers to the actual repository root.
+        if candidate.name == "Publication_Study" and _looks_like_current_workspace(candidate):
+            parent = candidate.parent
+            if (parent / ".git").exists() or _looks_like_legacy_parent(parent):
+                return parent
+        if _looks_like_current_workspace(candidate):
             return candidate
-        if candidate.name == "Publication_Study" and (candidate / "bessel_twin_core.py").exists():
-            return candidate.parent
-        if (candidate / "bessel_twin_core.py").exists() and (candidate / "Publication_Study").exists():
+        if _looks_like_legacy_parent(candidate):
             return candidate
-    raise FileNotFoundError("Could not find repository root containing Publication_Study/bessel_twin_core.py")
+
+    raise FileNotFoundError(
+        "Could not find a Vortex-Bessel workspace containing "
+        "bessel_twin_core.py, vbb_study/ and notebooks/."
+    )
+
+
+def _workspace_from_root(root: Path) -> Path:
+    legacy = root / "Publication_Study"
+    if _looks_like_current_workspace(legacy):
+        return legacy
+    if _looks_like_current_workspace(root):
+        return root
+    raise FileNotFoundError(f"No active structured-beam workspace found beneath {root}")
 
 
 def bootstrap(
     start: str | Path | None = None,
     *,
     apply_plot_style: bool = True,
-) -> dict[str, Path]:
-    """Add study source folders to ``sys.path`` and return canonical paths.
-
-    Returns
-    -------
-    dict
-        Paths for source, documentation, and generated-output locations. The
-        ``modular_lab`` key is a compatibility alias for legacy notebooks; it
-        points at ``reference_kernels`` rather than an external lab folder.
-    """
+) -> dict[str, Any]:
+    """Add source folders to ``sys.path`` and return canonical workspace paths."""
 
     root = find_repo_root(start)
-    publication = root / "Publication_Study"
-    reference_kernels = publication / "reference_kernels"
-    outputs = publication / "outputs"
-    paths = {
-        # Source/workspace roots.
+    workspace = _workspace_from_root(root)
+    reference_kernels = workspace / "reference_kernels"
+    outputs = workspace / "outputs"
+
+    paths: dict[str, Any] = {
         "root": root,
-        "publication": publication,
+        # Historical name retained as an API key: in Vortex-Bessel this points
+        # to the checkout root itself.
+        "publication": workspace,
         "reference_kernels": reference_kernels,
         "modular_lab": reference_kernels,
-        # Generated-output contract. These folders may be removed only by the
-        # runner's explicit --clean-output option.
         "outputs": outputs,
         "figures": outputs / "figures",
         "csv": outputs / "csv",
         "holograms": outputs / "holograms",
         "manifests": outputs / "manifests",
         "jupyter_runtime": outputs / "jupyter_runtime",
-        # Compatibility pointer for older exploratory notebooks. Publication
-        # notebooks should prefer paths["outputs"] and paths["docs"].
         "root_outputs": root / "outputs",
-        "docs": publication / "docs",
+        "docs": workspace / "docs",
+        "run_id": os.environ.get("STRUCTURED_BEAM_RUN_ID", ""),
     }
-    for key in ("root", "publication"):
-        path_text = str(paths[key])
-        if path_text not in sys.path:
-            sys.path.insert(0, path_text)
-    # Expose run_id from the runner environment so notebooks can stamp outputs.
-    # Notebooks should use paths["run_id"] when calling annotate_scalar_row.
-    import os as _os
-    paths["run_id"] = _os.environ.get("STRUCTURED_BEAM_RUN_ID", "")
+
+    # Workspace first so imports always resolve to this repository rather than
+    # a stale sibling checkout on PYTHONPATH.
+    for path in (root, workspace):
+        text = str(path)
+        if text in sys.path:
+            sys.path.remove(text)
+        sys.path.insert(0, text)
+
     if apply_plot_style:
         from . import vbb_style
 
@@ -176,36 +172,25 @@ def bootstrap(
     return paths
 
 
-def _missing(paths: Mapping[str, Path], key: str, names: list[str]) -> list[str]:
-    base = Path(paths[key])
+def _missing(base: Path, names: list[str]) -> list[str]:
     return [str(base / name) for name in names if not (base / name).exists()]
 
 
-def validate_workspace(paths: Mapping[str, Path], strict: bool = True) -> dict[str, list[str]]:
-    """Check that the publication workspace has its expected source skeleton.
+def validate_workspace(paths: Mapping[str, Any], strict: bool = True) -> dict[str, list[str]]:
+    """Validate the minimum current source/notebook/document skeleton.
 
-    The validation is intentionally about reproducibility plumbing, not physics
-    correctness: it checks that canonical notebooks, docs, active source files,
-    and compatibility shims exist. Generated scientific outputs are not
-    required because a fresh checkout may not include them.
-
-    Parameters
-    ----------
-    paths:
-        Mapping returned by :func:`bootstrap`.
-    strict:
-        When true, raise ``FileNotFoundError`` with a grouped message if any
-        required item is missing. When false, only return the report.
+    This checks reproducibility plumbing only; it does not assert experimental
+    calibration or scientific validity of generated results.
     """
 
-    root = Path(paths["root"])
+    workspace = Path(paths["publication"])
     report = {
-        "missing_notebooks": _missing(paths, "publication", REQUIRED_NOTEBOOKS),
-        "missing_docs": _missing(paths, "docs", REQUIRED_DOCS),
-        "missing_source_files": [str(root / name) for name in REQUIRED_SOURCE_FILES if not (root / name).exists()],
+        "missing_notebooks": _missing(workspace, REQUIRED_NOTEBOOKS),
+        "missing_docs": _missing(Path(paths["docs"]), REQUIRED_DOCS),
+        "missing_source_files": _missing(workspace, REQUIRED_SOURCE_FILES),
     }
     if strict and any(report.values()):
-        lines = ["Publication_Study workspace validation failed:"]
+        lines = ["Vortex-Bessel workspace validation failed:"]
         for label, items in report.items():
             if items:
                 lines.append(f"- {label}:")
@@ -266,7 +251,7 @@ def code_version(root: str | Path | None = None) -> str | None:
 
 
 def stage1_engine_git_fields(root: str | Path | None = None) -> dict[str, str | None]:
-    """Return Stage 1 baseline provenance fields for future captures."""
+    """Return baseline engine provenance fields for future captures."""
 
     commit = code_version(root)
     if commit:
@@ -287,12 +272,7 @@ def run_manifest(
     extra: Mapping[str, Any] | None = None,
     root: str | Path | None = None,
 ) -> dict[str, Any]:
-    """Build the minimal manifest I want next to generated artefacts.
-
-    The manifest records timestamp, config hash, Python/runtime details, code
-    version when available, and output paths. It deliberately does not invent
-    any metric values.
-    """
+    """Build a minimal provenance manifest for generated artefacts."""
 
     repo = find_repo_root(root)
     return {
@@ -316,7 +296,7 @@ def write_run_manifest(
     extra: Mapping[str, Any] | None = None,
     root: str | Path | None = None,
 ) -> Path:
-    """Write a JSON run manifest and return the path."""
+    """Write a JSON run manifest and return its path."""
 
     path = Path(manifest_path)
     path.parent.mkdir(parents=True, exist_ok=True)
