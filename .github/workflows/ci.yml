@@ -41,6 +41,9 @@ jobs:
       - name: Audit notebook runtime paths
         run: python tools/audit_notebook_runtime_paths.py
 
+      - name: Audit canonical figure library
+        run: python tools/audit_figure_library.py
+
       - name: Validate workspace bootstrap
         shell: bash
         run: |
