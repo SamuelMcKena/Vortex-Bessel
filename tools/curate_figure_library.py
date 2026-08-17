@@ -122,22 +122,32 @@ def curate_q20(rows: list[dict[str, str]]) -> None:
 
     for group, items in groups.items():
         for rel, generator, preferred in items:
+            is_rejected = "REJECTED_DO_NOT_USE" in rel or "CANDIDATE" in rel
             evidence = "measured+model" if group in {"reconstruction", "validation"} else "model_inference"
             if group in {"phase_error_recreation", "single_mask"}:
                 evidence = "falsification_test"
-            if group == "slm_preview" or "CANDIDATE" in rel:
+            if group == "slm_preview" or is_rejected:
                 evidence = "hardware_preview_not_validated"
+            status = "canonical"
+            if group == "slm_preview":
+                status = "secondary"
+            if is_rejected:
+                status = "rejected_engineering_evidence"
+            note = ""
+            if evidence == "hardware_preview_not_validated":
+                note = "Not hardware-validated; requires calibrated SLM mapping/LUT and a fresh post-correction z-stack."
+            if is_rejected:
+                note = "Rejected candidate retained only as controller/engineering evidence; do not present as a usable correction mask."
             copy_one(
                 rows, qfig / rel, qdst / group / Path(rel).name,
                 topic=f"q20_aberration/{group}",
-                status="secondary" if group == "slm_preview" else "canonical",
+                status=status,
                 evidence_type=evidence,
                 generator=generator,
                 source_root=qroot,
                 supersedes="pre_realign_* and early/root q20 renders" if group in {"reconstruction", "validation"} else "",
                 presentation_preferred=preferred,
-                notes=("Not hardware-validated; requires calibrated SLM mapping/LUT and a fresh post-correction z-stack."
-                       if evidence == "hardware_preview_not_validated" else ""),
+                notes=note,
             )
 
 
@@ -224,7 +234,7 @@ If multiple historical versions exist, prefer the figure listed here and use `ma
 
 Measured z-stack images are experimental evidence. Modal phase recovery and proposed correction maps are model inference. Phase-error recreation and single-mask forward propagation are falsification tests. SLM previews are not hardware-ready until phase LUT/stroke, illuminated footprint, parity/rotation and camera-to-SLM mapping are calibrated and a fresh post-correction z-stack verifies the result.
 
-Pre-realignment q=20 renders and early `postcorrectionoutput1`-style figures are deliberately not promoted here.
+Rejected controller candidates are retained only as engineering evidence and are never canonical usable correction masks. Pre-realignment q20 renders and early `postcorrectionoutput1`-style figures are deliberately not promoted here.
 
 `outputs/` remains the regeneration/transient area; `figures/` is the small committed library for navigation, comparison and presentation reuse.
 """,
