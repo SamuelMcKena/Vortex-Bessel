@@ -1,0 +1,101 @@
+name: Bootstrap clean Vortex-Bessel repository
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/bootstrap_from_cleanroom.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out destination repository
+        uses: actions/checkout@v4
+        with:
+          path: destination
+          fetch-depth: 0
+
+      - name: Check out validated source cleanroom
+        uses: actions/checkout@v4
+        with:
+          repository: SamuelMcKena/phd-structured-beam-study
+          ref: agent/phd-cleanroom-v1
+          path: source
+          fetch-depth: 1
+
+      - name: Copy current authoritative code and runnable workflows
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE/destination"
+
+          # Replace the temporary bootstrap README with the curated cleanroom README.
+          cp "$GITHUB_WORKSPACE/source/README.md" README.md
+          cp "$GITHUB_WORKSPACE/source/CLEANROOM_PROVENANCE.md" CLEANROOM_PROVENANCE.md
+          cp "$GITHUB_WORKSPACE/source/.gitignore" .gitignore
+
+          # Core importable physics/model code, calibration bridge and digital twin.
+          for d in vbb_study calibration configs docs reference_kernels tests tools; do
+            rm -rf "$d"
+            cp -a "$GITHUB_WORKSPACE/source/$d" "$d"
+          done
+
+          # Curated runnable notebooks, including scalar/vector/lab-realism/materials,
+          # digital-twin and experimental q=20 axicon-aberration correction work.
+          rm -rf notebooks
+          cp -a "$GITHUB_WORKSPACE/source/notebooks" notebooks
+
+          # Keep governed machine-readable validation evidence, not the historical
+          # bulk output forest.
+          rm -rf outputs
+          mkdir -p outputs
+          cp -a "$GITHUB_WORKSPACE/source/outputs/validation" outputs/validation
+
+          # Compatibility / publication entry points that remain useful for old work.
+          for f in \
+            bessel_twin_core.py \
+            publication_diagnostics.py \
+            interface_correction_diagnosis.py \
+            finalize_outputs.py \
+            finalize_publication_outputs.py \
+            run_study.py \
+            run_publication_study.py \
+            pyproject.toml \
+            requirements.txt \
+            requirements-report.txt; do
+            if [[ -f "$GITHUB_WORKSPACE/source/$f" ]]; then
+              cp "$GITHUB_WORKSPACE/source/$f" "$f"
+            fi
+          done
+
+          cat > MIGRATION_SOURCE.md <<'EOF'
+          # Migration source
+
+          This repository was bootstrapped from the curated `agent/phd-cleanroom-v1`
+          tree in `SamuelMcKena/phd-structured-beam-study`.
+
+          The cleanroom was built on the Phase 2K mathematical/physics audit and then
+          received the current experimental q=20 axicon-aberration correction subtree.
+          The historical repository remains the provenance store; this repository is
+          intended to be the day-to-day runnable codebase.
+          EOF
+
+      - name: Commit migrated repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE/destination"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No migration changes to commit."
+            exit 0
+          fi
+          git commit -m "Bootstrap validated structured-beam cleanroom"
+          git push origin main
