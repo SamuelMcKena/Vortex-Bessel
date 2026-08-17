@@ -56,10 +56,10 @@ jobs:
               preview_dst = preview_out / f'{stem}.jpg'
               preview.save(preview_dst, 'JPEG', quality=7, optimize=True, progressive=False)
 
-              # Same pixel dimensions as the canonical source PNG, but WebP-compressed
-              # so it can be rendered directly in chat without downsampling.
+              # Preserve the exact source pixel dimensions. WebP compression is only
+              # to keep the file small enough for direct in-chat rendering.
               full_dst = full_out / f'{stem}.webp'
-              original.save(full_dst, 'WEBP', quality=42, method=6)
+              original.save(full_dst, 'WEBP', quality=12, method=6)
               print(stem, original.size, preview_dst.stat().st_size, full_dst.stat().st_size)
 
       - name: Commit display exports
@@ -73,6 +73,6 @@ jobs:
             echo 'Chat display figures already current.'
             exit 0
           fi
-          git commit -m 'Build full-resolution chat display figures'
+          git commit -m 'Compress full-resolution chat display figures'
           git pull --rebase origin main
           git push origin main
