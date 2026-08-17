@@ -32,6 +32,9 @@ jobs:
       - name: Compile current source
         run: python -m compileall -q vbb_study tools tests bessel_twin_core.py publication_diagnostics.py interface_correction_diagnosis.py run_study.py run_publication_study.py
 
+      - name: Guard Publication_Study workflow coverage
+        run: python tools/audit_publication_study_coverage.py
+
       - name: Audit standalone repository layout
         run: python tools/audit_clean_layout.py
 
