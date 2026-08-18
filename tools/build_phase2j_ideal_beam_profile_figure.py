@@ -94,15 +94,15 @@ def build_figure(output_dir: Path, grid_n: int) -> Path:
         ("V3", "V3 — ℓ=3\nvortex–Bessel"),
     )
 
-    # Reserve an explicit header band so the slide annotations never collide
-    # with the top-row panel titles.
+    # Reserve a dedicated header band so all explanatory text stays clear of
+    # the panel titles and axis labels.
     fig, axes = plt.subplots(2, 3, figsize=(13.4, 7.8), constrained_layout=False)
     style.style_fig(fig)
     fig.subplots_adjust(
         left=0.058,
         right=0.985,
-        bottom=0.080,
-        top=0.805,
+        bottom=0.072,
+        top=0.775,
         wspace=0.085,
         hspace=0.315,
     )
@@ -146,11 +146,11 @@ def build_figure(output_dir: Path, grid_n: int) -> Path:
         color=style.TEXT,
         fontsize=18,
         weight="bold",
-        y=0.972,
+        y=0.975,
     )
     fig.text(
         0.5,
-        0.923,
+        0.927,
         "Transverse intensity at z = 60 mm",
         ha="center",
         va="center",
@@ -160,7 +160,7 @@ def build_figure(output_dir: Path, grid_n: int) -> Path:
     )
     fig.text(
         0.5,
-        0.888,
+        0.892,
         r"$\phi(r,\theta)=\phi_{\rm axicon}(r)+\ell\theta$   •   only $\ell$ varies: 0 → 1 → 3",
         ha="center",
         va="center",
@@ -169,12 +169,12 @@ def build_figure(output_dir: Path, grid_n: int) -> Path:
     )
     fig.text(
         0.5,
-        0.030,
-        "Dashed line in each x–z map: z = 60 mm transverse slice shown above",
+        0.855,
+        "Dashed line in each x–z map marks the same z = 60 mm transverse plane shown above",
         ha="center",
         va="center",
         color=style.MUTED,
-        fontsize=9.0,
+        fontsize=9.2,
     )
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -185,7 +185,7 @@ def build_figure(output_dir: Path, grid_n: int) -> Path:
     manifest.write_text(
         "\n".join(
             [
-                "PHASE2J-PRESENTATION-VISUAL-REFINEMENT-V4",
+                "PHASE2J-PRESENTATION-VISUAL-REFINEMENT-V5",
                 f"grid_n={grid_n}",
                 f"colormap={style.CMAP_NAME}",
                 f"palette_hex={','.join(style.THERMAL_HEX)}",
