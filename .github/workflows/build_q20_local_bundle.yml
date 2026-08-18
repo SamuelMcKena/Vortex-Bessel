@@ -1,6 +1,5 @@
 name: build q20 local bundle
 
-# Triggered to package the current q20 correction code for local Windows use.
 on:
   push:
     branches: [main]
@@ -135,8 +134,16 @@ jobs:
           split -l 100 -d -a 3 q20_new_correction_local.zip.b64 chat_q20_bundle_chunks/chunk_
           sha256sum q20_new_correction_local.zip > chat_q20_bundle_chunks/SHA256.txt
           wc -c q20_new_correction_local.zip > chat_q20_bundle_chunks/SIZE.txt
+          printf '%s\n' "${GITHUB_RUN_ID}" > chat_q20_bundle_chunks/RUN_ID.txt
 
-      - name: Commit bundle bridge chunks
+      - name: Upload q20 local bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: q20_new_correction_local
+          path: q20_new_correction_local.zip
+          if-no-files-found: error
+
+      - name: Commit bundle bridge metadata
         shell: bash
         run: |
           set -euo pipefail
