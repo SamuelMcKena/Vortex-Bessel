@@ -1,0 +1,160 @@
+name: build q20 local bundle
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/build_q20_local_bundle.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build self-contained q20 correction bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="q20_new_correction_local"
+          SRC="notebooks/experimental/axicon_aberration_correction"
+          rm -rf "$ROOT" chat_q20_bundle_chunks q20_new_correction_local.zip q20_new_correction_local.zip.b64
+          mkdir -p "$ROOT/tests"
+
+          files=(
+            modal_vortex_bessel.py
+            miao_full_retrieval.py
+            run_q20_miao_retrieval.py
+            q20_experimental_acceptance_metrics.py
+            iterative_correction_controller.py
+            iterative_correction_controller_v2.py
+            q20_phase_physics.py
+            single_transverse_phase_forward_test.py
+            rebuild_q20_presentation_from_bmg.py
+            q20_hardware_calibration_template.json
+            Q20_LAB_CALIBRATION_PROTOCOL.md
+            Q20_PHASE_RECONSTRUCTION_PHYSICS.md
+            README.md
+            bessel_zscan_metadata.json
+          )
+          for f in "${files[@]}"; do
+            cp "$SRC/$f" "$ROOT/$f"
+          done
+          cp tests/test_miao_full_retrieval.py "$ROOT/tests/"
+          cp tests/test_q20_phase_physics.py "$ROOT/tests/"
+
+          cat > "$ROOT/requirements_local.txt" <<'EOF'
+          numpy
+          scipy
+          pandas
+          matplotlib
+          pillow
+          pytest
+          EOF
+
+          cat > "$ROOT/RUN_BASELINE_RETRIEVAL.bat" <<'EOF'
+          @echo off
+          setlocal
+          cd /d "%~dp0"
+          echo Installing Python dependencies...
+          python -m pip install -r requirements_local.txt
+          if not exist "z-scan 2 1010" (
+            echo.
+            echo ERROR: Put your existing folder named "z-scan 2 1010" beside this BAT file.
+            echo It should contain z0_1.bmg through z17_4.bmg ^(72 BMG files total^).
+            pause
+            exit /b 1
+          )
+          if not exist q20_hardware_calibration.json copy q20_hardware_calibration_template.json q20_hardware_calibration.json >nul
+          echo.
+          echo Running the new Miao-style q=20 retrieval...
+          python run_q20_miao_retrieval.py
+          echo.
+          echo Finished. See outputs\miao_full_q20\
+          echo If calibration fields are still null, the code will deliberately stop at LOCAL_RETRIEVAL_ONLY rather than inventing a hardware correction.
+          pause
+          EOF
+
+          cat > "$ROOT/RUN_TESTS.bat" <<'EOF'
+          @echo off
+          setlocal
+          cd /d "%~dp0"
+          python -m pip install -r requirements_local.txt
+          python -m pytest -q tests
+          pause
+          EOF
+
+          cat > "$ROOT/README_RUN_LOCAL.txt" <<'EOF'
+          Q20 NEW ABERRATION-CORRECTION PIPELINE — LOCAL RUN
+          =================================================
+
+          1. Unzip this folder anywhere on the Windows machine that contains Python.
+          2. Copy your ORIGINAL raw-data folder named exactly:
+
+               z-scan 2 1010
+
+             into this folder. It should contain 72 BMG files:
+             z0_1.bmg ... z17_4.bmg (4 repeats at each of 18 z positions).
+
+          3. Double-click RUN_BASELINE_RETRIEVAL.bat.
+
+          The first run installs numpy/scipy/pandas/matplotlib/pillow/pytest and then
+          executes run_q20_miao_retrieval.py.
+
+          IMPORTANT:
+          - With q20_hardware_calibration.json still containing null values, the code
+            WILL run the raw BMG per-plane retrieval and create diagnostics/fit tables,
+            but it will deliberately block a final SLM2 hardware correction.
+          - Do not invent calibration values just to get a phase mask.
+          - Fill q20_hardware_calibration.json only with measured bench quantities.
+          - Q20_LAB_CALIBRATION_PROTOCOL.md explains each required measurement.
+
+          Main outputs are written to:
+
+               outputs/miao_full_q20/
+
+          Once full calibration is supplied, the pipeline can additionally write:
+          - retrieved_full_residual_phase_input_plane_rad.npy
+          - conjugate_correction_input_plane_rad.npy
+          - radial_phase_rad.npy
+          - angular_phase_rows_rad.npy
+          - slm2_correction_phase_rad.npy (only if all hardware gates are satisfied)
+          - correction_manifest.json
+
+          To verify the packaged code itself, double-click RUN_TESTS.bat.
+
+          Scientific model summary:
+          - one transverse correction phase; longitudinal behaviour comes from propagation;
+          - k_perp is fitted independently for each z plane;
+          - programmed q=20 vortex is excluded from the residual correction;
+          - radial residual is inferred from k_perp(z) through stationary-phase geometry;
+          - real plane-to-plane beam walk is preserved;
+          - camera-stage runout can be supplied independently by z position;
+          - the U/U* conjugate ambiguity blocks hardware output until resolved;
+          - mapped SLM2 correction remains in native SLM2 pixel coordinates;
+          - a new measured 18x4 BMG stack is required for experimental acceptance.
+          EOF
+
+          zip -qr q20_new_correction_local.zip "$ROOT"
+          base64 -w0 q20_new_correction_local.zip > q20_new_correction_local.zip.b64
+          mkdir -p chat_q20_bundle_chunks
+          split -b 18000 -d -a 3 q20_new_correction_local.zip.b64 chat_q20_bundle_chunks/chunk_
+          sha256sum q20_new_correction_local.zip > chat_q20_bundle_chunks/SHA256.txt
+          wc -c q20_new_correction_local.zip > chat_q20_bundle_chunks/SIZE.txt
+
+      - name: Commit bundle bridge chunks
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add chat_q20_bundle_chunks
+          git commit -m "Build q20 local correction bundle" || exit 0
+          git pull --rebase origin main
+          git push origin main
