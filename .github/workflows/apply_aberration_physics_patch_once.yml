@@ -1,0 +1,302 @@
+name: Apply aberration physics patch once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/apply_aberration_physics_patch_once.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/physics-consistent-aberration-v2
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Apply remaining physics and curation patches
+        shell: python
+        run: |
+          from pathlib import Path
+          import csv
+          import io
+          import re
+
+          root = Path.cwd()
+          corr = root / 'notebooks' / 'experimental' / 'axicon_aberration_correction'
+
+          def replace_required(path, old, new, label):
+              text = path.read_text(encoding='utf-8')
+              if old not in text:
+                  raise SystemExit(f'{path}: required patch not found: {label}')
+              path.write_text(text.replace(old, new), encoding='utf-8')
+              print('patched', path, label)
+
+          # ------------------------------------------------------------------
+          # Global retrieval: keep a fixed sensor-frame crop across z so the
+          # common field can represent true beam-axis drift. Repeat frames at
+          # one z are stabilized only to their within-plane median position.
+          # ------------------------------------------------------------------
+          phys = corr / 'physics_consistent_multiplane.py'
+          replace_required(
+              phys,
+              '''def resize_square_preserving_fov(\n    image: np.ndarray,\n    output_n: int,\n    *,\n    center_yx: tuple[float, float] | None = None,\n) -> np.ndarray:\n    """Center a square image and resample it without changing physical FOV."""\n''',
+              '''def resize_square_preserving_fov(\n    image: np.ndarray,\n    output_n: int,\n    *,\n    center_yx: tuple[float, float] | None = None,\n    recenter: bool = True,\n) -> np.ndarray:\n    """Resample a square image without changing physical FOV.\n\n    ``recenter=False`` preserves a pre-defined common camera coordinate frame.\n    This is the canonical mode for a physically propagated z stack.\n    """\n''',
+              'add fixed-frame resize mode'
+          )
+          replace_required(
+              phys,
+              '''    if center_yx is None:\n        yy, xx = np.indices(image.shape)\n        positive = np.clip(image, 0.0, None)\n        positive = np.where(\n            positive >= 0.02 * max(float(np.max(positive)), EPS), positive, 0.0\n        )\n        s = float(np.sum(positive))\n        if s <= EPS:\n            cy, cx = (np.asarray(image.shape, float) - 1.0) / 2.0\n        else:\n            cy = float(np.sum(yy * positive) / s)\n            cx = float(np.sum(xx * positive) / s)\n    else:\n        cy, cx = map(float, center_yx)\n\n    target = (np.asarray(image.shape, float) - 1.0) / 2.0\n    shifted = ndimage.shift(\n        image,\n        shift=(target[0] - cy, target[1] - cx),\n        order=1,\n        mode="constant",\n        cval=0.0,\n        prefilter=False,\n    )\n''',
+              '''    if recenter:\n        if center_yx is None:\n            yy, xx = np.indices(image.shape)\n            positive = np.clip(image, 0.0, None)\n            positive = np.where(\n                positive >= 0.02 * max(float(np.max(positive)), EPS), positive, 0.0\n            )\n            s = float(np.sum(positive))\n            if s <= EPS:\n                cy, cx = (np.asarray(image.shape, float) - 1.0) / 2.0\n            else:\n                cy = float(np.sum(yy * positive) / s)\n                cx = float(np.sum(xx * positive) / s)\n        else:\n            cy, cx = map(float, center_yx)\n        target = (np.asarray(image.shape, float) - 1.0) / 2.0\n        shifted = ndimage.shift(\n            image,\n            shift=(target[0] - cy, target[1] - cx),\n            order=1,\n            mode="constant",\n            cval=0.0,\n            prefilter=False,\n        )\n    else:\n        shifted = image.copy()\n''',
+              'preserve sensor frame when requested'
+          )
+          replace_required(
+              phys,
+              '''def prepare_amplitude_stack(\n    images: Iterable[np.ndarray],\n    *,\n    output_n: int,\n    native_pixel_pitch_m: float,\n    centers_yx: Iterable[tuple[float, float] | None] | None = None,\n) -> tuple[np.ndarray, float, np.ndarray]:\n''',
+              '''def prepare_amplitude_stack(\n    images: Iterable[np.ndarray],\n    *,\n    output_n: int,\n    native_pixel_pitch_m: float,\n    centers_yx: Iterable[tuple[float, float] | None] | None = None,\n    recenter: bool = True,\n) -> tuple[np.ndarray, float, np.ndarray]:\n''',
+              'amplitude stack recenter flag'
+          )
+          replace_required(
+              phys,
+              '''        small = resize_square_preserving_fov(image, int(output_n), center_yx=center)\n''',
+              '''        small = resize_square_preserving_fov(\n            image, int(output_n), center_yx=center, recenter=bool(recenter)\n        )\n''',
+              'forward recenter flag'
+          )
+
+          driver = corr / 'global_multiplane_retrieval.py'
+          replace_required(
+              driver,
+              'from modal_vortex_bessel import load_first_scan, estimate_global_kr, find_dark_core_center\n',
+              'from modal_vortex_bessel import (estimate_global_kr, find_dark_core_center, preprocess, read_bmg)\n',
+              'use full-sensor loader primitives'
+          )
+
+          insert_marker = '''def _corr_rmse(a: np.ndarray, b: np.ndarray, mask: np.ndarray) -> tuple[float, float]:\n'''
+          fixed_loader = '''def _load_fixed_sensor_scan(data_dir: Path, *, minimum_roi_size: int = 768):\n    """Average repeats while retaining one common camera frame across z.\n\n    Each repeated acquisition at one z is registered to that z plane's median\n    dark-core location to suppress shot-to-shot jitter.  Different z planes are\n    NOT recentered.  A single common crop centred on the central reference plane\n    is then applied to every z, so physical beam-axis drift is preserved.\n    """\n\n    data_dir = Path(data_dir)\n    z_ids = sorted({int(p.stem.split('_')[0][1:]) for p in data_dir.glob('z*_*.bmg')})\n    if not z_ids:\n        raise FileNotFoundError(f'No z*_*.bmg files found in {data_dir}')\n\n    full_planes = []\n    sensor_centres = []\n    for zid in z_ids:\n        frames = [preprocess(read_bmg(path)) for path in sorted(data_dir.glob(f'z{zid}_*.bmg'))]\n        if not frames:\n            raise FileNotFoundError(f'No repeated frames found for z{zid}')\n        centres = np.asarray([find_dark_core_center(frame)[:2] for frame in frames], float)\n        target = np.median(centres, axis=0)\n        aligned = [\n            ndimage.shift(\n                frame,\n                (target[0]-centre[0], target[1]-centre[1]),\n                order=1, mode='constant', cval=0.0, prefilter=False,\n            )\n            for frame, centre in zip(frames, centres)\n        ]\n        full_planes.append(np.mean(aligned, axis=0))\n        sensor_centres.append(tuple(map(float, target)))\n\n    anchor_index = (len(full_planes)-1)//2\n    anchor = np.asarray(sensor_centres[anchor_index], float)\n    centres = np.asarray(sensor_centres, float)\n    max_excursion = float(np.max(np.abs(centres-anchor)))\n    side = max(int(minimum_roi_size), int(np.ceil(2*(max_excursion+280))))\n    side = min(side, min(full_planes[0].shape))\n    if side % 2:\n        side -= 1\n\n    cy, cx = anchor\n    y0 = int(round(cy-side/2)); x0 = int(round(cx-side/2))\n    y0 = max(0, min(full_planes[0].shape[0]-side, y0))\n    x0 = max(0, min(full_planes[0].shape[1]-side, x0))\n    crops = [plane[y0:y0+side, x0:x0+side] for plane in full_planes]\n    crop_centres = [(cyi-y0, cxi-x0) for cyi, cxi in sensor_centres]\n    metadata = {\n        'coordinate_mode': 'fixed_sensor_common_crop',\n        'anchor_plane_index': int(anchor_index),\n        'common_crop_origin_yx_px': [int(y0), int(x0)],\n        'common_crop_side_px': int(side),\n        'sensor_centres_yx_px': [list(map(float, c)) for c in sensor_centres],\n    }\n    return crops, crop_centres, anchor_index, metadata\n\n\ndef _center_for_shape_metric(image: np.ndarray) -> np.ndarray:\n    """Recenter only a COPY used for ideal-z nuisance registration."""\n    image = np.asarray(image, float)\n    positive = np.clip(image, 0.0, None)\n    threshold = 0.02*max(float(positive.max()), EPS)\n    positive = np.where(positive >= threshold, positive, 0.0)\n    s = float(positive.sum())\n    if s <= EPS:\n        return image\n    yy, xx = np.indices(image.shape)\n    cy = float((yy*positive).sum()/s); cx = float((xx*positive).sum()/s)\n    target = (np.asarray(image.shape, float)-1.0)/2.0\n    return ndimage.shift(\n        image, (target[0]-cy, target[1]-cx), order=1,\n        mode='constant', cval=0.0, prefilter=False,\n    )\n\n\n'''
+          text = driver.read_text(encoding='utf-8')
+          if insert_marker not in text:
+              raise SystemExit('driver insertion marker not found')
+          text = text.replace(insert_marker, fixed_loader + insert_marker, 1)
+          driver.write_text(text, encoding='utf-8')
+
+          replace_required(
+              driver,
+              '''            model = normalise_intensity(np.abs(propagator(z_abs_m)) ** 2)\n            corr, rmse = _corr_rmse(measured_intensity[idx], model, roi)\n''',
+              '''            model = normalise_intensity(np.abs(propagator(z_abs_m)) ** 2)\n            # Absolute-z registration is a morphology nuisance fit only; centre\n            # copies here so real pointing drift does not bias the distance.\n            measured_shape = _center_for_shape_metric(measured_intensity[idx])\n            model_shape = _center_for_shape_metric(model)\n            corr, rmse = _corr_rmse(measured_shape, model_shape, roi)\n''',
+              'shape-only absolute-z registration'
+          )
+          replace_required(
+              driver,
+              '''    images = load_first_scan(data_dir)\n    if not images:\n        raise FileNotFoundError(f"No z*_*.bmg files found in {data_dir}")\n\n    if z_relative_mm is None:\n''',
+              '''    images, fixed_centres, fixed_reference_index, sensor_metadata = _load_fixed_sensor_scan(data_dir)\n\n    if z_relative_mm is None:\n''',
+              'fixed sensor-frame input stack'
+          )
+          replace_required(
+              driver,
+              '''    centers = [find_dark_core_center(image)[:2] for image in images]\n    amplitudes, dx_m, removed_power = prepare_amplitude_stack(\n        images,\n        output_n=output_n,\n        native_pixel_pitch_m=pixel_pitch_m,\n        centers_yx=centers,\n    )\n''',
+              '''    # The crops already share one physical sensor frame.  Do not\n    # recenter them plane by plane here.\n    amplitudes, dx_m, removed_power = prepare_amplitude_stack(\n        images,\n        output_n=output_n,\n        native_pixel_pitch_m=pixel_pitch_m,\n        centers_yx=fixed_centres,\n        recenter=False,\n    )\n''',
+              'disable plane-wise recentering in retrieval'
+          )
+          replace_required(
+              driver,
+              '''    # Pick a central TRAIN plane, not a held-out plane.\n    median_z = np.median(z_relative_m[train_indices])\n    reference_index = int(train_indices[np.argmin(np.abs(z_relative_m[train_indices] - median_z))])\n''',
+              '''    # The common sensor crop is centred on the central reference plane.\n    # If the deterministic hold-out pattern ever selects it, use the nearest train plane.\n    if fixed_reference_index in train_indices:\n        reference_index = int(fixed_reference_index)\n    else:\n        reference_index = int(train_indices[np.argmin(np.abs(train_indices-fixed_reference_index))])\n''',
+              'use common-crop reference plane'
+          )
+          replace_required(
+              driver,
+              '''        "camera_plane_correction_only": True,\n''',
+              '''        "camera_plane_correction_only": True,\n        "measurement_coordinate_mode": sensor_metadata,\n        "plane_wise_recentering_used_for_retrieval": False,\n''',
+              'record fixed sensor coordinate mode'
+          )
+          replace_required(
+              driver,
+              '"MEASURED MORPHOLOGY",\n',
+              '"MEASURED FIXED SENSOR FRAME",\n',
+              'longitudinal measured label'
+          )
+          replace_required(
+              driver,
+              '''        "One reference field -> all z planes (no per-plane phase refit; no accidental absolute-z double count)\\n"\n        "virtual conjugate is a camera-plane diagnostic, not an SLM result",\n''',
+              '''        "One reference field -> all z planes in one fixed camera frame\\n"\n        "no per-plane phase refit or recentering; virtual conjugate is not an SLM result",\n''',
+              'longitudinal figure truth label'
+          )
+
+          # ------------------------------------------------------------------
+          # Demote older independent-per-plane modal products and repair wrapped
+          # phase interpolation in their compatibility correction preview.
+          # ------------------------------------------------------------------
+          q20 = corr / 'q20_modal_analysis.py'
+          text = q20.read_text(encoding='utf-8')
+          text = text.replace(
+              '"""Run the q=20 constrained Bessel-modal diagnostic on a Beamage z scan.\n',
+              '"""SECONDARY per-plane q=20 Bessel-modal diagnostic on a Beamage z scan.\n\nThis module fits each z plane independently; it is not the canonical common-field\nwavefront retrieval. Use global_multiplane_retrieval.py for longitudinal physics.\n'
+          )
+          pattern = re.compile(
+              r'''    # Visualization only: row interpolation maps measured z ordering to normalized radius\.\n'''
+              r'''    nrho = 512; ntheta = phases\.shape\[1\]\n'''
+              r'''    phase_r = np\.vstack\(\[np\.interp\(np\.linspace\(0, len\(phases\)-1, nrho\),\n'''
+              r'''                                   np\.arange\(len\(phases\)\), phases\[:, j\]\)\n'''
+              r'''                         for j in range\(ntheta\)\]\)\.T\n'''
+          )
+          replacement = '''    # Compatibility visualization only.  Wrapped phase is circular data:\n    # interpolate its unit phasor, never the wrapped angle itself.\n    nrho = 512; ntheta = phases.shape[1]\n    radial_coord = np.linspace(0, len(phases)-1, nrho)\n    source_coord = np.arange(len(phases), dtype=float)\n    phase_phasor = np.exp(1j*phases)\n    re_r = np.vstack([np.interp(radial_coord, source_coord, phase_phasor[:, j].real)\n                      for j in range(ntheta)]).T\n    im_r = np.vstack([np.interp(radial_coord, source_coord, phase_phasor[:, j].imag)\n                      for j in range(ntheta)]).T\n    phase_r = np.angle(re_r + 1j*im_r)\n'''
+          text, count = pattern.subn(replacement, text, count=1)
+          if count != 1:
+              raise SystemExit(f'q20 wrapped-phase interpolation patch count={count}')
+          text = text.replace(
+              '"method": "Miao-style q=20 constrained Bessel modal retrieval",',
+              '"method": "independent per-plane constrained q=20 Bessel-modal intensity fit",\n        "canonical_phase_retrieval": False,\n        "longitudinal_consistency": "not enforced; use global_multiplane_retrieval.py",'
+          )
+          text = text.replace(
+              '"interpretation": "model-internal phase-only prediction",',
+              '"interpretation": "secondary per-plane annular diagnostic; not one propagated 3-D wavefield",'
+          )
+          q20.write_text(text, encoding='utf-8')
+
+          recreation = corr / 'phase_error_recreation.py'
+          text = recreation.read_text(encoding='utf-8')
+          text = text.replace(
+              'This is a model falsification diagnostic: phase-only error is applied to the ideal\nq=20 angular field and compared with measured camera intensity at every z plane.',
+              'This is a SECONDARY per-plane modal closure diagnostic. Each z plane uses its own\nindependently fitted angular coefficients; it is not a common propagated wavefield.\nUse global_multiplane_retrieval.py or single_mask_inverse_forward_test.py for\nlongitudinal/causal falsification.'
+          )
+          text = text.replace(
+              '"test": "ideal q=20 plus retrieved phase error versus measured lab stack",',
+              '"test": "per-plane ideal q=20 plus independently retrieved modal phase error",\n        "longitudinal_common_field": False,\n        "canonical_causal_test": False,'
+          )
+          text = text.replace(
+              'fig.suptitle("Retrieved phase-error recreation test")',
+              'fig.suptitle("Per-plane modal phase recreation — NOT common-field propagation")'
+          )
+          text = text.replace(
+              'fig.suptitle("Signed propagation: does inverse correction recreate the measured distortion?")',
+              'fig.suptitle("Per-plane modal stack — NOT a single propagated error field")'
+          )
+          recreation.write_text(text, encoding='utf-8')
+
+          comp = corr / 'comprehensive_error_validation.py'
+          text = comp.read_text(encoding='utf-8')
+          text = text.replace('"PHASE-CORRECTED PER-PLANE MODEL"', '"INDEPENDENT PER-PLANE PHASE COUNTERFACTUAL"')
+          text = text.replace(
+              '"Measured versus predicted corrected q=20 beam path — true iso-intensity meshes\\n"',
+              '"Measured stack versus independent per-plane modal counterfactuals\\n"'
+          )
+          text = text.replace(
+              '"Measured versus corrected q=20 3D beam path — rotatable mesh"',
+              '"Measured stack versus per-plane counterfactual stack — not propagated 3D"'
+          )
+          comp.write_text(text, encoding='utf-8')
+
+          # ------------------------------------------------------------------
+          # Runner and navigation: only the new canonical experimental notebook
+          # is treated as runnable current work.
+          # ------------------------------------------------------------------
+          runner = root / 'run_study.py'
+          text = runner.read_text(encoding='utf-8')
+          text = text.replace('PROJECT_SCHEMA_VERSION = "3.1.0"', 'PROJECT_SCHEMA_VERSION = "3.2.0"')
+          old = '    return [_relative(path) for path in sorted(folder.rglob("*.ipynb"))]\n'
+          new = '''    notebooks = []\n    for path in sorted(folder.rglob("*.ipynb")):\n        if any(part.lower() in {"legacy", "archive", "deprecated"} for part in path.parts):\n            continue\n        notebooks.append(_relative(path))\n    if stage == "experimental":\n        canonical = "notebooks/experimental/axicon_aberration_correction/Bessel_zscan_physics_consistent.ipynb"\n        return [canonical] if (ROOT / canonical).exists() else notebooks\n    return notebooks\n'''
+          if old not in text:
+              raise SystemExit('run_study discovery patch not found')
+          runner.write_text(text.replace(old, new), encoding='utf-8')
+
+          for rel in ('vbb_study/setup_study.py', 'tools/audit_publication_study_coverage.py',
+                      'README.md', 'docs/RUN_GUIDE.md', 'docs/CURRENT_CODE_INDEX.md'):
+              path = root / rel
+              text = path.read_text(encoding='utf-8')
+              text = text.replace(
+                  'Bessel_zscan_alignment_correction.ipynb',
+                  'Bessel_zscan_physics_consistent.ipynb'
+              )
+              path.write_text(text, encoding='utf-8')
+
+          # ------------------------------------------------------------------
+          # Figure manifest: do not call independent per-plane products current
+          # 3-D correction evidence. The single-mask falsification stays current;
+          # new global figures will be promoted after real data are rerun.
+          # ------------------------------------------------------------------
+          manifest = root / 'figures' / 'manifest.csv'
+          rows = list(csv.DictReader(manifest.read_text(encoding='utf-8').splitlines()))
+          demote = {
+              'iteration_000_gain_sweep': 'Controller preview based on pre-v2 correction inference; rerun after global multi-plane validation.',
+              'phase_error_recreation_agreement_vs_z': 'Independent per-plane modal closure, not common-field propagation; superseded for causal claims by global multi-plane retrieval.',
+              'phase_error_recreation_page_1': 'Independent per-plane modal closure, not common-field propagation.',
+              'phase_error_recreation_signed_xz_yz': 'Stack of independent per-plane modal results; not a propagated XZ/YZ field.',
+              'annular_aberration_phase': 'Per-plane angular modal phase diagnostic; not a global 2-D wavefront or hardware correction.',
+              'polar_measured_fit_corrected': 'Independent per-plane modal counterfactual; not a propagated corrected field.',
+              'realigned_3d_intensity_isosurfaces': 'Built from independent per-plane fits; not a single reconstructed 3-D wavefield.',
+              'realigned_cartesian_xy_measured_fit_corrected_ideal': 'Independent per-plane modal counterfactual; retain only as secondary diagnostic.',
+              'all_z_full_signed_xz_yz_maps': 'Contains legacy/per-plane model stacks; measured content remains useful but do not present as corrected common-field propagation.',
+              'all_z_images_page_1': 'Contains legacy/per-plane model stacks; secondary diagnostic only.',
+              'all_z_metrics_dashboard': 'Metrics include independent per-plane counterfactuals; rerun global v2 for current correction claims.',
+              'measured_vs_corrected_3d_mesh': 'NOT a propagated corrected beam: second mesh was assembled from independent per-plane modal counterfactuals.',
+              'realigned_signed_xz_yz_measured_corrected_ideal': 'Independent per-plane counterfactual stack; not a single propagated corrected XZ/YZ field.',
+          }
+          for row in rows:
+              if row['id'] in demote:
+                  row['status'] = 'secondary_legacy_diagnostic'
+                  row['presentation_preferred'] = 'no'
+                  row['notes'] = demote[row['id']]
+                  if row['id'].startswith('phase_error_recreation'):
+                      row['evidence_type'] = 'per_plane_modal_closure'
+                  elif 'corrected' in row['id'] or '3d' in row['id'] or 'all_z' in row['id']:
+                      row['evidence_type'] = 'per_plane_model_counterfactual'
+                  elif row['id'] == 'annular_aberration_phase':
+                      row['evidence_type'] = 'per_plane_modal_phase_diagnostic'
+          output = io.StringIO()
+          writer = csv.DictWriter(output, fieldnames=rows[0].keys(), lineterminator='\n')
+          writer.writeheader(); writer.writerows(rows)
+          manifest.write_text(output.getvalue(), encoding='utf-8')
+
+          # Remove the non-running migration workflow from the research branch.
+          obsolete = root / '.github' / 'workflows' / 'repair_aberration_physics_v2_once.yml'
+          if obsolete.exists():
+              obsolete.unlink()
+
+      - name: Install branch dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-report.txt
+          python -m pip install -r notebooks/experimental/axicon_aberration_correction/requirements.txt
+
+      - name: Compile affected code
+        run: |
+          python -m py_compile \
+            notebooks/experimental/axicon_aberration_correction/physics_consistent_multiplane.py \
+            notebooks/experimental/axicon_aberration_correction/global_multiplane_retrieval.py \
+            notebooks/experimental/axicon_aberration_correction/q20_modal_analysis.py \
+            notebooks/experimental/axicon_aberration_correction/phase_error_recreation.py \
+            notebooks/experimental/axicon_aberration_correction/single_mask_inverse_forward_test.py \
+            notebooks/experimental/axicon_aberration_correction/comprehensive_error_validation.py \
+            run_study.py
+
+      - name: Run focused physics tests
+        run: |
+          python -m pytest tests/test_physics_consistent_multiplane.py -q
+          python -m pytest notebooks/experimental/axicon_aberration_correction/test_iterative_correction_controller.py -q
+          python run_study.py --stage experimental --dry-run
+          python tools/audit_publication_study_coverage.py
+
+      - name: Commit tested branch patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'Branch already patched.'
+            exit 0
+          fi
+          git commit -m 'Complete physics-consistent q20 z-stack cleanup'
+          git push origin HEAD:agent/physics-consistent-aberration-v2
