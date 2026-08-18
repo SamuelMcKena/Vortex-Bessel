@@ -1,7 +1,10 @@
 from pathlib import Path
+import json
 import sys
 
 import numpy as np
+import pandas as pd
+import pytest
 from scipy import special
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,7 +16,7 @@ from miao_full_retrieval import (
     assemble_full_aperture, interpolate_to_cartesian, resolve_conjugate_branch,
     correction_manifest,
 )
-from iterative_correction_controller_v2 import _candidate_mask
+from iterative_correction_controller_v2 import _candidate_mask, evaluate_experimental_update
 from q20_experimental_acceptance_metrics import compute_plane_metrics
 from run_q20_miao_retrieval import calibrated_axes_in_crop
 
@@ -138,8 +141,54 @@ def test_independent_acceptance_metric_is_near_ideal_for_synthetic_bessel():
         k_perp_nominal_m_inv=kp, roi_radius_um=150)
     assert result["measured_vs_ideal_corr"] > 0.999999
     assert result["measured_vs_ideal_rmse"] < 1e-8
-    assert result["measured_ring_cv"] < 0.25
+    assert result["measured_ring_cv"] < 0.01
     assert result["measured_dark_core_ratio"] < 0.2
+
+
+def _acceptance_frame(digest, corr=0.5, rmse=0.3, ring_cv=0.4, dark=0.1):
+    return pd.DataFrame({
+        "z_mm": [-1.0, 0.0],
+        "measured_vs_ideal_corr": [corr, corr],
+        "measured_vs_ideal_rmse": [rmse, rmse],
+        "measured_ring_cv": [ring_cv, ring_cv],
+        "measured_dark_core_ratio": [dark, dark],
+        "dataset_sha256": [digest, digest],
+        "q_target": [20, 20],
+        "k_perp_nominal_m_inv": [4.9e5, 4.9e5],
+        "wavelength_m": [1030e-9, 1030e-9],
+        "pixel_pitch_m": [5.5e-6, 5.5e-6],
+        "roi_radius_um": [160.0, 160.0],
+        "camera_axis_source": ["per-z measured reference axis"]*2,
+    })
+
+
+def test_experimental_acceptance_rejects_same_dataset_hash(tmp_path):
+    before = tmp_path/"before.csv"
+    after = tmp_path/"after.csv"
+    _acceptance_frame("same").to_csv(before, index=False)
+    _acceptance_frame("same", corr=0.6).to_csv(after, index=False)
+    state = tmp_path/"closed_loop_state.json"
+    state.write_text(json.dumps({"status": "AWAITING_EXPERIMENTAL_MEASUREMENT",
+                                 "iteration": 0, "candidate_phase_path": "unused.npy"}),
+                     encoding="utf-8")
+    with pytest.raises(ValueError, match="same BMG dataset"):
+        evaluate_experimental_update(before, after, state)
+
+
+def test_experimental_acceptance_checks_matching_target_provenance(tmp_path):
+    before = tmp_path/"before.csv"
+    after = tmp_path/"after.csv"
+    a = _acceptance_frame("before")
+    b = _acceptance_frame("after", corr=0.4)  # worsening => no candidate-file access
+    b["k_perp_nominal_m_inv"] = 5.0e5
+    a.to_csv(before, index=False)
+    b.to_csv(after, index=False)
+    state = tmp_path/"closed_loop_state.json"
+    state.write_text(json.dumps({"status": "AWAITING_EXPERIMENTAL_MEASUREMENT",
+                                 "iteration": 0, "candidate_phase_path": "unused.npy"}),
+                     encoding="utf-8")
+    with pytest.raises(ValueError, match="k_perp_nominal_m_inv differs"):
+        evaluate_experimental_update(before, after, state)
 
 
 def test_legacy_normalized_z_map_and_second_remap_are_not_consumed_by_v3_controller():
@@ -162,6 +211,7 @@ def test_controller_acceptance_contract_matches_metric_generator():
     controller = (MOD/"iterative_correction_controller_v2.py").read_text(encoding="utf-8")
     metrics = (MOD/"q20_experimental_acceptance_metrics.py").read_text(encoding="utf-8")
     for name in ("measured_vs_ideal_corr", "measured_vs_ideal_rmse",
-                 "measured_ring_cv", "measured_dark_core_ratio"):
+                 "measured_ring_cv", "measured_dark_core_ratio",
+                 "dataset_sha256", "q_target", "k_perp_nominal_m_inv"):
         assert name in controller
         assert name in metrics
