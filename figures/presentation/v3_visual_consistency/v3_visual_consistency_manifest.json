@@ -11,7 +11,7 @@
     4160,
     4160
   ],
-  "colour_map": "<matplotlib.colors.LinearSegmentedColormap object at 0x7fd2cdf96690>",
+  "colour_map": "<matplotlib.colors.LinearSegmentedColormap object at 0x7fe72d2b2690>",
   "gamma": 0.55,
   "z_ref_mm": 60.0,
   "status": "presentation_only_consistent_visual_set"
