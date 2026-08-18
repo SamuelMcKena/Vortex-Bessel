@@ -31,8 +31,10 @@ jobs:
           root = Path.cwd()
           out = root / 'figures/chat_q20_current'
           inline = root / 'figures/chat_q20_inline'
+          embed = root / 'figures/chat_q20_embed'
           out.mkdir(parents=True, exist_ok=True)
           inline.mkdir(parents=True, exist_ok=True)
+          embed.mkdir(parents=True, exist_ok=True)
 
           def trim_white(im, pad=24):
               rgb = im.convert('RGB')
@@ -52,7 +54,6 @@ jobs:
                   h = round(im.height * max_w / im.width)
                   im = im.resize((max_w, h), Image.Resampling.LANCZOS)
               im.save(out / name, 'JPEG', quality=quality, optimize=True, progressive=False)
-              print('current', name, im.size, (out/name).stat().st_size)
 
           def save_inline(src, name, max_w=520, quality=18):
               im = Image.open(src).convert('RGB')
@@ -60,7 +61,15 @@ jobs:
                   h = round(im.height * max_w / im.width)
                   im = im.resize((max_w, h), Image.Resampling.LANCZOS)
               im.save(inline / name, 'JPEG', quality=quality, optimize=True, progressive=False)
-              print('inline', name, im.size, (inline/name).stat().st_size)
+
+          def save_embed(src, stem, max_w, quality=5):
+              im = Image.open(src).convert('RGB')
+              if im.width > max_w:
+                  h = round(im.height * max_w / im.width)
+                  im = im.resize((max_w, h), Image.Resampling.LANCZOS)
+              dst = embed / f'{stem}.webp'
+              im.save(dst, 'WEBP', quality=quality, method=6)
+              print('embed', dst.name, im.size, dst.stat().st_size)
 
           prop = Image.open(root/'figures/experimental/q20_aberration/validation/all_z_full_signed_xz_yz_maps.png').convert('RGB')
           w,h = prop.size
@@ -82,13 +91,18 @@ jobs:
           ]:
               save_inline(out/name, name, max_w=width, quality=quality)
 
+          save_embed(out/'01_measured_XZ_full_stack.jpg', '01_measured_XZ_full_stack', 420, 5)
+          save_embed(out/'02_measured_YZ_full_stack.jpg', '02_measured_YZ_full_stack', 420, 5)
+          save_embed(out/'03_constrained_annular_phase_diagnostic.jpg', '03_constrained_annular_phase_diagnostic', 500, 4)
+          save_embed(out/'04_single_input_mask_forward_falsification.jpg', '04_single_input_mask_forward_falsification', 650, 3)
+
       - name: Commit compact q20 chat figures
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add figures/chat_q20_current figures/chat_q20_inline
+          git add figures/chat_q20_current figures/chat_q20_inline figures/chat_q20_embed
           if git diff --cached --quiet; then
             echo 'Compact q20 chat figures already current.'
             exit 0
