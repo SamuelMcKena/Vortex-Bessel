@@ -81,42 +81,31 @@ def _fixed_lab_crop(intensity: np.ndarray, grid: Mapping[str, Any]):
     return crop, extent, int(ids.size)
 
 
-def _annotate_reference_slice(ax: plt.Axes) -> None:
-    """Label the z=60 mm dashed line as the transverse slice shown above."""
-    z_ref_mm = Z_REF_M * 1e3
-    y_top_mm = float(LONGITUDINAL_COORD_M[-1]) * 1e3
-    ax.text(
-        z_ref_mm + 2.0,
-        y_top_mm - 0.008,
-        "transverse slice\nshown above",
-        color=style.MUTED,
-        fontsize=7.4,
-        rotation=90,
-        ha="left",
-        va="top",
-        linespacing=0.95,
-        alpha=0.92,
-        bbox={
-            "boxstyle": "round,pad=0.18",
-            "facecolor": style.AX_BG,
-            "edgecolor": "none",
-            "alpha": 0.74,
-        },
-    )
-
-
 def build_figure(output_dir: Path, grid_n: int) -> Path:
     if grid_n < 2048:
         raise ValueError("Phase 2J ideal presentation figure requires grid_n >= 2048")
     style.validate_palette_has_no_cool_segment()
 
+    # The current integrated route keeps all other beamline settings fixed;
+    # these three cases differ only by the programmed SLM1 vortex charge.
     cases = (
         ("B0", "B0 — ℓ=0\nbright-core Bessel"),
         ("V1", "V1 — ℓ=1\nvortex–Bessel"),
         ("V3", "V3 — ℓ=3\nvortex–Bessel"),
     )
-    fig, axes = plt.subplots(2, 3, figsize=(13.4, 7.75), constrained_layout=True)
+
+    # Reserve an explicit header band so the slide annotations never collide
+    # with the top-row panel titles.
+    fig, axes = plt.subplots(2, 3, figsize=(13.4, 7.8), constrained_layout=False)
     style.style_fig(fig)
+    fig.subplots_adjust(
+        left=0.058,
+        right=0.985,
+        bottom=0.080,
+        top=0.805,
+        wspace=0.085,
+        hspace=0.315,
+    )
 
     retained: list[float] = []
     native_crop_samples: list[int] = []
@@ -147,37 +136,45 @@ def build_figure(output_dir: Path, grid_n: int) -> Path:
         )
         axes[1, col].set_title(
             f"{case_id} — fixed-lab x–z propagation",
-            fontsize=12.3,
+            fontsize=12.0,
             weight="bold",
             pad=7,
         )
-        _annotate_reference_slice(axes[1, col])
 
     fig.suptitle(
         "Beam profile shaping — ideal simulated outputs",
         color=style.TEXT,
         fontsize=18,
         weight="bold",
-        y=1.045,
+        y=0.972,
     )
     fig.text(
         0.5,
-        0.985,
+        0.923,
         "Transverse intensity at z = 60 mm",
         ha="center",
         va="center",
         color=style.TEXT,
-        fontsize=11.5,
+        fontsize=11.3,
         weight="bold",
     )
     fig.text(
         0.5,
-        0.955,
+        0.888,
         r"$\phi(r,\theta)=\phi_{\rm axicon}(r)+\ell\theta$   •   only $\ell$ varies: 0 → 1 → 3",
         ha="center",
         va="center",
         color=style.MUTED,
-        fontsize=10.3,
+        fontsize=10.1,
+    )
+    fig.text(
+        0.5,
+        0.030,
+        "Dashed line in each x–z map: z = 60 mm transverse slice shown above",
+        ha="center",
+        va="center",
+        color=style.MUTED,
+        fontsize=9.0,
     )
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -188,7 +185,7 @@ def build_figure(output_dir: Path, grid_n: int) -> Path:
     manifest.write_text(
         "\n".join(
             [
-                "PHASE2J-PRESENTATION-VISUAL-REFINEMENT-V3",
+                "PHASE2J-PRESENTATION-VISUAL-REFINEMENT-V4",
                 f"grid_n={grid_n}",
                 f"colormap={style.CMAP_NAME}",
                 f"palette_hex={','.join(style.THERMAL_HEX)}",
@@ -201,6 +198,7 @@ def build_figure(output_dir: Path, grid_n: int) -> Path:
                 f"display_interpolation={style.DISPLAY_INTERPOLATION}_only_for_rendering",
                 "longitudinal_coordinates=fixed_lab_no_per_z_recentering",
                 "normalisation=per_case_peak_for_morphology_only",
+                "beam_family_control=programmed_SLM1_vortex_charge_only",
                 "presentation_annotation=z60_transverse_slice_explicitly_linked_to_longitudinal_maps",
                 "physics_change=false",
             ]
