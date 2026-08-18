@@ -7,6 +7,7 @@ on:
     paths:
       - .github/workflows/build_v3_visual_consistency.yml
       - tools/build_phase2k_v3_visual_consistency.py
+      - tools/build_phase2l_nominal_constraints.py
       - tools/presentation_phase2j_style.py
 
 permissions:
@@ -18,7 +19,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
         with:
@@ -59,24 +60,39 @@ jobs:
               raise SystemExit(f'Output PNG dimensions do not match: {sizes}')
           PY
 
-      - name: Upload V3 visual consistency figures
+      - name: Render ideal versus nominal experimental constraints
+        run: |
+          rm -rf outputs/figures/nominal_constraints
+          python tools/build_phase2l_nominal_constraints.py \
+            --grid-n 2048 \
+            --output-dir outputs/figures/nominal_constraints
+          test -f outputs/figures/nominal_constraints/01_ideal_vs_nominal_constraints_B0_V1_V3.png
+          test -f outputs/figures/nominal_constraints/02_V3_propagation_ideal_vs_nominal.png
+          test -f outputs/figures/nominal_constraints/03_constraint_ladder_SLM_4F.png
+          test -f outputs/figures/nominal_constraints/nominal_constraints_manifest.json
+
+      - name: Upload presentation figures
         uses: actions/upload-artifact@v4
         with:
           name: v3_visual_consistency
-          path: outputs/figures/v3_visual_consistency/
+          path: |
+            outputs/figures/v3_visual_consistency/
+            outputs/figures/nominal_constraints/
           if-no-files-found: error
 
-      - name: Promote rendered PNGs into repository
+      - name: Promote rendered figures into repository
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p figures/presentation/v3_visual_consistency
+          mkdir -p figures/presentation/nominal_constraints
           cp outputs/figures/v3_visual_consistency/*.png figures/presentation/v3_visual_consistency/
           cp outputs/figures/v3_visual_consistency/v3_visual_consistency_manifest.json figures/presentation/v3_visual_consistency/
+          cp outputs/figures/nominal_constraints/* figures/presentation/nominal_constraints/
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add figures/presentation/v3_visual_consistency
-          git commit -m 'Regenerate V3 visual consistency figures' || true
+          git add figures/presentation/v3_visual_consistency figures/presentation/nominal_constraints
+          git commit -m 'Regenerate presentation constraint figures' || true
           git pull --rebase origin main
           git push origin HEAD:main
 
@@ -84,9 +100,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p chat_v3_visual_consistency
+          mkdir -p chat_v3_visual_consistency chat_nominal_constraints
           printf '%s\n' '${{ github.run_id }}' > chat_v3_visual_consistency/RUN_ID.txt
-          git add chat_v3_visual_consistency/RUN_ID.txt
-          git commit -m 'Record V3 visual consistency artifact run' || exit 0
+          printf '%s\n' '${{ github.run_id }}' > chat_nominal_constraints/RUN_ID.txt
+          git add chat_v3_visual_consistency/RUN_ID.txt chat_nominal_constraints/RUN_ID.txt
+          git commit -m 'Record presentation figure artifact run' || exit 0
           git pull --rebase origin main
           git push origin HEAD:main
