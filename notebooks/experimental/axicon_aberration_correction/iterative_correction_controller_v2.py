@@ -1,14 +1,18 @@
 """Safe closed-loop controller for the calibrated Miao-style q=20 correction.
 
 The old controller consumed a legacy normalized-z correction map and then passed
-its candidate through a second normalized-coordinate remapping step.  Both are
-forbidden here.  This controller accepts only `slm2_correction_phase_rad.npy`
+its candidate through a second normalized-coordinate remapping step. Both are
+forbidden here. This controller accepts only `slm2_correction_phase_rad.npy`
 produced by the calibrated full retrieval; that array is already in native SLM2
 pixel coordinates and is kept there without another geometric transform.
 
 The output is an additive phase layer in radians, NOT a greyscale hardware
-raster.  The lab GUI/driver must combine it with the existing programmed phase,
+raster. The lab GUI/driver must combine it with the existing programmed phase,
 wrap once, and use the independently calibrated 1030-nm SLM LUT.
+
+Experimental acceptance requires two independently generated metric CSVs with
+identical target/calibration provenance and DIFFERENT SHA-256 BMG dataset
+fingerprints. Reusing the same camera stack therefore cannot accept a candidate.
 """
 from __future__ import annotations
 
@@ -88,7 +92,7 @@ def _write_native_slm2_preview(candidate, output_dir, iteration, gain):
 
 def _blocked_state(retrieval_dir, loop_dir, manifest, reason):
     state = {
-        "schema_version": 3,
+        "schema_version": 4,
         "status": "BLOCKED_BY_RETRIEVAL_OR_CALIBRATION",
         "experimental_accepted": False,
         "retrieval_dir": str(Path(retrieval_dir).resolve()),
@@ -169,7 +173,7 @@ def propose_iteration(retrieval_dir, loop_dir, *, data_dir=None,
     preview_manifest = _write_native_slm2_preview(candidate, preview_dir, iteration, gain)
 
     state = {
-        "schema_version": 3,
+        "schema_version": 4,
         "iteration": iteration,
         "status": "AWAITING_EXPERIMENTAL_MEASUREMENT",
         "experimental_accepted": False,
@@ -187,11 +191,12 @@ def propose_iteration(retrieval_dir, loop_dir, *, data_dir=None,
         "legacy_normalized_z_map_used": False,
         "direct_greyscale_hardware_export_created": False,
         "model_prediction_is_not_acceptance": True,
+        "experimental_acceptance_requires_distinct_dataset_sha256": True,
         "hardware_ready": False,
         "next_action": (
             "Load the candidate as an additive PHASE correction layer in the calibrated SLM2 GUI, "
             "not as a direct bitmap; apply the measured LUT through the normal driver, capture an "
-            "identical new 18x4 z-stack, rerun the full retrieval, and evaluate measured before/after metrics."
+            "identical new 18x4 z-stack, generate independent acceptance metrics, then evaluate before/after."
         ),
     }
     state_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
@@ -204,18 +209,51 @@ def propose_iteration(retrieval_dir, loop_dir, *, data_dir=None,
                           "status": state["status"]}]), state
 
 
+def _unique_constant(frame, column):
+    values = frame[column].dropna().unique()
+    if len(values) != 1:
+        raise ValueError(f"{column} must contain exactly one provenance value per dataset")
+    return values[0]
+
+
 def evaluate_experimental_update(before_metrics_csv, after_metrics_csv, state_path):
-    """Accept/reject only from a genuinely new camera z-stack."""
+    """Accept/reject only from a genuinely new camera z-stack with identical target provenance."""
     state_path = Path(state_path)
     state = json.loads(state_path.read_text(encoding="utf-8"))
     if state.get("status") != "AWAITING_EXPERIMENTAL_MEASUREMENT":
         raise RuntimeError("controller is not waiting for a new experimental measurement")
-    before, after = pd.read_csv(before_metrics_csv), pd.read_csv(after_metrics_csv)
-    required = {"z_mm", "measured_vs_ideal_corr", "measured_vs_ideal_rmse",
-                "measured_ring_cv", "measured_dark_core_ratio"}
+    before_path, after_path = Path(before_metrics_csv), Path(after_metrics_csv)
+    if before_path.resolve() == after_path.resolve():
+        raise ValueError("before and after metrics must be different files from different camera stacks")
+    before, after = pd.read_csv(before_path), pd.read_csv(after_path)
+
+    metric_cols = {"z_mm", "measured_vs_ideal_corr", "measured_vs_ideal_rmse",
+                   "measured_ring_cv", "measured_dark_core_ratio"}
+    provenance_cols = {"dataset_sha256", "q_target", "k_perp_nominal_m_inv",
+                       "wavelength_m", "pixel_pitch_m", "roi_radius_um",
+                       "camera_axis_source"}
+    required = metric_cols | provenance_cols
     if not required.issubset(before) or not required.issubset(after):
-        raise ValueError(f"missing experimental gate columns: {required-(set(before)&set(after))}")
-    cols = sorted(required)
+        missing = required-(set(before)&set(after))
+        raise ValueError(f"missing experimental gate/provenance columns: {missing}")
+
+    before_digest = str(_unique_constant(before, "dataset_sha256"))
+    after_digest = str(_unique_constant(after, "dataset_sha256"))
+    if before_digest == after_digest:
+        raise ValueError("before and after metrics resolve to the same BMG dataset SHA-256")
+
+    # The target and calibration defining 'improvement' must be identical.
+    for column in sorted(provenance_cols-{"dataset_sha256"}):
+        b = _unique_constant(before, column)
+        a = _unique_constant(after, column)
+        if column == "camera_axis_source":
+            if str(a) != str(b):
+                raise ValueError(f"before/after {column} differs: {b!r} vs {a!r}")
+        else:
+            if not np.isclose(float(a), float(b), rtol=0, atol=1e-12):
+                raise ValueError(f"before/after {column} differs: {b!r} vs {a!r}")
+
+    cols = sorted(metric_cols)
     merged = before[cols].merge(after[cols], on="z_mm", suffixes=("_before", "_after"))
     if len(merged) != len(before) or len(merged) != len(after):
         raise ValueError("before/after z planes do not match exactly")
@@ -232,7 +270,10 @@ def evaluate_experimental_update(before_metrics_csv, after_metrics_csv, state_pa
     accepted = bool(corr_gain >= 0.01 and rmse_reduction > 0 and
                     cv_fraction >= 0.05 and dark_change <= 0.01)
     result = {
-        "accepted": accepted, "cartesian_correlation_gain": corr_gain,
+        "accepted": accepted,
+        "before_dataset_sha256": before_digest,
+        "after_dataset_sha256": after_digest,
+        "cartesian_correlation_gain": corr_gain,
         "cartesian_rmse_reduction": rmse_reduction,
         "ring_cv_reduction_fraction": cv_fraction,
         "maximum_dark_core_ratio_change": dark_change,
@@ -255,5 +296,7 @@ def evaluate_experimental_update(before_metrics_csv, after_metrics_csv, state_pa
         "status": state["status"], "gain": state.get("candidate_gain"),
         "experimental_accepted": accepted,
         "candidate_phase_path": state.get("candidate_phase_path"),
+        "before_dataset_sha256": before_digest,
+        "after_dataset_sha256": after_digest,
     })
     return result
