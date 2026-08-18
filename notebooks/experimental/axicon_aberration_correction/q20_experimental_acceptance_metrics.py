@@ -13,17 +13,21 @@ The output columns are the contract consumed by
     measured_ring_cv
     measured_dark_core_ratio
 
+The CSV also repeats the fixed target/calibration provenance and a SHA-256 digest
+of the complete BMG dataset. The controller requires the target provenance to be
+identical before/after and the dataset digest to be different, preventing the
+same camera stack from accidentally accepting its own correction.
+
 `measured_ring_cv` is explicitly an AZIMUTHAL coefficient of variation: the
 intensity is sampled as a function of theta around the target principal ring,
 with a small radial average at every theta. It is not the standard deviation of
 all pixels in a thick annulus, which would incorrectly count the ideal radial
 Bessel profile itself as non-uniformity.
-
-Additional diagnostic columns are included but do not alter acceptance logic.
 """
 from __future__ import annotations
 
 from pathlib import Path
+import hashlib
 import json
 
 import matplotlib.pyplot as plt
@@ -43,6 +47,26 @@ def _normalise_roi(image, roi):
     a = np.asarray(image, float)
     scale = max(float(np.max(a[roi])), EPS)
     return a/scale
+
+
+def dataset_sha256(data_dir):
+    """Hash filenames and complete BMG bytes in deterministic lexical order."""
+    root = Path(data_dir)
+    files = sorted(root.glob("z*_*.bmg"))
+    if not files:
+        raise FileNotFoundError(f"No z*_*.bmg files found in {root}")
+    h = hashlib.sha256()
+    for path in files:
+        h.update(path.name.encode("utf-8"))
+        h.update(b"\0")
+        with path.open("rb") as f:
+            while True:
+                chunk = f.read(1024*1024)
+                if not chunk:
+                    break
+                h.update(chunk)
+        h.update(b"\0")
+    return h.hexdigest()
 
 
 def _azimuthal_ring_profile(image, center_yx_px, ring_radius_m, pixel_pitch_m,
@@ -86,7 +110,6 @@ def compute_plane_metrics(image, optical_axis_yx_px, *, pixel_pitch_m,
     corr = float(np.corrcoef(mv, iv)[0, 1])
     rmse = float(np.sqrt(np.mean((mv-iv)**2)))
 
-    # First radial intensity maximum of J_q occurs at the first positive zero of J'_q.
     ring_radius_m = float(special.jnp_zeros(int(q), 1)[0]/kp)
     ring_theta = _azimuthal_ring_profile(
         image, (cy, cx), ring_radius_m, pixel_pitch_m,
@@ -102,7 +125,6 @@ def compute_plane_metrics(image, optical_axis_yx_px, *, pixel_pitch_m,
     detected_cy, detected_cx, core_score = find_dark_core_center(image)
     core_offset_um = float(np.hypot(detected_cy-cy, detected_cx-cx)*pixel_pitch_m*1e6)
 
-    # Measured radial location of the strongest annular band near the target ring.
     radii = np.linspace(max(2e-6, 0.55*ring_radius_m), 1.55*ring_radius_m, 120)
     radial_mean = []
     dr = max(1.25*pixel_pitch_m, 1.5e-6)
@@ -127,13 +149,13 @@ def run(data_dir, calibration_json, output_dir, *,
         z_relative_mm=np.arange(-17.0, 1.0), wavelength_m=1030e-9,
         pixel_pitch_m=5.5e-6, q=20, roi_radius_um=160.0):
     """Generate a before/after-compatible experimental metrics CSV from BMG data."""
-    del wavelength_m  # retained in signature/provenance for the 1030-nm experiment
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     calibration = json.loads(Path(calibration_json).read_text(encoding="utf-8"))
     kp = calibration.get("k_perp_nominal_m_inv")
     if kp is None:
         raise RuntimeError("k_perp_nominal_m_inv is required for independent acceptance metrics")
+    digest = dataset_sha256(data_dir)
 
     (images, z_keys, estimated_axis, crop_origin, mean_shifts,
      sensor_shape, qc) = load_scan_preserve_plane_shift(data_dir)
@@ -148,11 +170,20 @@ def run(data_dir, calibration_json, output_dir, *,
             "Independent acceptance metrics require measured camera optical-axis calibration; "
             "the median beam-core diagnostic axis is not accepted")
 
+    provenance = {
+        "dataset_sha256": digest,
+        "q_target": int(q),
+        "k_perp_nominal_m_inv": float(kp),
+        "wavelength_m": float(wavelength_m),
+        "pixel_pitch_m": float(pixel_pitch_m),
+        "roi_radius_um": float(roi_radius_um),
+        "camera_axis_source": axis_source,
+    }
     rows = []
     for i, (image, zmm) in enumerate(zip(images, z_relative_mm)):
         row = {"z_mm": float(zmm), "z_index": int(i),
                "optical_axis_y_px": float(axes[i, 0]),
-               "optical_axis_x_px": float(axes[i, 1])}
+               "optical_axis_x_px": float(axes[i, 1]), **provenance}
         row.update(compute_plane_metrics(
             image, axes[i], pixel_pitch_m=pixel_pitch_m, q=q,
             k_perp_nominal_m_inv=float(kp), roi_radius_um=roi_radius_um))
@@ -164,12 +195,8 @@ def run(data_dir, calibration_json, output_dir, *,
     summary = {
         "method": "measured BMG versus fixed analytical ideal; independent of retrieved correction phase",
         "ring_cv_definition": "azimuthal CV of radially averaged principal-ring I(theta)",
+        **provenance,
         "planes": int(len(metrics)),
-        "q": int(q),
-        "k_perp_nominal_m_inv": float(kp),
-        "pixel_pitch_m": float(pixel_pitch_m),
-        "roi_radius_um": float(roi_radius_um),
-        "camera_axis_source": axis_source,
         "sensor_shape_yx": list(map(int, sensor_shape)),
         "median_measured_vs_ideal_corr": float(metrics.measured_vs_ideal_corr.median()),
         "median_measured_vs_ideal_rmse": float(metrics.measured_vs_ideal_rmse.median()),
