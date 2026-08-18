@@ -1,8 +1,12 @@
 """High-resolution Phase 2J renderer for the ideal B0/V1/V3 presentation figure.
 
 This is presentation-only. The optical route, fixed-support propagator and
-fixed-laboratory coordinates are unchanged. The figure now uses the shared
-``phase2j_thermal`` palette and a genuinely higher native simulation grid.
+fixed-laboratory coordinates are unchanged. The figure uses the shared
+``phase2j_thermal`` palette and a high native simulation grid.
+
+Presentation annotations explicitly connect the transverse row to the
+z=60 mm slice of the longitudinal propagation maps. They do not alter the
+simulated fields or any numerical normalisation.
 """
 
 from __future__ import annotations
@@ -77,17 +81,41 @@ def _fixed_lab_crop(intensity: np.ndarray, grid: Mapping[str, Any]):
     return crop, extent, int(ids.size)
 
 
+def _annotate_reference_slice(ax: plt.Axes) -> None:
+    """Label the z=60 mm dashed line as the transverse slice shown above."""
+    z_ref_mm = Z_REF_M * 1e3
+    y_top_mm = float(LONGITUDINAL_COORD_M[-1]) * 1e3
+    ax.text(
+        z_ref_mm + 2.0,
+        y_top_mm - 0.008,
+        "transverse slice\nshown above",
+        color=style.MUTED,
+        fontsize=7.4,
+        rotation=90,
+        ha="left",
+        va="top",
+        linespacing=0.95,
+        alpha=0.92,
+        bbox={
+            "boxstyle": "round,pad=0.18",
+            "facecolor": style.AX_BG,
+            "edgecolor": "none",
+            "alpha": 0.74,
+        },
+    )
+
+
 def build_figure(output_dir: Path, grid_n: int) -> Path:
     if grid_n < 2048:
         raise ValueError("Phase 2J ideal presentation figure requires grid_n >= 2048")
     style.validate_palette_has_no_cool_segment()
 
     cases = (
-        ("B0", "B0 — bright-core Bessel"),
-        ("V1", "V1 — vortex-Bessel ℓ=1"),
-        ("V3", "V3 — vortex-Bessel ℓ=3"),
+        ("B0", "B0 — ℓ=0\nbright-core Bessel"),
+        ("V1", "V1 — ℓ=1\nvortex–Bessel"),
+        ("V3", "V3 — ℓ=3\nvortex–Bessel"),
     )
-    fig, axes = plt.subplots(2, 3, figsize=(13.4, 7.35), constrained_layout=True)
+    fig, axes = plt.subplots(2, 3, figsize=(13.4, 7.75), constrained_layout=True)
     style.style_fig(fig)
 
     retained: list[float] = []
@@ -117,14 +145,39 @@ def build_figure(output_dir: Path, grid_n: int) -> Path:
             ylabel=(col == 0),
             z_ref_m=Z_REF_M,
         )
-        axes[1, col].set_title(f"{case_id} — fixed-lab x–z", fontsize=13.0, weight="bold", pad=7)
+        axes[1, col].set_title(
+            f"{case_id} — fixed-lab x–z propagation",
+            fontsize=12.3,
+            weight="bold",
+            pad=7,
+        )
+        _annotate_reference_slice(axes[1, col])
 
     fig.suptitle(
         "Beam profile shaping — ideal simulated outputs",
         color=style.TEXT,
         fontsize=18,
         weight="bold",
-        y=1.025,
+        y=1.045,
+    )
+    fig.text(
+        0.5,
+        0.985,
+        "Transverse intensity at z = 60 mm",
+        ha="center",
+        va="center",
+        color=style.TEXT,
+        fontsize=11.5,
+        weight="bold",
+    )
+    fig.text(
+        0.5,
+        0.955,
+        r"$\phi(r,\theta)=\phi_{\rm axicon}(r)+\ell\theta$   •   only $\ell$ varies: 0 → 1 → 3",
+        ha="center",
+        va="center",
+        color=style.MUTED,
+        fontsize=10.3,
     )
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -135,11 +188,12 @@ def build_figure(output_dir: Path, grid_n: int) -> Path:
     manifest.write_text(
         "\n".join(
             [
-                "PHASE2J-PRESENTATION-VISUAL-REFINEMENT-V2",
+                "PHASE2J-PRESENTATION-VISUAL-REFINEMENT-V3",
                 f"grid_n={grid_n}",
                 f"colormap={style.CMAP_NAME}",
                 f"palette_hex={','.join(style.THERMAL_HEX)}",
                 f"transverse_halfwidth_mm={TRANSVERSE_HALFWIDTH_M*1e3:.6f}",
+                f"transverse_reference_z_mm={Z_REF_M*1e3:.6f}",
                 f"longitudinal_halfwidth_mm={abs(LONGITUDINAL_COORD_M[0])*1e3:.6f}",
                 f"z_samples={len(Z_VALUES_M)}",
                 f"native_crop_samples={native_crop_samples}",
@@ -147,6 +201,8 @@ def build_figure(output_dir: Path, grid_n: int) -> Path:
                 f"display_interpolation={style.DISPLAY_INTERPOLATION}_only_for_rendering",
                 "longitudinal_coordinates=fixed_lab_no_per_z_recentering",
                 "normalisation=per_case_peak_for_morphology_only",
+                "presentation_annotation=z60_transverse_slice_explicitly_linked_to_longitudinal_maps",
+                "physics_change=false",
             ]
         ) + "\n",
         encoding="utf-8",
