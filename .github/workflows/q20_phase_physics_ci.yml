@@ -1,5 +1,6 @@
 name: q20 phase physics CI
 
+# Final regression gate after native-SLM2/conjugacy hardening.
 on:
   push:
     branches: [main]
