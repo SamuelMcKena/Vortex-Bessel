@@ -1,0 +1,79 @@
+name: Build title refresh figures
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/build_title_refresh.yml
+      - tools/build_phase2j_title_refresh.py
+      - tools/presentation_phase2j_style.py
+
+permissions:
+  contents: write
+
+env:
+  MPLBACKEND: Agg
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install numerical environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-report.txt
+          python -m pip install -e . --no-deps
+
+      - name: Render cinematic title and route figures
+        run: |
+          rm -rf outputs/figures/presentation_title_refresh
+          python tools/build_phase2j_title_refresh.py \
+            --grid-n 2048 \
+            --output-dir outputs/figures/presentation_title_refresh
+          test -f outputs/figures/presentation_title_refresh/00_V3_3d_intensity_cinematic.png
+          test -f outputs/figures/presentation_title_refresh/01_V3_ideal_propagation_cinematic_xz.png
+          test -f outputs/figures/presentation_title_refresh/02_V3_ideal_propagation_landscape.png
+          test -f outputs/figures/presentation_title_refresh/03_computational_route_dual_slm_roles.png
+
+      - name: Upload title refresh figures
+        uses: actions/upload-artifact@v4
+        with:
+          name: presentation_title_refresh
+          path: outputs/figures/presentation_title_refresh/
+          if-no-files-found: error
+
+      - name: Promote rendered PNGs into repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p figures/presentation/title_refresh
+          cp outputs/figures/presentation_title_refresh/*.png figures/presentation/title_refresh/
+          cp outputs/figures/presentation_title_refresh/title_refresh_manifest.json figures/presentation/title_refresh/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add figures/presentation/title_refresh
+          git commit -m 'Regenerate cinematic title refresh figures' || true
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Record run id for chat retrieval
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p chat_title_refresh
+          printf '%s\n' '${{ github.run_id }}' > chat_title_refresh/RUN_ID.txt
+          git add chat_title_refresh/RUN_ID.txt
+          git commit -m 'Record title refresh artifact run' || exit 0
+          git pull --rebase origin main
+          git push origin HEAD:main
