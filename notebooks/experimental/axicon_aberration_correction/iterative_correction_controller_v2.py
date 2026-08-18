@@ -1,24 +1,29 @@
-"""Safe closed-loop controller for the Miao-style q=20 correction.
+"""Safe closed-loop controller for the calibrated Miao-style q=20 correction.
 
-The old controller consumed the legacy normalized-z correction map.  This one
-accepts only `slm2_correction_phase_rad.npy` produced by the calibrated full
-retrieval and refuses to propose a mask while any pre-trial blocker remains.
-A model prediction is never experimental acceptance.
+The old controller consumed a legacy normalized-z correction map and then passed
+its candidate through a second normalized-coordinate remapping step.  Both are
+forbidden here.  This controller accepts only `slm2_correction_phase_rad.npy`
+produced by the calibrated full retrieval; that array is already in native SLM2
+pixel coordinates and is kept there without another geometric transform.
+
+The output is an additive phase layer in radians, NOT a greyscale hardware
+raster.  The lab GUI/driver must combine it with the existing programmed phase,
+wrap once, and use the independently calibrated 1030-nm SLM LUT.
 """
 from __future__ import annotations
 
 from pathlib import Path
 import json
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
-from slm2_complete_mask_preview import build_slm2_complete_preview
 
 EPS = 1e-12
 
 
 def _candidate_mask(residual_phase, accepted_phase, gain):
+    """Accumulate signed phase through unit phasors, preserving native SLM pixels."""
     residual = np.asarray(residual_phase, float)
     accepted = np.asarray(accepted_phase, float)
     valid = np.isfinite(residual)
@@ -29,8 +34,8 @@ def _candidate_mask(residual_phase, accepted_phase, gain):
     ac = np.zeros_like(accepted)
     av = np.isfinite(accepted)
     ac[av] = np.angle(np.exp(1j*accepted[av]))
-    out = np.mod(ac + float(gain)*rs, 2*np.pi)
-    out[~valid] = np.nan
+    out = np.full_like(residual, np.nan)
+    out[valid] = np.angle(np.exp(1j*(ac[valid] + float(gain)*rs[valid])))
     return out
 
 
@@ -42,9 +47,48 @@ def _append_history(path, row):
     frame.to_csv(p, index=False)
 
 
+def _write_native_slm2_preview(candidate, output_dir, iteration, gain):
+    """Preview a native-pixel correction layer without resampling or LUT encoding."""
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    phase = np.asarray(candidate, float)
+    valid = np.isfinite(phase)
+
+    fig, ax = plt.subplots(figsize=(12, 7), constrained_layout=True)
+    shown = np.ma.masked_invalid(phase)
+    im = ax.imshow(shown, origin="upper", cmap="twilight", vmin=-np.pi, vmax=np.pi,
+                   interpolation="nearest", aspect="equal")
+    ax.set(title=(f"Iteration {iteration}: calibrated native-SLM2 correction layer, gain={gain:.2f}\n"
+                  "phase radians only — no second coordinate mapping, no greyscale LUT export"),
+           xlabel="SLM2 x pixel", ylabel="SLM2 y pixel")
+    fig.colorbar(im, ax=ax, label="signed correction phase (rad)")
+    png = output_dir/"native_slm2_correction_layer_preview.png"
+    fig.savefig(png, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+    manifest = {
+        "status": "CALIBRATED_PHASE_LAYER_PREVIEW_NOT_DIRECT_HARDWARE_RASTER",
+        "coordinate_space": "native SLM2 pixels",
+        "shape_yx": list(map(int, phase.shape)),
+        "valid_pixel_fraction": float(np.mean(valid)),
+        "phase_units": "radians",
+        "phase_range_convention": "signed [-pi, pi] on valid pixels",
+        "geometric_remapping_applied_here": False,
+        "linear_greyscale_conversion_applied_here": False,
+        "application_contract": (
+            "Add this phase layer to the existing SLM2 programmed phase in the lab GUI, "
+            "wrap the combined phase once, then encode with the measured 1030-nm LUT."
+        ),
+        "preview_png": png.name,
+    }
+    (output_dir/"native_slm2_correction_layer_manifest.json").write_text(
+        json.dumps(manifest, indent=2), encoding="utf-8")
+    return manifest
+
+
 def _blocked_state(retrieval_dir, loop_dir, manifest, reason):
     state = {
-        "schema_version": 2,
+        "schema_version": 3,
         "status": "BLOCKED_BY_RETRIEVAL_OR_CALIBRATION",
         "experimental_accepted": False,
         "retrieval_dir": str(Path(retrieval_dir).resolve()),
@@ -63,10 +107,10 @@ def _blocked_state(retrieval_dir, loop_dir, manifest, reason):
 def propose_iteration(retrieval_dir, loop_dir, *, data_dir=None,
                       gains=(0.01, 0.02, 0.05, 0.10, 0.20), q=20,
                       kr_m_inv=None, force_recompute=False, trial_gain=0.05):
-    """Create one conservative low-gain trial only from the calibrated full map.
+    """Create one conservative low-gain trial from the calibrated native-SLM2 map.
 
-    `q` and `kr_m_inv` are retained in the signature for compatibility with the
-    old controller but are not used to reconstruct a correction here.
+    `q` and `kr_m_inv` remain in the signature only for compatibility with older
+    callers; this controller never reconstructs its own correction from them.
     """
     retrieval_dir, loop_dir = Path(retrieval_dir), Path(loop_dir)
     loop_dir.mkdir(parents=True, exist_ok=True)
@@ -82,7 +126,13 @@ def propose_iteration(retrieval_dir, loop_dir, *, data_dir=None,
     correction_path = retrieval_dir/"slm2_correction_phase_rad.npy"
     if not correction_path.exists():
         return _blocked_state(retrieval_dir, loop_dir, manifest,
-                              "calibrated SLM2 correction phase file is missing")
+                              "calibrated native-SLM2 correction phase file is missing")
+
+    residual = np.load(correction_path)
+    expected_shape = manifest.get("slm2_shape_yx")
+    if expected_shape is not None and tuple(map(int, expected_shape)) != residual.shape:
+        return _blocked_state(retrieval_dir, loop_dir, manifest,
+                              "SLM2 correction array shape disagrees with calibrated manifest")
 
     state_path = loop_dir/"closed_loop_state.json"
     previous = json.loads(state_path.read_text(encoding="utf-8")) if state_path.exists() else None
@@ -99,7 +149,6 @@ def propose_iteration(retrieval_dir, loop_dir, *, data_dir=None,
         raise ValueError("at least one gain in (0, 0.20] is required")
     gain = min(allowed, key=lambda g: abs(g-float(trial_gain)))
 
-    residual = np.load(correction_path)
     if previous and previous.get("status") == "EXPERIMENTALLY_ACCEPTED" and previous.get("accepted_cumulative_phase_path"):
         accepted_path = loop_dir/previous["accepted_cumulative_phase_path"]
         accepted = np.load(accepted_path)
@@ -113,16 +162,14 @@ def propose_iteration(retrieval_dir, loop_dir, *, data_dir=None,
             np.save(accepted_path, accepted)
 
     candidate = _candidate_mask(residual, accepted, gain)
-    candidate_name = f"iteration_{iteration:03d}_candidate_gain_{gain:.2f}_phase.npy"
-    np.save(loop_dir/candidate_name, candidate)
+    candidate_name = f"iteration_{iteration:03d}_candidate_gain_{gain:.2f}_phase_rad.npy"
+    np.save(loop_dir/candidate_name, candidate.astype(np.float32))
 
-    preview_dir = loop_dir/f"iteration_{iteration:03d}_slm2_preview"
-    _, _, preview_manifest = build_slm2_complete_preview(
-        loop_dir/candidate_name, preview_dir, ell_slm2=0,
-        correction_gain=1.0, filename_tag=f"ITERATION_{iteration:03d}_MIAO_CANDIDATE")
+    preview_dir = loop_dir/f"iteration_{iteration:03d}_native_slm2_preview"
+    preview_manifest = _write_native_slm2_preview(candidate, preview_dir, iteration, gain)
 
     state = {
-        "schema_version": 2,
+        "schema_version": 3,
         "iteration": iteration,
         "status": "AWAITING_EXPERIMENTAL_MEASUREMENT",
         "experimental_accepted": False,
@@ -133,11 +180,19 @@ def propose_iteration(retrieval_dir, loop_dir, *, data_dir=None,
         "candidate_phase_path": candidate_name,
         "accepted_cumulative_phase_path": accepted_path.name,
         "preview_manifest": preview_manifest,
+        "candidate_coordinate_space": "native SLM2 pixels",
+        "candidate_phase_units": "radians",
+        "second_coordinate_mapping_applied": False,
         "programmed_q_in_correction": False,
         "legacy_normalized_z_map_used": False,
+        "direct_greyscale_hardware_export_created": False,
         "model_prediction_is_not_acceptance": True,
         "hardware_ready": False,
-        "next_action": "Apply only this low-gain trial, capture an identical new 18x4 z-stack, rerun the full retrieval, and evaluate the measured before/after metrics.",
+        "next_action": (
+            "Load the candidate as an additive PHASE correction layer in the calibrated SLM2 GUI, "
+            "not as a direct bitmap; apply the measured LUT through the normal driver, capture an "
+            "identical new 18x4 z-stack, rerun the full retrieval, and evaluate measured before/after metrics."
+        ),
     }
     state_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
     _append_history(loop_dir/"iteration_history.csv", {
