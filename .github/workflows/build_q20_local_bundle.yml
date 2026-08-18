@@ -44,9 +44,7 @@ jobs:
             README.md
             bessel_zscan_metadata.json
           )
-          for f in "${files[@]}"; do
-            cp "$SRC/$f" "$ROOT/$f"
-          done
+          for f in "${files[@]}"; do cp "$SRC/$f" "$ROOT/$f"; done
           cp tests/test_miao_full_retrieval.py "$ROOT/tests/"
           cp tests/test_q20_phase_physics.py "$ROOT/tests/"
 
@@ -129,23 +127,12 @@ jobs:
           - correction_manifest.json
 
           To verify the packaged code itself, double-click RUN_TESTS.bat.
-
-          Scientific model summary:
-          - one transverse correction phase; longitudinal behaviour comes from propagation;
-          - k_perp is fitted independently for each z plane;
-          - programmed q=20 vortex is excluded from the residual correction;
-          - radial residual is inferred from k_perp(z) through stationary-phase geometry;
-          - real plane-to-plane beam walk is preserved;
-          - camera-stage runout can be supplied independently by z position;
-          - the U/U* conjugate ambiguity blocks hardware output until resolved;
-          - mapped SLM2 correction remains in native SLM2 pixel coordinates;
-          - a new measured 18x4 BMG stack is required for experimental acceptance.
           EOF
 
           zip -qr q20_new_correction_local.zip "$ROOT"
-          base64 -w0 q20_new_correction_local.zip > q20_new_correction_local.zip.b64
+          base64 q20_new_correction_local.zip > q20_new_correction_local.zip.b64
           mkdir -p chat_q20_bundle_chunks
-          split -b 18000 -d -a 3 q20_new_correction_local.zip.b64 chat_q20_bundle_chunks/chunk_
+          split -l 100 -d -a 3 q20_new_correction_local.zip.b64 chat_q20_bundle_chunks/chunk_
           sha256sum q20_new_correction_local.zip > chat_q20_bundle_chunks/SHA256.txt
           wc -c q20_new_correction_local.zip > chat_q20_bundle_chunks/SIZE.txt
 
@@ -155,7 +142,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add chat_q20_bundle_chunks
+          git add -A chat_q20_bundle_chunks
           git commit -m "Build q20 local correction bundle" || exit 0
           git pull --rebase origin main
           git push origin main
