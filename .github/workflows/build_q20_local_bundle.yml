@@ -1,5 +1,6 @@
 name: build q20 local bundle
 
+# Triggered to package the current q20 correction code for local Windows use.
 on:
   push:
     branches: [main]
