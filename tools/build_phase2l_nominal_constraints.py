@@ -1,11 +1,7 @@
-"""Presentation figures comparing continuous-ideal and nominal bench-constrained B0/V1/V3.
+"""Presentation figures comparing continuous-ideal and nominal bench-constrained B0/V1/V3,
+now including explicit absolute-difference panels for the transverse comparison.
 
-`build_system_route` already includes the known nominal hardware constraints:
-8 um SLM pixelation, 256 phase levels, 93% fill-factor throughput, the nominal
-20-pixel carrier/blaze, explicit finite-iris 4F propagation, and the physical
-refractive axicon. Missing measured LUT/stroke/static-map/fringing/bench values
-are NOT fabricated. The constrained result is therefore a nominal fixed-
-parameter simulation, not a calibrated bench prediction.
+This is a drop-in replacement / patch variant for tools/build_phase2l_nominal_constraints.py.
 """
 from __future__ import annotations
 import argparse, gc, json, math
@@ -44,22 +40,57 @@ def continuous_ideal(cid,n):
     g=make_xy_grid(int(n),WINDOW_M/int(n)); b,_=gaussian_input_field(g,wavelength_m=wl,canonical_radius_m=w,error=GaussianBeamError()); ph=float(_ell(cid))*np.arctan2(np.asarray(g['Y']),np.asarray(g['X'])); at,_=physical_axicon_on_own_plane(g,wavelength_m=wl,base_angle_rad=ga,refractive_index=na,external_index=ne,error=AxiconError()); return {'grid':g,'post_axicon':b*np.exp(1j*ph)*at,'phase':ph}
 
 def ideal_vs_nominal(out,n):
-    fig,ax=plt.subplots(2,3,figsize=(13.2,8.3),facecolor=BG); fig.subplots_adjust(left=.06,right=.985,bottom=.08,top=.82,wspace=.10,hspace=.27)
-    for c,(cid,t) in enumerate([('B0','B0 — ℓ=0'),('V1','V1 — ℓ=1'),('V3','V3 — ℓ=3')]):
+    cases=[('B0','B0 — ℓ=0'),('V1','V1 — ℓ=1'),('V3','V3 — ℓ=3')]
+    fig,ax=plt.subplots(3,3,figsize=(13.4,12.0),facecolor=BG)
+    fig.subplots_adjust(left=.06,right=.985,bottom=.08,top=.865,wspace=.10,hspace=.28)
+    max_diff = 0.0
+    prepared=[]
+    for cid,t in cases:
         a=continuous_ideal(cid,n); b=build_system_route(cid,grid_n=n); ia=_xy(a); ib=_xy(b)
-        for r,(v,route,label) in enumerate([(ia,a,'continuous ideal'),(ib,b,'nominal bench-constrained')]):
-            q=ax[r,c]; style.style_ax(q); cr,x=_crop(v,route['grid']); q.imshow(_norm(cr),origin='lower',extent=[x[0]*1e3,x[-1]*1e3,x[0]*1e3,x[-1]*1e3],cmap=CMAP,norm=PNORM,interpolation=style.DISPLAY_INTERPOLATION,aspect='equal'); q.set_title(f'{t}\n{label}',color=TEXT,fontsize=11.5,weight='bold'); q.set_xlabel('x (mm)',fontsize=8)
+        ia_n=_norm(ia); ib_n=_norm(ib)
+        diff=np.abs(ib_n-ia_n)
+        max_diff=max(max_diff,float(np.max(diff)))
+        prepared.append((cid,t,a,b,ia_n,ib_n,diff))
+    max_diff=max(max_diff,1e-12)
+    dnorm=colors.PowerNorm(gamma=.75,vmin=0,vmax=max_diff)
+    diff_mappable=None
+
+    for c,(_,t,a,b,ia_n,ib_n,diff) in enumerate(prepared):
+        for r,(v,route,label,norm,cmap_) in enumerate([
+            (ia_n,a,'continuous ideal',PNORM,CMAP),
+            (ib_n,b,'nominal bench-constrained',PNORM,CMAP),
+            (diff,b,'absolute difference',dnorm,CMAP),
+        ]):
+            q=ax[r,c]; style.style_ax(q); cr,x=_crop(v,route['grid'])
+            im=q.imshow(cr,origin='lower',extent=[x[0]*1e3,x[-1]*1e3,x[0]*1e3,x[-1]*1e3],cmap=cmap_,norm=norm,interpolation=style.DISPLAY_INTERPOLATION,aspect='equal')
+            if r<2:
+                q.set_title(f'{t}\n{label}',color=TEXT,fontsize=11.2,weight='bold')
+            else:
+                q.set_title(f'{t}\n|I_nominal − I_ideal|',color=TEXT,fontsize=11.2,weight='bold')
+                diff_mappable=im
+            q.set_xlabel('x (mm)',fontsize=8)
             if c==0:q.set_ylabel('y (mm)',fontsize=8)
             else:q.tick_params(labelleft=False)
-        del a,b,ia,ib; gc.collect()
-    fig.suptitle('Ideal beam family → nominal experimental constraints',color=TEXT,fontsize=18,weight='bold',y=.965); fig.text(.5,.905,'SLM pixelation + 8-bit phase + fill-factor throughput + carrier/blaze + finite 4F order selection',ha='center',color=MUTED,fontsize=10.2); fig.text(.5,.865,'No deliberate misalignment, wavefront error, axicon defect or measured correction map',ha='center',color=MUTED,fontsize=9.3)
+        del a,b,ia_n,ib_n,diff
+        gc.collect()
+    fig.suptitle('Ideal beam family → nominal experimental constraints',color=TEXT,fontsize=18,weight='bold',y=.972)
+    fig.text(.5,.920,'SLM pixelation + 8-bit phase + fill-factor throughput + carrier/blaze + finite 4F order selection',ha='center',color=MUTED,fontsize=10.2)
+    fig.text(.5,.890,'Third row isolates the morphology change caused by nominal hardware constraints only',ha='center',color=MUTED,fontsize=9.3)
+    fig.text(.5,.867,'No deliberate misalignment, wavefront error, axicon defect or measured correction map',ha='center',color=MUTED,fontsize=9.1)
+    if diff_mappable is not None:
+        cax=fig.add_axes([0.25,0.045,0.50,0.015])
+        cb=fig.colorbar(diff_mappable,cax=cax,orientation='horizontal')
+        cb.ax.tick_params(colors=MUTED,labelsize=7,length=2)
+        cb.outline.set_edgecolor((*colors.to_rgb(MUTED),0.28))
+        cb.set_label('|I_nominal − I_ideal|',color=MUTED,fontsize=8,labelpad=2)
     p=out/'01_ideal_vs_nominal_constraints_B0_V1_V3.png'; fig.savefig(p,dpi=480,bbox_inches='tight',facecolor=BG,pad_inches=.06); plt.close(fig); return p
 
 def v3_prop(out,n):
     a=continuous_ideal('V3',n); b=build_system_route('V3',grid_n=n); ia=_norm(_xz(a,'phase2l-ideal-v3')); ib=_norm(_xz(b,'phase2l-nominal-v3')); d=np.abs(ib-ia); z=Z_VALUES_M*1e3; x=PROP_COORD_M*1e3
     fig,ax=plt.subplots(1,3,figsize=(14.5,4.8),facecolor=BG); fig.subplots_adjust(left=.055,right=.985,bottom=.16,top=.78,wspace=.13)
     for q in ax:style.style_ax(q)
-    for q,v,t in [(ax[0],ia,'Continuous ideal'),(ax[1],ib,'Nominal bench-constrained')]:q.imshow(v.T,origin='lower',extent=[z[0],z[-1],x[0],x[-1]],cmap=CMAP,norm=PNORM,interpolation=style.DISPLAY_INTERPOLATION,aspect='auto');q.set_title(t,color=TEXT,fontsize=12.5,weight='bold');q.set_xlabel('z from axicon (mm)');q.axvline(60,color='white',alpha=.25,ls='--',lw=.8)
+    for q,v,t in [(ax[0],ia,'Continuous ideal'),(ax[1],ib,'Nominal bench-constrained')]:
+        q.imshow(v.T,origin='lower',extent=[z[0],z[-1],x[0],x[-1]],cmap=CMAP,norm=PNORM,interpolation=style.DISPLAY_INTERPOLATION,aspect='auto');q.set_title(t,color=TEXT,fontsize=12.5,weight='bold');q.set_xlabel('z from axicon (mm)');q.axvline(60,color='white',alpha=.25,ls='--',lw=.8)
     ax[0].set_ylabel('x at fixed y=0 (mm)'); im=ax[2].imshow(d.T,origin='lower',extent=[z[0],z[-1],x[0],x[-1]],cmap=CMAP,vmin=0,vmax=max(float(np.max(d)),1e-12),interpolation=style.DISPLAY_INTERPOLATION,aspect='auto'); ax[2].set_title('Absolute morphology difference',color=TEXT,fontsize=12.5,weight='bold'); ax[2].set_xlabel('z from axicon (mm)'); cb=fig.colorbar(im,ax=ax[2],pad=.02,shrink=.88); cb.ax.tick_params(colors=MUTED,labelsize=7); cb.set_label('|I_nominal − I_ideal|',color=MUTED,fontsize=8)
     fig.suptitle('V3 propagation: ideal vs nominal experimental constraints',color=TEXT,fontsize=17,weight='bold',y=.95); fig.text(.5,.865,'Same physical coordinates and propagation range; main panels peak-normalised for morphology',ha='center',color=MUTED,fontsize=9.2)
     p=out/'02_V3_propagation_ideal_vs_nominal.png';fig.savefig(p,dpi=480,bbox_inches='tight',facecolor=BG,pad_inches=.06);plt.close(fig);return p
