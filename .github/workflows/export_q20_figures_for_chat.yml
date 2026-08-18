@@ -1,0 +1,33 @@
+name: Export q20 figure sources for chat
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/export_q20_figures_for_chat.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Collect current q20 figure sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p q20_figure_source_pack
+          cp figures/experimental/q20_aberration/validation/all_z_full_signed_xz_yz_maps.png q20_figure_source_pack/
+          cp figures/experimental/q20_aberration/validation/all_z_images_page_1.png q20_figure_source_pack/
+          cp figures/experimental/q20_aberration/reconstruction/annular_aberration_phase.png q20_figure_source_pack/
+          cp figures/experimental/q20_aberration/single_mask/single_mask_signed_xz_yz.png q20_figure_source_pack/
+          cp figures/experimental/q20_aberration/single_mask/single_mask_metrics_vs_z.png q20_figure_source_pack/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: q20-figure-source-pack
+          path: q20_figure_source_pack
+          if-no-files-found: error
+          retention-days: 1
