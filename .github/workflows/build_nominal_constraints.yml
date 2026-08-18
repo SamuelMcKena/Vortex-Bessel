@@ -77,3 +77,4 @@ jobs:
 
 # Triggered from the presentation workflow review on 2026-08-18.
 # Rebuild requested 2026-08-19: add shared-scale transverse absolute-difference row.
+# Final rebuild requested 2026-08-19: display ideal, constrained and difference as columns for each beam.
