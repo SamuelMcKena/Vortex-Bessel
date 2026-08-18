@@ -8,26 +8,76 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   export:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Collect current q20 figure sources
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install Pillow
+        run: python -m pip install pillow
+      - name: Build compact current q20 chat figures
+        shell: python
+        run: |
+          from pathlib import Path
+          from PIL import Image, ImageChops
+
+          root = Path.cwd()
+          out = root / 'figures/chat_q20_current'
+          out.mkdir(parents=True, exist_ok=True)
+
+          def trim_white(im, pad=24):
+              rgb = im.convert('RGB')
+              bg = Image.new('RGB', rgb.size, 'white')
+              diff = ImageChops.difference(rgb, bg).convert('L')
+              # Ignore tiny anti-aliasing differences from white.
+              diff = diff.point(lambda p: 255 if p > 10 else 0)
+              box = diff.getbbox()
+              if not box:
+                  return rgb
+              l,t,r,b = box
+              l=max(0,l-pad); t=max(0,t-pad); r=min(rgb.width,r+pad); b=min(rgb.height,b+pad)
+              return rgb.crop((l,t,r,b))
+
+          def save_small(im, name, max_w=1100, quality=72):
+              im = trim_white(im)
+              if im.width > max_w:
+                  h = round(im.height * max_w / im.width)
+                  im = im.resize((max_w, h), Image.Resampling.LANCZOS)
+              im.save(out / name, 'JPEG', quality=quality, optimize=True, progressive=False)
+              print(name, im.size, (out/name).stat().st_size)
+
+          prop = Image.open(root/'figures/experimental/q20_aberration/validation/all_z_full_signed_xz_yz_maps.png').convert('RGB')
+          w,h = prop.size
+          # First subplot column from the canonical 2x5 all-z map. The crop is deliberately
+          # generous so the scientific axis labels and title are retained.
+          x0, x1 = int(0.002*w), int(0.218*w)
+          save_small(prop.crop((x0, int(0.015*h), x1, int(0.53*h))), '01_measured_XZ_full_stack.jpg', max_w=950, quality=80)
+          save_small(prop.crop((x0, int(0.47*h), x1, int(0.995*h))), '02_measured_YZ_full_stack.jpg', max_w=950, quality=80)
+
+          phase = Image.open(root/'figures/experimental/q20_aberration/reconstruction/annular_aberration_phase.png').convert('RGB')
+          save_small(phase, '03_constrained_annular_phase_diagnostic.jpg', max_w=1150, quality=82)
+
+          single = Image.open(root/'figures/experimental/q20_aberration/single_mask/single_mask_signed_xz_yz.png').convert('RGB')
+          save_small(single, '04_single_input_mask_forward_falsification.jpg', max_w=1400, quality=76)
+
+      - name: Commit compact q20 chat figures
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p q20_figure_source_pack
-          cp figures/experimental/q20_aberration/validation/all_z_full_signed_xz_yz_maps.png q20_figure_source_pack/
-          cp figures/experimental/q20_aberration/validation/all_z_images_page_1.png q20_figure_source_pack/
-          cp figures/experimental/q20_aberration/reconstruction/annular_aberration_phase.png q20_figure_source_pack/
-          cp figures/experimental/q20_aberration/single_mask/single_mask_signed_xz_yz.png q20_figure_source_pack/
-          cp figures/experimental/q20_aberration/single_mask/single_mask_metrics_vs_z.png q20_figure_source_pack/
-      - uses: actions/upload-artifact@v4
-        with:
-          name: q20-figure-source-pack
-          path: q20_figure_source_pack
-          if-no-files-found: error
-          retention-days: 1
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add figures/chat_q20_current
+          if git diff --cached --quiet; then
+            echo 'Compact q20 chat figures already current.'
+            exit 0
+          fi
+          git commit -m 'Build current q20 chat figure previews'
+          git pull --rebase origin main
+          git push origin main
