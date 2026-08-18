@@ -1,0 +1,27 @@
+{
+  "claim": "nominal_fixed_parameter_simulation_not_calibrated_bench_prediction",
+  "nominal_fixed_parameter_simulation_ready": true,
+  "fixed_bench_prediction_ready": false,
+  "fixed_bench_prediction_blocker": "The optical route is fixed numerically, but critical bench geometry, SLM calibration, axicon geometry, camera scale and throughput remain unresolved. This is a nominal fixed-parameter model, not a calibrated bench prediction.",
+  "included": {
+    "slm_pixel_pitch_um": 8.0,
+    "slm_phase_bits": 8,
+    "slm_fill_factor": 0.93,
+    "carrier_period_px": 20,
+    "carrier_frequency_cpm": 6250.0,
+    "fourf_focal_length_m": 0.3,
+    "fourier_iris_radius_m": 0.0007717500000000001,
+    "physical_axicon": true
+  },
+  "missing_measurements": [
+    "SLM phase LUT at operating wavelength",
+    "SLM phase stroke/nonlinearity",
+    "static SLM wavefront maps",
+    "calibrated fringing response",
+    "per-panel orientation/parity",
+    "measured 4F separations and iris centering/size",
+    "physical axicon clear aperture/surface map",
+    "camera scale/absolute observation-plane calibration"
+  ],
+  "important_note": "Existing build_system_route presentation figures already contain the nominal hardware constraints; they are ideal only in the sense of zero deliberate errors."
+}
