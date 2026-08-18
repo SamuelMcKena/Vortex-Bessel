@@ -7,14 +7,24 @@ on:
       - notebooks/experimental/axicon_aberration_correction/q20_phase_physics.py
       - notebooks/experimental/axicon_aberration_correction/single_transverse_phase_forward_test.py
       - notebooks/experimental/axicon_aberration_correction/rebuild_q20_presentation_from_bmg.py
+      - notebooks/experimental/axicon_aberration_correction/miao_full_retrieval.py
+      - notebooks/experimental/axicon_aberration_correction/run_q20_miao_retrieval.py
+      - notebooks/experimental/axicon_aberration_correction/iterative_correction_controller.py
+      - notebooks/experimental/axicon_aberration_correction/iterative_correction_controller_v2.py
       - tests/test_q20_phase_physics.py
+      - tests/test_miao_full_retrieval.py
       - .github/workflows/q20_phase_physics_ci.yml
   pull_request:
     paths:
       - notebooks/experimental/axicon_aberration_correction/q20_phase_physics.py
       - notebooks/experimental/axicon_aberration_correction/single_transverse_phase_forward_test.py
       - notebooks/experimental/axicon_aberration_correction/rebuild_q20_presentation_from_bmg.py
+      - notebooks/experimental/axicon_aberration_correction/miao_full_retrieval.py
+      - notebooks/experimental/axicon_aberration_correction/run_q20_miao_retrieval.py
+      - notebooks/experimental/axicon_aberration_correction/iterative_correction_controller.py
+      - notebooks/experimental/axicon_aberration_correction/iterative_correction_controller_v2.py
       - tests/test_q20_phase_physics.py
+      - tests/test_miao_full_retrieval.py
       - .github/workflows/q20_phase_physics_ci.yml
 
 jobs:
@@ -26,11 +36,15 @@ jobs:
         with:
           python-version: '3.13'
       - name: Install test dependencies
-        run: python -m pip install --upgrade pip numpy pytest
+        run: python -m pip install --upgrade pip numpy scipy pandas matplotlib pytest
       - name: Run q20 phase physics regression tests
-        run: python -m pytest -q tests/test_q20_phase_physics.py
-      - name: Compile q20 presentation modules
+        run: python -m pytest -q tests/test_q20_phase_physics.py tests/test_miao_full_retrieval.py
+      - name: Compile q20 retrieval modules
         run: |
           python -m py_compile notebooks/experimental/axicon_aberration_correction/q20_phase_physics.py
           python -m py_compile notebooks/experimental/axicon_aberration_correction/single_transverse_phase_forward_test.py
           python -m py_compile notebooks/experimental/axicon_aberration_correction/rebuild_q20_presentation_from_bmg.py
+          python -m py_compile notebooks/experimental/axicon_aberration_correction/miao_full_retrieval.py
+          python -m py_compile notebooks/experimental/axicon_aberration_correction/run_q20_miao_retrieval.py
+          python -m py_compile notebooks/experimental/axicon_aberration_correction/iterative_correction_controller.py
+          python -m py_compile notebooks/experimental/axicon_aberration_correction/iterative_correction_controller_v2.py
