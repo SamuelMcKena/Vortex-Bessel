@@ -1,0 +1,168 @@
+name: Repair aberration physics v2 once
+
+on:
+  push:
+    branches: [agent/physics-consistent-aberration-v2]
+    paths:
+      - .github/workflows/repair_aberration_physics_v2_once.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/physics-consistent-aberration-v2
+          fetch-depth: 0
+
+      - name: Canonicalise q20 physics and archive misleading notebook
+        shell: python
+        run: |
+          from pathlib import Path
+          import shutil
+
+          root = Path.cwd()
+          corr = root / 'notebooks' / 'experimental' / 'axicon_aberration_correction'
+
+          # 1) Archive the old notebook with its historical outputs.  It remains
+          # available for provenance but is no longer a runnable/current notebook.
+          old_nb = corr / 'Bessel_zscan_alignment_correction.ipynb'
+          legacy_dir = corr / 'legacy'
+          legacy_dir.mkdir(exist_ok=True)
+          legacy_nb = legacy_dir / 'Bessel_zscan_alignment_correction_legacy.ipynb'
+          if old_nb.exists() and not legacy_nb.exists():
+              shutil.move(str(old_nb), str(legacy_nb))
+              print('archived legacy notebook')
+
+          legacy_readme = legacy_dir / 'README.md'
+          legacy_readme.write_text(
+              '# Legacy aberration notebook\n\n'
+              '`Bessel_zscan_alignment_correction_legacy.ipynb` is retained only for provenance.\n\n'
+              'Do not use its **Recovered phase at z0** or **Predicted XZ/YZ — before/after correction** '
+              'figures as current evidence. The total wrapped phase contains the q=20 topology, and the '
+              'old propagation preview used absolute relative-z labels from a field already reconstructed '
+              'at the first measured plane, double-counting the reference distance.\n\n'
+              'Use `../Bessel_zscan_physics_consistent.ipynb` and '
+              '`../global_multiplane_retrieval.py` instead.\n',
+              encoding='utf-8'
+          )
+
+          # 2) Fix the remaining q20 normalized-disk visualization so wrapped
+          # phases are never interpolated as ordinary scalars.
+          q20 = corr / 'q20_modal_analysis.py'
+          text = q20.read_text(encoding='utf-8')
+          old = '''    # Visualization only: row interpolation maps measured z ordering to normalized radius.\n    nrho = 512; ntheta = phases.shape[1]\n    phase_r = np.vstack([np.interp(np.linspace(0, len(phases)-1, nrho),\n                                   np.arange(len(phases)), phases[:, j])\n                         for j in range(ntheta)]).T\n'''
+          new = '''    # LEGACY VISUALIZATION ONLY: map measured z ordering to normalized radius.\n    # Wrapped angles must never be interpolated as ordinary real numbers; interpolate\n    # the unit phasor and take its argument afterwards.  This is still not a physical\n    # camera-to-SLM map and is retained only for compatibility/falsification tests.\n    nrho = 512; ntheta = phases.shape[1]\n    radial_coord = np.linspace(0, len(phases)-1, nrho)\n    source_coord = np.arange(len(phases), dtype=float)\n    phase_phasor = np.exp(1j * phases)\n    re_r = np.vstack([np.interp(radial_coord, source_coord, phase_phasor[:, j].real)\n                      for j in range(ntheta)]).T\n    im_r = np.vstack([np.interp(radial_coord, source_coord, phase_phasor[:, j].imag)\n                      for j in range(ntheta)]).T\n    phase_r = np.angle(re_r + 1j * im_r)\n'''
+          if old not in text:
+              raise SystemExit('q20 wrapped-phase interpolation block not found')
+          text = text.replace(old, new)
+          text = text.replace(
+              '"method": "Miao-style q=20 constrained Bessel modal retrieval",',
+              '"method": "independent per-plane constrained q=20 Bessel-modal intensity fit",\n        "canonical_phase_retrieval": False,\n        "longitudinal_consistency": "not enforced; use global_multiplane_retrieval.py",'
+          )
+          text = text.replace(
+              '"interpretation": "model-internal phase-only prediction",',
+              '"interpretation": "secondary per-plane annular diagnostic; not one propagated 3-D wavefield",'
+          )
+          q20.write_text(text, encoding='utf-8')
+
+          # 3) Make the older per-plane recreation impossible to misread as a
+          # longitudinal propagation proof.
+          recreation = corr / 'phase_error_recreation.py'
+          text = recreation.read_text(encoding='utf-8')
+          text = text.replace(
+              'This is a model falsification diagnostic: phase-only error is applied to the ideal\nq=20 angular field and compared with measured camera intensity at every z plane.',
+              'This is a SECONDARY per-plane modal closure diagnostic.  Each z plane uses its own\nindependently fitted angular coefficients; it is not a common propagated wavefield.\nUse global_multiplane_retrieval.py or single_mask_inverse_forward_test.py for\nlongitudinal/causal falsification.'
+          )
+          text = text.replace(
+              '"test": "ideal q=20 plus retrieved phase error versus measured lab stack",',
+              '"test": "per-plane ideal q=20 plus independently retrieved modal phase error",\n        "longitudinal_common_field": False,\n        "canonical_causal_test": False,'
+          )
+          text = text.replace(
+              'fig.suptitle("Retrieved phase-error recreation test")',
+              'fig.suptitle("Per-plane modal phase recreation — NOT common-field propagation")'
+          )
+          text = text.replace(
+              'fig.suptitle("Signed propagation: does inverse correction recreate the measured distortion?")',
+              'fig.suptitle("Per-plane modal stack: not a single propagated error field")'
+          )
+          recreation.write_text(text, encoding='utf-8')
+
+          # 4) Correct labels on the independent per-plane counterfactual stack.
+          comp = corr / 'comprehensive_error_validation.py'
+          text = comp.read_text(encoding='utf-8')
+          text = text.replace(
+              '"PHASE-CORRECTED PER-PLANE MODEL"',
+              '"INDEPENDENT PER-PLANE PHASE COUNTERFACTUAL"'
+          )
+          text = text.replace(
+              '"Measured versus predicted corrected q=20 beam path — true iso-intensity meshes\\n"',
+              '"Measured stack versus independent per-plane modal counterfactuals\\n"'
+          )
+          text = text.replace(
+              '"Measured versus corrected q=20 3D beam path — rotatable mesh"',
+              '"Measured stack versus per-plane counterfactual stack — not propagated 3D"'
+          )
+          comp.write_text(text, encoding='utf-8')
+
+          # 5) The normal runner must execute only current notebooks.  Legacy and
+          # archive folders are provenance, not runnable study stages.
+          runner = root / 'run_study.py'
+          text = runner.read_text(encoding='utf-8')
+          old = '    return [_relative(path) for path in sorted(folder.rglob("*.ipynb"))]\n'
+          new = '''    notebooks = []\n    for path in sorted(folder.rglob("*.ipynb")):\n        if any(part.lower() in {"legacy", "archive", "deprecated"} for part in path.parts):\n            continue\n        notebooks.append(_relative(path))\n    if stage == "experimental":\n        canonical = "notebooks/experimental/axicon_aberration_correction/Bessel_zscan_physics_consistent.ipynb"\n        return [canonical] if (ROOT / canonical).exists() else notebooks\n    return notebooks\n'''
+          if old not in text:
+              raise SystemExit('run_study discovery block not found')
+          text = text.replace(old, new)
+          text = text.replace('PROJECT_SCHEMA_VERSION = "3.1.0"', 'PROJECT_SCHEMA_VERSION = "3.2.0"')
+          runner.write_text(text, encoding='utf-8')
+
+          # 6) Update minimum workspace/coverage anchors that still named the old notebook.
+          for rel in ('vbb_study/setup_study.py', 'tools/audit_publication_study_coverage.py'):
+              path = root / rel
+              text = path.read_text(encoding='utf-8')
+              text = text.replace(
+                  'notebooks/experimental/axicon_aberration_correction/Bessel_zscan_alignment_correction.ipynb',
+                  'notebooks/experimental/axicon_aberration_correction/Bessel_zscan_physics_consistent.ipynb'
+              )
+              path.write_text(text, encoding='utf-8')
+
+          # 7) Update repository navigation where the old filename was presented as current.
+          for rel in ('README.md', 'docs/RUN_GUIDE.md', 'docs/CURRENT_CODE_INDEX.md'):
+              path = root / rel
+              text = path.read_text(encoding='utf-8')
+              text = text.replace(
+                  'Bessel_zscan_alignment_correction.ipynb',
+                  'Bessel_zscan_physics_consistent.ipynb'
+              )
+              path.write_text(text, encoding='utf-8')
+
+      - name: Compile and run focused physics tests
+        run: |
+          python -m py_compile \
+            notebooks/experimental/axicon_aberration_correction/physics_consistent_multiplane.py \
+            notebooks/experimental/axicon_aberration_correction/global_multiplane_retrieval.py \
+            notebooks/experimental/axicon_aberration_correction/q20_modal_analysis.py \
+            notebooks/experimental/axicon_aberration_correction/phase_error_recreation.py \
+            notebooks/experimental/axicon_aberration_correction/comprehensive_error_validation.py \
+            run_study.py
+          python -m pytest tests/test_physics_consistent_multiplane.py -q
+          python run_study.py --stage experimental --dry-run
+
+      - name: Commit migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No migration changes required.'
+            exit 0
+          fi
+          git commit -m 'Make global multi-plane physics canonical for aberration correction'
+          git push origin agent/physics-consistent-aberration-v2
