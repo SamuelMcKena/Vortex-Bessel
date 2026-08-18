@@ -1,0 +1,66 @@
+name: Build slide 3 ideal beam figure
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/build_slide3_ideal_figure.yml
+      - tools/build_phase2j_ideal_beam_profile_figure.py
+      - tools/presentation_phase2j_style.py
+
+permissions:
+  contents: write
+
+env:
+  MPLBACKEND: Agg
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install numerical environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-report.txt
+          python -m pip install -e . --no-deps
+
+      - name: Render updated slide 3 figure
+        run: |
+          rm -rf outputs/figures/slide3_ideal
+          python tools/build_phase2j_ideal_beam_profile_figure.py \
+            --grid-n 2048 \
+            --output-dir outputs/figures/slide3_ideal
+          test -f outputs/figures/slide3_ideal/02_beam_profile_shaping_B0_V1_V3_thermal_tight.png
+
+      - name: Upload slide 3 figure
+        uses: actions/upload-artifact@v4
+        with:
+          name: slide3_ideal_beam_figure
+          path: |
+            outputs/figures/slide3_ideal/02_beam_profile_shaping_B0_V1_V3_thermal_tight.png
+            outputs/figures/slide3_ideal/02_beam_profile_shaping_B0_V1_V3_thermal_tight.txt
+          if-no-files-found: error
+
+      - name: Record run id for chat retrieval
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p chat_slide3_figure
+          printf '%s\n' '${{ github.run_id }}' > chat_slide3_figure/RUN_ID.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add chat_slide3_figure/RUN_ID.txt
+          git commit -m 'Record slide 3 figure artifact run' || exit 0
+          git pull --rebase origin main
+          git push origin HEAD:main
