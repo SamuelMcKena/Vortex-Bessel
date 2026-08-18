@@ -5,6 +5,11 @@ each z plane, increases aberration modal order until convergence, reconstructs
 the radial phase from k_perp(z), and blocks SLM output until the required bench
 calibrations and conjugate-branch check are present.
 
+Camera-stage runout is handled separately from optical beam walk: the preferred
+calibration is one raw-sensor optical-axis [y,x] position for every z stage
+position, measured with an aligned reference beam.  Only repeat-to-repeat jitter
+within one z plane is registered away.
+
 A geometric input-plane -> SLM2 phase remap is permitted only when the two
 planes have been experimentally confirmed to be conjugate.  Otherwise the
 complex field must be propagated/back-propagated through the measured relay; a
@@ -46,51 +51,104 @@ def load_scan_preserve_plane_shift(data_dir, roi_size=768,
             raise ValueError(f"z{zi}: expected {expected_repeats} repeats, found {len(groups[zi])}")
 
     frame_centres, all_centres = {}, []
+    sensor_shape = None
     for zi in keys:
         rows = []
         for p in groups[zi]:
             a = preprocess(read_bmg(p))
+            if sensor_shape is None:
+                sensor_shape = tuple(map(int, a.shape))
+            elif tuple(a.shape) != sensor_shape:
+                raise ValueError(f"Inconsistent BMG sensor shape: {a.shape} != {sensor_shape}")
             cy, cx, score = find_dark_core_center(a)
             rows.append((cy, cx, score))
             all_centres.append((cy, cx))
         frame_centres[zi] = rows
 
+    if sensor_shape is None:
+        raise FileNotFoundError("No readable BMG frames found")
+    sy, sx = sensor_shape
+    roi_size = int(min(roi_size, sy, sx))
     global_cy, global_cx = np.median(np.asarray(all_centres, float), axis=0)
     h = roi_size//2
-    y0 = max(0, min(2048-roi_size, int(round(global_cy))-h))
-    x0 = max(0, min(2048-roi_size, int(round(global_cx))-h))
+    y0 = max(0, min(sy-roi_size, int(round(global_cy))-h))
+    x0 = max(0, min(sx-roi_size, int(round(global_cx))-h))
     estimated_axis_crop_yx = (float(global_cy-y0), float(global_cx-x0))
 
-    images, qc = [], []
+    images, qc, mean_shift_by_z = [], [], []
     for zi in keys:
         centres = np.asarray([(c[0], c[1]) for c in frame_centres[zi]], float)
         target = np.median(centres, axis=0)
-        repeats = []
+        repeats, shifts = [], []
         for p, (cy, cx, score) in zip(groups[zi], frame_centres[zi]):
             a = preprocess(read_bmg(p))
+            shift = (float(target[0]-cy), float(target[1]-cx))
+            shifts.append(shift)
             # Remove repeat-to-repeat acquisition jitter within this z only.
             # The z-plane target itself is never shifted to another z-plane target.
-            a = ndimage.shift(a, (target[0]-cy, target[1]-cx),
-                              order=1, mode="constant", cval=0)
+            a = ndimage.shift(a, shift, order=1, mode="constant", cval=0)
             repeats.append(a[y0:y0+roi_size, x0:x0+roi_size])
             qc.append({"z_index": zi, "file": p.name,
                        "core_y_raw_px": float(cy), "core_x_raw_px": float(cx),
                        "core_score": float(score),
+                       "repeat_registration_shift_y_px": shift[0],
+                       "repeat_registration_shift_x_px": shift[1],
                        "crop_origin_y_px": int(y0), "crop_origin_x_px": int(x0)})
         images.append(np.mean(np.stack(repeats), axis=0))
+        mean_shift_by_z.append(np.mean(np.asarray(shifts, float), axis=0))
     crop_origin = (int(y0), int(x0))
-    return images, np.asarray(keys), estimated_axis_crop_yx, crop_origin, qc
+    return (images, np.asarray(keys), estimated_axis_crop_yx, crop_origin,
+            np.asarray(mean_shift_by_z, float), sensor_shape, qc)
 
 
-def _axis_in_crop(calibration, estimated_axis_crop_yx, crop_origin_yx):
-    raw_axis = calibration.get("camera_optical_axis_yx_px")
-    if raw_axis is None:
-        return tuple(map(float, estimated_axis_crop_yx)), False
-    if len(raw_axis) != 2:
-        raise ValueError("camera_optical_axis_yx_px must be [y, x] in raw 2048x2048 camera pixels")
+def calibrated_axes_in_crop(calibration, estimated_axis_crop_yx, crop_origin_yx,
+                            mean_registration_shift_by_z, n_planes):
+    """Return one optical-axis coordinate per z plane in the averaged ROI.
+
+    Preferred input is `camera_optical_axis_yx_px_by_z`, measured in raw camera
+    pixels at the same stage positions.  The small mean within-plane registration
+    shift is applied because the BMG repeats were shifted before averaging.
+    """
     y0, x0 = crop_origin_yx
-    axis = (float(raw_axis[0])-y0, float(raw_axis[1])-x0)
-    return axis, True
+    shifts = np.asarray(mean_registration_shift_by_z, float)
+    if shifts.shape != (int(n_planes), 2):
+        raise ValueError("mean_registration_shift_by_z must have shape (n_planes, 2)")
+
+    by_z = calibration.get("camera_optical_axis_yx_px_by_z")
+    if by_z is not None:
+        raw = np.asarray(by_z, float)
+        if raw.shape != (int(n_planes), 2):
+            raise ValueError(
+                f"camera_optical_axis_yx_px_by_z must have shape ({n_planes}, 2)")
+        axes = raw + shifts - np.asarray([y0, x0], float)
+        return axes, True, "per-z measured reference axis"
+
+    single = calibration.get("camera_optical_axis_yx_px")
+    single_valid = bool(calibration.get("camera_optical_axis_single_value_valid_for_all_z", False))
+    if single is not None and single_valid:
+        raw = np.asarray(single, float)
+        if raw.shape != (2,):
+            raise ValueError("camera_optical_axis_yx_px must be [y, x]")
+        axes = raw[None, :] + shifts - np.asarray([y0, x0], float)
+        axes = np.repeat(raw[None, :], int(n_planes), axis=0) + shifts - np.asarray([y0, x0], float)
+        return axes, True, "single measured axis; constant-with-z independently verified"
+
+    estimated = np.repeat(np.asarray(estimated_axis_crop_yx, float)[None, :],
+                          int(n_planes), axis=0)
+    return estimated, False, "median observed beam-core diagnostic axis"
+
+
+def _reference_rows_in_rho_order(reference, retrievals, z_abs_m, wavelength_m):
+    """Reference rows are supplied in acquisition-z order; match the rho sort."""
+    if reference is None:
+        return None
+    ref = np.asarray(reference, float)
+    if ref.shape[0] != len(retrievals):
+        raise ValueError("input reference must contain one angular row per z plane")
+    k = 2*np.pi/float(wavelength_m)
+    kp = np.asarray([r.k_perp_m_inv for r in retrievals], float)
+    order = np.argsort(np.asarray(z_abs_m, float)*kp/k)
+    return ref[order]
 
 
 def run(data_dir, output_dir, *, calibration_json=None,
@@ -102,24 +160,27 @@ def run(data_dir, output_dir, *, calibration_json=None,
     if calibration_json:
         calibration = json.loads(Path(calibration_json).read_text(encoding="utf-8"))
 
-    images, z_keys, estimated_axis, crop_origin, qc = load_scan_preserve_plane_shift(data_dir)
+    (images, z_keys, estimated_axis, crop_origin, mean_shifts,
+     sensor_shape, qc) = load_scan_preserve_plane_shift(data_dir)
     z_relative_mm = np.asarray(z_relative_mm, float)
     if len(images) != len(z_relative_mm):
-        raise ValueError("z_relative_mm must contain one value per plane")
-    retrieval_axis, axis_calibrated = _axis_in_crop(calibration, estimated_axis, crop_origin)
+        raise ValueError("z_relative_mm must contain one position per measured plane")
+    axes_by_z, axis_calibrated, axis_source = calibrated_axes_in_crop(
+        calibration, estimated_axis, crop_origin, mean_shifts, len(images))
 
     # Global ring estimate is only an optimizer seed now, never the fitted value.
     seed_kp, _ = estimate_global_kr(images, pixel_pitch_m, q, .55)
     retrievals = []
     for i, (image, zmm) in enumerate(zip(images, z_relative_mm)):
         retrievals.append(fit_plane_adaptive(
-            image, i, zmm*1e-3, retrieval_axis, pixel_pitch_m, q, seed_kp,
+            image, i, zmm*1e-3, axes_by_z[i], pixel_pitch_m, q, seed_kp,
             max_aberration_order=max_aberration_order))
 
     rows = [{
         "z_index": r.z_index, "z_relative_mm": r.z_relative_m*1e3,
         "retrieval_axis_y_px": r.center_y_px, "retrieval_axis_x_px": r.center_x_px,
         "camera_optical_axis_calibrated": axis_calibrated,
+        "camera_axis_source": axis_source,
         "k_perp_opt_m_inv": r.k_perp_m_inv,
         "aberration_order_max": r.aberration_order_max,
         "fit_cost": r.fit_cost, "fit_corr": r.fit_corr, "fit_nrmse": r.fit_nrmse,
@@ -135,10 +196,13 @@ def run(data_dir, output_dir, *, calibration_json=None,
     base = {
         "method": "Miao-style per-plane k_perp + adaptive complex Bessel modal retrieval",
         "planes": len(images), "repeats_per_plane": 4,
+        "sensor_shape_yx": list(map(int, sensor_shape)),
         "programmed_q": int(q), "programmed_vortex_in_correction": False,
-        "plane_to_plane_recentering": False,
+        "plane_to_plane_beam_recentering": False,
+        "within_plane_repeat_jitter_registration": True,
         "camera_optical_axis_calibrated": axis_calibrated,
-        "retrieval_axis_yx_px_in_crop": list(map(float, retrieval_axis)),
+        "camera_axis_source": axis_source,
+        "retrieval_axis_yx_px_by_z_in_crop": axes_by_z.tolist(),
         "global_k_perp_used_only_as_seed_m_inv": float(seed_kp),
         "nominal_k_perp_calibrated": nominal_kp is not None,
         "absolute_z_calibrated": z0 is not None,
@@ -151,7 +215,8 @@ def run(data_dir, output_dir, *, calibration_json=None,
     if nominal_kp is None:
         early_blockers.append("supply the intended/calibrated k_perp_nominal_m_inv before a correction trial")
     if not axis_calibrated:
-        early_blockers.append("measure camera_optical_axis_yx_px; the median beam core is diagnostic only")
+        early_blockers.append(
+            "measure camera optical axis versus z-stage position; median beam core is diagnostic only")
     if z0 is None:
         base.update({
             "status": "LOCAL_RETRIEVAL_ONLY",
@@ -172,6 +237,7 @@ def run(data_dir, output_dir, *, calibration_json=None,
     ref_path = calibration.get("input_reference_annular_intensity_npy")
     if ref_path:
         reference = np.load(ref_path)
+        reference = _reference_rows_in_rho_order(reference, retrievals, z_abs_m, wavelength_m)
     full = assemble_full_aperture(retrievals, z_abs_m, wavelength_m,
                                   k_perp_nominal_m_inv=nominal_kp,
                                   reference_intensity_rows=reference)
@@ -210,7 +276,7 @@ def run(data_dir, output_dir, *, calibration_json=None,
     if not nominal_ready:
         extra_pretrial.append("intended/calibrated nominal k_perp is missing")
     if not axis_calibrated:
-        extra_pretrial.append("camera optical axis is not independently calibrated")
+        extra_pretrial.append("camera optical axis/stage runout is not independently calibrated")
     if conjugate_plane is not True:
         if conjugate_plane is False:
             extra_pretrial.append(
@@ -222,8 +288,6 @@ def run(data_dir, output_dir, *, calibration_json=None,
             manifest["pretrial_blockers"].append(item)
         if item not in manifest["hardware_blockers"]:
             manifest["hardware_blockers"].insert(0, item)
-    manifest["application_ready_for_low_gain_trial"] = len(manifest["pretrial_blockers"]) == 0
-    manifest["hardware_ready"] = len(manifest["hardware_blockers"]) == 0
 
     manifest.update(base)
     manifest.update({
@@ -241,7 +305,6 @@ def run(data_dir, output_dir, *, calibration_json=None,
                           if slm_written else None),
         "nonconjugate_relay_backpropagation_implemented": False,
     })
-    # base intentionally starts hardware_ready=False; recompute after update.
     manifest["application_ready_for_low_gain_trial"] = len(manifest["pretrial_blockers"]) == 0
     manifest["hardware_ready"] = len(manifest["hardware_blockers"]) == 0
     (out/"correction_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
