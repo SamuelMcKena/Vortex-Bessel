@@ -46,26 +46,26 @@
     {
       "decentre_m": -0.0005,
       "label": "\u2212500 \u00b5m",
-      "centroid_x_m": -0.00029059848951751294,
-      "centroid_y_m": -3.897786550864924e-08,
-      "fixed_lab_line_centroid_slope_rad": -0.0005856430017236518,
+      "centroid_x_m": -0.000290598489517513,
+      "centroid_y_m": -3.897786550861771e-08,
+      "fixed_lab_line_centroid_slope_rad": -0.0005856430017236508,
       "fixed_support_retained_power_fraction": 0.9999995641463878
     },
     {
       "decentre_m": 0.0,
       "label": "aligned",
-      "centroid_x_m": 7.568870218811776e-08,
-      "centroid_y_m": -4.766238379965599e-09,
-      "fixed_lab_line_centroid_slope_rad": -6.296734199042186e-08,
+      "centroid_x_m": 7.568870218810655e-08,
+      "centroid_y_m": -4.766238379934063e-09,
+      "fixed_lab_line_centroid_slope_rad": -6.296734199045504e-08,
       "fixed_support_retained_power_fraction": 0.999999929776872
     },
     {
       "decentre_m": 0.0005,
       "label": "+500 \u00b5m",
       "centroid_x_m": 0.0002907451088218217,
-      "centroid_y_m": -3.581663501277139e-08,
+      "centroid_y_m": -3.581663501280293e-08,
       "fixed_lab_line_centroid_slope_rad": 0.0005846559779036651,
-      "fixed_support_retained_power_fraction": 0.9999995760107139
+      "fixed_support_retained_power_fraction": 0.9999995760107141
     }
   ],
   "axicon_tip_metrics": [
@@ -94,35 +94,35 @@
   "real_error_fingerprints": [
     {
       "label": "nominal",
-      "centroid_x_m": 7.568870218811776e-08,
-      "centroid_y_m": -4.766238379965599e-09,
+      "centroid_x_m": 7.568870218810655e-08,
+      "centroid_y_m": -4.766238379934063e-09,
       "fixed_support_retained_power_fraction": 0.999999929776872
     },
     {
       "label": "beam pointing +0.75 mrad",
-      "centroid_x_m": -4.475317695970575e-05,
-      "centroid_y_m": 7.930543209493732e-07,
-      "fixed_support_retained_power_fraction": 0.999999885000802
+      "centroid_x_m": -4.475317695970574e-05,
+      "centroid_y_m": 7.930543209493731e-07,
+      "fixed_support_retained_power_fraction": 0.9999998850008018
     },
     {
       "label": "SLM1 registration +250 \u00b5m",
-      "centroid_x_m": -1.982154760335274e-06,
+      "centroid_x_m": -1.9821547603352773e-06,
       "centroid_y_m": 1.2006374924426442e-06,
       "fixed_support_retained_power_fraction": 0.9999994099250046
     },
     {
       "label": "4F iris offset +0.35 R",
-      "centroid_x_m": -5.1231046800797547e-08,
-      "centroid_y_m": -1.073518491630841e-06,
+      "centroid_x_m": -5.123104680081329e-08,
+      "centroid_y_m": -1.0735184916308725e-06,
       "fixed_support_retained_power_fraction": 0.9999999052145432
     }
   ],
   "tip_avoidance_planning_proxy": {
     "tip_radius_m": 0.0002,
     "annular_proxy_strength": 0.75,
-    "nominal_fractional_power_inside_tip": 0.01465788965723334,
+    "nominal_fractional_power_inside_tip": 0.014657889657233341,
     "annular_fractional_power_inside_tip": 0.0034618396019710125,
-    "annular_mask_light_cost_before_equal_power_rescale": 0.30971669352789366,
+    "annular_mask_light_cost_before_equal_power_rescale": 0.3097166935278939,
     "equal_total_power_for_shape_comparison_only": true,
     "fixed_support_retained_power_fraction": [
       0.9999999330497593,
@@ -146,17 +146,17 @@
       0.0005
     ],
     "costs": [
-      0.16130907645155737,
-      0.17992755126874674,
-      0.17785339806972422,
-      0.17659037454736926,
+      0.16130907645155734,
+      0.1799275512687467,
+      0.17785339806972425,
+      0.17659037454736923,
       0.17338402461397265,
-      0.1689221040164061,
-      0.1617416191710591,
+      0.16892210401640606,
+      0.16174161917105906,
       0.14494573479594516,
-      4.815229677487345e-16,
+      5.273544457035894e-16,
       0.1433964866990569,
-      0.1438168967674724
+      0.14381689676747236
     ],
     "recovered_axicon_decentre_m": 0.0002999999999999999,
     "z_planes_m": [
