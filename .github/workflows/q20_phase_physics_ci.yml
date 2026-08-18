@@ -1,6 +1,6 @@
 name: q20 phase physics CI
 
-# Final regression gate after native-SLM2/conjugacy hardening.
+# Regression gate for retrieval, calibrated SLM2 mapping and experimental acceptance.
 on:
   push:
     branches: [main]
@@ -10,6 +10,7 @@ on:
       - notebooks/experimental/axicon_aberration_correction/rebuild_q20_presentation_from_bmg.py
       - notebooks/experimental/axicon_aberration_correction/miao_full_retrieval.py
       - notebooks/experimental/axicon_aberration_correction/run_q20_miao_retrieval.py
+      - notebooks/experimental/axicon_aberration_correction/q20_experimental_acceptance_metrics.py
       - notebooks/experimental/axicon_aberration_correction/iterative_correction_controller.py
       - notebooks/experimental/axicon_aberration_correction/iterative_correction_controller_v2.py
       - tests/test_q20_phase_physics.py
@@ -22,6 +23,7 @@ on:
       - notebooks/experimental/axicon_aberration_correction/rebuild_q20_presentation_from_bmg.py
       - notebooks/experimental/axicon_aberration_correction/miao_full_retrieval.py
       - notebooks/experimental/axicon_aberration_correction/run_q20_miao_retrieval.py
+      - notebooks/experimental/axicon_aberration_correction/q20_experimental_acceptance_metrics.py
       - notebooks/experimental/axicon_aberration_correction/iterative_correction_controller.py
       - notebooks/experimental/axicon_aberration_correction/iterative_correction_controller_v2.py
       - tests/test_q20_phase_physics.py
@@ -52,6 +54,7 @@ jobs:
           python -m py_compile notebooks/experimental/axicon_aberration_correction/rebuild_q20_presentation_from_bmg.py
           python -m py_compile notebooks/experimental/axicon_aberration_correction/miao_full_retrieval.py
           python -m py_compile notebooks/experimental/axicon_aberration_correction/run_q20_miao_retrieval.py
+          python -m py_compile notebooks/experimental/axicon_aberration_correction/q20_experimental_acceptance_metrics.py
           python -m py_compile notebooks/experimental/axicon_aberration_correction/iterative_correction_controller.py
           python -m py_compile notebooks/experimental/axicon_aberration_correction/iterative_correction_controller_v2.py
       - name: Record passing full-retrieval CI
