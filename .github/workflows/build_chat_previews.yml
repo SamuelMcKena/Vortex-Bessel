@@ -37,12 +37,21 @@ jobs:
           preview_out.mkdir(parents=True, exist_ok=True)
           full_out.mkdir(parents=True, exist_ok=True)
 
+          # The old q20 chat exports were visually convenient but scientifically
+          # ambiguous: one mixed measured/model reconstruction and the other was
+          # a dense all-z comparison.  They are deliberately removed until the
+          # complete 72-frame BMG stack has been rerun through the physics-safe
+          # presentation rebuild.
+          for stem in ('04_q20_reconstruction', '05_q20_xz_yz'):
+              for folder, suffix in ((preview_out, '.jpg'), (full_out, '.webp')):
+                  stale = folder / f'{stem}{suffix}'
+                  if stale.exists():
+                      stale.unlink()
+
           files = {
               '01_B0_V1_V3': root / 'figures/presentation/02_beam_profile_shaping_B0_V1_V3_thermal_tight.png',
               '02_axicon_decentre': root / 'figures/presentation/04_V1_axicon_decentre_fixed_lab_thermal_tight.png',
               '03_nonideal_tip': root / 'figures/presentation/05_V1_nonideal_tip_fixed_lab_thermal_tight.png',
-              '04_q20_reconstruction': root / 'figures/experimental/q20_aberration/reconstruction/polar_measured_fit_corrected.png',
-              '05_q20_xz_yz': root / 'figures/experimental/q20_aberration/validation/all_z_full_signed_xz_yz_maps.png',
           }
 
           for stem, src in files.items():
@@ -56,7 +65,7 @@ jobs:
               preview_dst = preview_out / f'{stem}.jpg'
               preview.save(preview_dst, 'JPEG', quality=7, optimize=True, progressive=False)
 
-              # Preserve the exact source pixel dimensions. WebP compression is only
+              # Preserve exact source pixel dimensions. WebP compression is only
               # to keep the file small enough for direct in-chat rendering.
               full_dst = full_out / f'{stem}.webp'
               original.save(full_dst, 'WEBP', quality=12, method=6)
@@ -68,11 +77,11 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add figures/chat_previews figures/chat_fullres
+          git add -A figures/chat_previews figures/chat_fullres
           if git diff --cached --quiet; then
             echo 'Chat display figures already current.'
             exit 0
           fi
-          git commit -m 'Compress full-resolution chat display figures'
+          git commit -m 'Refresh chat display figures'
           git pull --rebase origin main
           git push origin main
