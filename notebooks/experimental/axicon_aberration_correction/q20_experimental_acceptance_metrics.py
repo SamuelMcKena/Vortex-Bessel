@@ -1,8 +1,8 @@
 """Independent measured beam-quality metrics for q=20 correction acceptance.
 
-This module does not consume a retrieved phase map.  It compares each measured
+This module does not consume a retrieved phase map. It compares each measured
 BMG plane to a fixed analytical q-th order Bessel target defined by the calibrated
-nominal k_perp, in the calibrated camera optical-axis coordinate system.  The
+nominal k_perp, in the calibrated camera optical-axis coordinate system. The
 same target and geometry are used before and after a correction trial.
 
 The output columns are the contract consumed by
@@ -12,6 +12,12 @@ The output columns are the contract consumed by
     measured_vs_ideal_rmse
     measured_ring_cv
     measured_dark_core_ratio
+
+`measured_ring_cv` is explicitly an AZIMUTHAL coefficient of variation: the
+intensity is sampled as a function of theta around the target principal ring,
+with a small radial average at every theta. It is not the standard deviation of
+all pixels in a thick annulus, which would incorrectly count the ideal radial
+Bessel profile itself as non-uniformity.
 
 Additional diagnostic columns are included but do not alter acceptance logic.
 """
@@ -23,7 +29,7 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy import special
+from scipy import ndimage, special
 
 from modal_vortex_bessel import find_dark_core_center
 from run_q20_miao_retrieval import (
@@ -37,6 +43,24 @@ def _normalise_roi(image, roi):
     a = np.asarray(image, float)
     scale = max(float(np.max(a[roi])), EPS)
     return a/scale
+
+
+def _azimuthal_ring_profile(image, center_yx_px, ring_radius_m, pixel_pitch_m,
+                            radial_fraction=0.15, n_r=9, n_theta=720):
+    """Return I(theta), averaging the same radial samples at every angle."""
+    cy, cx = map(float, center_yx_px)
+    frac = float(np.clip(radial_fraction, 0.01, 0.30))
+    radii_m = ring_radius_m*np.linspace(1.0-frac, 1.0+frac, int(n_r))
+    theta = np.linspace(0, 2*np.pi, int(n_theta), endpoint=False)
+    rr, tt = np.meshgrid(radii_m/float(pixel_pitch_m), theta, indexing="ij")
+    yy = cy + rr*np.sin(tt)
+    xx = cx + rr*np.cos(tt)
+    sampled = ndimage.map_coordinates(np.asarray(image, float), [yy, xx],
+                                       order=1, mode="constant", cval=np.nan)
+    profile = np.nanmean(sampled, axis=0)
+    if np.sum(np.isfinite(profile)) < 0.9*len(profile):
+        raise ValueError("principal-ring profile leaves the camera ROI; check axis/k_perp")
+    return profile
 
 
 def compute_plane_metrics(image, optical_axis_yx_px, *, pixel_pitch_m,
@@ -64,14 +88,15 @@ def compute_plane_metrics(image, optical_axis_yx_px, *, pixel_pitch_m,
 
     # First radial intensity maximum of J_q occurs at the first positive zero of J'_q.
     ring_radius_m = float(special.jnp_zeros(int(q), 1)[0]/kp)
-    half_band = max(float(ring_band_fraction)*ring_radius_m, 5e-6)
-    ring = np.abs(R_m-ring_radius_m) <= half_band
+    ring_theta = _azimuthal_ring_profile(
+        image, (cy, cx), ring_radius_m, pixel_pitch_m,
+        radial_fraction=ring_band_fraction, n_r=9, n_theta=720)
+    ring_mean = max(float(np.nanmean(ring_theta)), EPS)
+    ring_cv = float(np.nanstd(ring_theta)/ring_mean)
+
     core = R_m < 0.35*ring_radius_m
-    ring_vals = image[ring]
-    if ring_vals.size < 20 or int(np.sum(core)) < 10:
-        raise ValueError("target ring/core masks are too small; check pixel pitch and k_perp")
-    ring_mean = max(float(np.mean(ring_vals)), EPS)
-    ring_cv = float(np.std(ring_vals)/ring_mean)
+    if int(np.sum(core)) < 10:
+        raise ValueError("target core mask is too small; check pixel pitch and k_perp")
     dark_ratio = float(np.mean(image[core])/ring_mean)
 
     detected_cy, detected_cx, core_score = find_dark_core_center(image)
@@ -138,6 +163,7 @@ def run(data_dir, calibration_json, output_dir, *,
 
     summary = {
         "method": "measured BMG versus fixed analytical ideal; independent of retrieved correction phase",
+        "ring_cv_definition": "azimuthal CV of radially averaged principal-ring I(theta)",
         "planes": int(len(metrics)),
         "q": int(q),
         "k_perp_nominal_m_inv": float(kp),
