@@ -1,7 +1,7 @@
 """Presentation figures comparing continuous-ideal and nominal bench-constrained B0/V1/V3,
 now including explicit absolute-difference panels for the transverse comparison.
 
-This is a drop-in replacement / patch variant for tools/build_phase2l_nominal_constraints.py.
+The transverse comparison is arranged beam-by-beam as ideal → constrained → absolute difference.
 """
 from __future__ import annotations
 import argparse, gc, json, math
@@ -41,49 +41,63 @@ def continuous_ideal(cid,n):
 
 def ideal_vs_nominal(out,n):
     cases=[('B0','B0 — ℓ=0'),('V1','V1 — ℓ=1'),('V3','V3 — ℓ=3')]
-    fig,ax=plt.subplots(3,3,figsize=(13.4,12.0),facecolor=BG)
-    fig.subplots_adjust(left=.06,right=.985,bottom=.08,top=.865,wspace=.10,hspace=.28)
-    max_diff = 0.0
-    prepared=[]
-    for cid,t in cases:
-        a=continuous_ideal(cid,n); b=build_system_route(cid,grid_n=n); ia=_xy(a); ib=_xy(b)
-        ia_n=_norm(ia); ib_n=_norm(ib)
-        diff=np.abs(ib_n-ia_n)
-        max_diff=max(max_diff,float(np.max(diff)))
-        prepared.append((cid,t,a,b,ia_n,ib_n,diff))
-    max_diff=max(max_diff,1e-12)
-    dnorm=colors.PowerNorm(gamma=.75,vmin=0,vmax=max_diff)
-    diff_mappable=None
+    # Each beam occupies one row: ideal → nominal bench-constrained → absolute difference.
+    fig,ax=plt.subplots(3,3,figsize=(13.8,11.6),facecolor=BG)
+    fig.subplots_adjust(left=.075,right=.985,bottom=.085,top=.84,wspace=.10,hspace=.25)
 
-    for c,(_,t,a,b,ia_n,ib_n,diff) in enumerate(prepared):
-        for r,(v,route,label,norm,cmap_) in enumerate([
-            (ia_n,a,'continuous ideal',PNORM,CMAP),
-            (ib_n,b,'nominal bench-constrained',PNORM,CMAP),
-            (diff,b,'absolute difference',dnorm,CMAP),
-        ]):
-            q=ax[r,c]; style.style_ax(q); cr,x=_crop(v,route['grid'])
-            im=q.imshow(cr,origin='lower',extent=[x[0]*1e3,x[-1]*1e3,x[0]*1e3,x[-1]*1e3],cmap=cmap_,norm=norm,interpolation=style.DISPLAY_INTERPOLATION,aspect='equal')
-            if r<2:
-                q.set_title(f'{t}\n{label}',color=TEXT,fontsize=11.2,weight='bold')
+    prepared=[]
+    max_diff=0.0
+    for cid,label in cases:
+        ideal=continuous_ideal(cid,n)
+        nominal=build_system_route(cid,grid_n=n)
+        ideal_xy=_norm(_xy(ideal))
+        nominal_xy=_norm(_xy(nominal))
+        difference=np.abs(nominal_xy-ideal_xy)
+        max_diff=max(max_diff,float(np.max(difference)))
+        prepared.append((cid,label,ideal,nominal,ideal_xy,nominal_xy,difference))
+
+    dnorm=colors.PowerNorm(gamma=.75,vmin=0,vmax=max(max_diff,1e-12))
+    diff_mappable=None
+    column_titles=('Continuous ideal','Nominal bench-constrained','Absolute difference')
+
+    for r,(_,case_label,ideal,nominal,ideal_xy,nominal_xy,difference) in enumerate(prepared):
+        panels=((ideal_xy,ideal,PNORM),(nominal_xy,nominal,PNORM),(difference,nominal,dnorm))
+        for c,(values,route,norm) in enumerate(panels):
+            q=ax[r,c]
+            style.style_ax(q)
+            crop,x=_crop(values,route['grid'])
+            im=q.imshow(
+                crop,origin='lower',
+                extent=[x[0]*1e3,x[-1]*1e3,x[0]*1e3,x[-1]*1e3],
+                cmap=CMAP,norm=norm,
+                interpolation=style.DISPLAY_INTERPOLATION,aspect='equal'
+            )
+            if r==0:
+                q.set_title(column_titles[c],color=TEXT,fontsize=12.0,weight='bold',pad=9)
+            if c==0:
+                q.set_ylabel(f'{case_label}\ny (mm)',fontsize=9,weight='bold')
             else:
-                q.set_title(f'{t}\n|I_nominal − I_ideal|',color=TEXT,fontsize=11.2,weight='bold')
-                diff_mappable=im
+                q.tick_params(labelleft=False)
             q.set_xlabel('x (mm)',fontsize=8)
-            if c==0:q.set_ylabel('y (mm)',fontsize=8)
-            else:q.tick_params(labelleft=False)
-        del a,b,ia_n,ib_n,diff
+            if c==2:
+                diff_mappable=im
+        del ideal,nominal,ideal_xy,nominal_xy,difference
         gc.collect()
+
     fig.suptitle('Ideal beam family → nominal experimental constraints',color=TEXT,fontsize=18,weight='bold',y=.972)
-    fig.text(.5,.920,'SLM pixelation + 8-bit phase + fill-factor throughput + carrier/blaze + finite 4F order selection',ha='center',color=MUTED,fontsize=10.2)
-    fig.text(.5,.890,'Third row isolates the morphology change caused by nominal hardware constraints only',ha='center',color=MUTED,fontsize=9.3)
-    fig.text(.5,.867,'No deliberate misalignment, wavefront error, axicon defect or measured correction map',ha='center',color=MUTED,fontsize=9.1)
+    fig.text(.5,.918,'SLM pixelation + 8-bit phase + fill-factor throughput + carrier/blaze + finite 4F order selection',ha='center',color=MUTED,fontsize=10.2)
+    fig.text(.5,.883,'Difference column: |I_nominal − I_ideal| on a shared scale across B0, V1 and V3',ha='center',color=MUTED,fontsize=9.3)
+    fig.text(.5,.858,'No deliberate misalignment, wavefront error, axicon defect or measured correction map',ha='center',color=MUTED,fontsize=9.1)
     if diff_mappable is not None:
-        cax=fig.add_axes([0.25,0.045,0.50,0.015])
+        cax=fig.add_axes([0.70,0.045,0.235,0.015])
         cb=fig.colorbar(diff_mappable,cax=cax,orientation='horizontal')
         cb.ax.tick_params(colors=MUTED,labelsize=7,length=2)
         cb.outline.set_edgecolor((*colors.to_rgb(MUTED),0.28))
         cb.set_label('|I_nominal − I_ideal|',color=MUTED,fontsize=8,labelpad=2)
-    p=out/'01_ideal_vs_nominal_constraints_B0_V1_V3.png'; fig.savefig(p,dpi=480,bbox_inches='tight',facecolor=BG,pad_inches=.06); plt.close(fig); return p
+    p=out/'01_ideal_vs_nominal_constraints_B0_V1_V3.png'
+    fig.savefig(p,dpi=480,bbox_inches='tight',facecolor=BG,pad_inches=.06)
+    plt.close(fig)
+    return p
 
 def v3_prop(out,n):
     a=continuous_ideal('V3',n); b=build_system_route('V3',grid_n=n); ia=_norm(_xz(a,'phase2l-ideal-v3')); ib=_norm(_xz(b,'phase2l-nominal-v3')); d=np.abs(ib-ia); z=Z_VALUES_M*1e3; x=PROP_COORD_M*1e3
