@@ -1,0 +1,13 @@
+{
+  "z_at_relative_zero_from_axicon_mm": null,
+  "k_perp_nominal_m_inv": null,
+  "input_reference_annular_intensity_npy": null,
+  "slm2_shape": null,
+  "input_plane_m_per_slm2_pixel": null,
+  "slm2_center_yx_px": null,
+  "slm2_rotation_deg": null,
+  "slm2_parity_x": null,
+  "slm2_parity_y": null,
+  "slm2_phase_lut_1030nm_calibrated": false,
+  "notes": "Do not guess these values. Measure z=0-to-axicon distance, branch reference, end-to-end input-plane/SLM2 transform, and 1030-nm phase response before a low-gain trial."
+}
