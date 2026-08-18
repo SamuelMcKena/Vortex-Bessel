@@ -30,13 +30,14 @@ jobs:
 
           root = Path.cwd()
           out = root / 'figures/chat_q20_current'
+          inline = root / 'figures/chat_q20_inline'
           out.mkdir(parents=True, exist_ok=True)
+          inline.mkdir(parents=True, exist_ok=True)
 
           def trim_white(im, pad=24):
               rgb = im.convert('RGB')
               bg = Image.new('RGB', rgb.size, 'white')
               diff = ImageChops.difference(rgb, bg).convert('L')
-              # Ignore tiny anti-aliasing differences from white.
               diff = diff.point(lambda p: 255 if p > 10 else 0)
               box = diff.getbbox()
               if not box:
@@ -51,12 +52,18 @@ jobs:
                   h = round(im.height * max_w / im.width)
                   im = im.resize((max_w, h), Image.Resampling.LANCZOS)
               im.save(out / name, 'JPEG', quality=quality, optimize=True, progressive=False)
-              print(name, im.size, (out/name).stat().st_size)
+              print('current', name, im.size, (out/name).stat().st_size)
+
+          def save_inline(src, name, max_w=520, quality=18):
+              im = Image.open(src).convert('RGB')
+              if im.width > max_w:
+                  h = round(im.height * max_w / im.width)
+                  im = im.resize((max_w, h), Image.Resampling.LANCZOS)
+              im.save(inline / name, 'JPEG', quality=quality, optimize=True, progressive=False)
+              print('inline', name, im.size, (inline/name).stat().st_size)
 
           prop = Image.open(root/'figures/experimental/q20_aberration/validation/all_z_full_signed_xz_yz_maps.png').convert('RGB')
           w,h = prop.size
-          # First subplot column from the canonical 2x5 all-z map. The crop is deliberately
-          # generous so the scientific axis labels and title are retained.
           x0, x1 = int(0.002*w), int(0.218*w)
           save_small(prop.crop((x0, int(0.015*h), x1, int(0.53*h))), '01_measured_XZ_full_stack.jpg', max_w=950, quality=80)
           save_small(prop.crop((x0, int(0.47*h), x1, int(0.995*h))), '02_measured_YZ_full_stack.jpg', max_w=950, quality=80)
@@ -67,13 +74,21 @@ jobs:
           single = Image.open(root/'figures/experimental/q20_aberration/single_mask/single_mask_signed_xz_yz.png').convert('RGB')
           save_small(single, '04_single_input_mask_forward_falsification.jpg', max_w=1400, quality=76)
 
+          for name, width, quality in [
+              ('01_measured_XZ_full_stack.jpg', 500, 20),
+              ('02_measured_YZ_full_stack.jpg', 500, 20),
+              ('03_constrained_annular_phase_diagnostic.jpg', 650, 18),
+              ('04_single_input_mask_forward_falsification.jpg', 850, 14),
+          ]:
+              save_inline(out/name, name, max_w=width, quality=quality)
+
       - name: Commit compact q20 chat figures
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add figures/chat_q20_current
+          git add figures/chat_q20_current figures/chat_q20_inline
           if git diff --cached --quiet; then
             echo 'Compact q20 chat figures already current.'
             exit 0
