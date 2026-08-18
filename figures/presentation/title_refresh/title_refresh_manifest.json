@@ -1,0 +1,17 @@
+{
+  "outcome": "PHASE2J-TITLE-REFRESH",
+  "grid_n": 2048,
+  "z_reference_mm": 60.0,
+  "fixed_lab_longitudinal": true,
+  "per_z_recentering": false,
+  "intensity_palette": "phase2j_thermal",
+  "physics_change": false,
+  "bench_role_note": "SLM1 beam shaping + blaze/carrier; SLM2 wavefront correction + blaze/carrier",
+  "current_model_note": "ideal plotted route has zero SLM2 correction; active plotted terms remain shaping on SLM1 and carrier on SLM2",
+  "figures": [
+    "outputs/figures/presentation_title_refresh/00_V3_3d_intensity_cinematic.png",
+    "outputs/figures/presentation_title_refresh/01_V3_ideal_propagation_cinematic_xz.png",
+    "outputs/figures/presentation_title_refresh/02_V3_ideal_propagation_landscape.png",
+    "outputs/figures/presentation_title_refresh/03_computational_route_dual_slm_roles.png"
+  ]
+}
