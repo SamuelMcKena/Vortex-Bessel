@@ -32,9 +32,9 @@ jobs:
           out = root / 'figures/chat_q20_current'
           inline = root / 'figures/chat_q20_inline'
           embed = root / 'figures/chat_q20_embed'
-          out.mkdir(parents=True, exist_ok=True)
-          inline.mkdir(parents=True, exist_ok=True)
-          embed.mkdir(parents=True, exist_ok=True)
+          tiny = root / 'figures/chat_q20_tiny'
+          for p in (out, inline, embed, tiny):
+              p.mkdir(parents=True, exist_ok=True)
 
           def trim_white(im, pad=24):
               rgb = im.convert('RGB')
@@ -45,43 +45,35 @@ jobs:
               if not box:
                   return rgb
               l,t,r,b = box
-              l=max(0,l-pad); t=max(0,t-pad); r=min(rgb.width,r+pad); b=min(rgb.height,b+pad)
-              return rgb.crop((l,t,r,b))
+              return rgb.crop((max(0,l-pad), max(0,t-pad), min(rgb.width,r+pad), min(rgb.height,b+pad)))
 
-          def save_small(im, name, max_w=1100, quality=72):
-              im = trim_white(im)
+          def resize_to(im, max_w):
               if im.width > max_w:
                   h = round(im.height * max_w / im.width)
                   im = im.resize((max_w, h), Image.Resampling.LANCZOS)
+              return im
+
+          def save_small(im, name, max_w=1100, quality=72):
+              im = resize_to(trim_white(im), max_w)
               im.save(out / name, 'JPEG', quality=quality, optimize=True, progressive=False)
 
           def save_inline(src, name, max_w=520, quality=18):
-              im = Image.open(src).convert('RGB')
-              if im.width > max_w:
-                  h = round(im.height * max_w / im.width)
-                  im = im.resize((max_w, h), Image.Resampling.LANCZOS)
+              im = resize_to(Image.open(src).convert('RGB'), max_w)
               im.save(inline / name, 'JPEG', quality=quality, optimize=True, progressive=False)
 
-          def save_embed(src, stem, max_w, quality=5):
-              im = Image.open(src).convert('RGB')
-              if im.width > max_w:
-                  h = round(im.height * max_w / im.width)
-                  im = im.resize((max_w, h), Image.Resampling.LANCZOS)
-              dst = embed / f'{stem}.webp'
+          def save_webp(src, folder, stem, max_w, quality):
+              im = resize_to(Image.open(src).convert('RGB'), max_w)
+              dst = folder / f'{stem}.webp'
               im.save(dst, 'WEBP', quality=quality, method=6)
-              print('embed', dst.name, im.size, dst.stat().st_size)
+              print(folder.name, dst.name, im.size, dst.stat().st_size)
 
           prop = Image.open(root/'figures/experimental/q20_aberration/validation/all_z_full_signed_xz_yz_maps.png').convert('RGB')
           w,h = prop.size
           x0, x1 = int(0.002*w), int(0.218*w)
-          save_small(prop.crop((x0, int(0.015*h), x1, int(0.53*h))), '01_measured_XZ_full_stack.jpg', max_w=950, quality=80)
-          save_small(prop.crop((x0, int(0.47*h), x1, int(0.995*h))), '02_measured_YZ_full_stack.jpg', max_w=950, quality=80)
-
-          phase = Image.open(root/'figures/experimental/q20_aberration/reconstruction/annular_aberration_phase.png').convert('RGB')
-          save_small(phase, '03_constrained_annular_phase_diagnostic.jpg', max_w=1150, quality=82)
-
-          single = Image.open(root/'figures/experimental/q20_aberration/single_mask/single_mask_signed_xz_yz.png').convert('RGB')
-          save_small(single, '04_single_input_mask_forward_falsification.jpg', max_w=1400, quality=76)
+          save_small(prop.crop((x0, int(0.015*h), x1, int(0.53*h))), '01_measured_XZ_full_stack.jpg', 950, 80)
+          save_small(prop.crop((x0, int(0.47*h), x1, int(0.995*h))), '02_measured_YZ_full_stack.jpg', 950, 80)
+          save_small(Image.open(root/'figures/experimental/q20_aberration/reconstruction/annular_aberration_phase.png').convert('RGB'), '03_constrained_annular_phase_diagnostic.jpg', 1150, 82)
+          save_small(Image.open(root/'figures/experimental/q20_aberration/single_mask/single_mask_signed_xz_yz.png').convert('RGB'), '04_single_input_mask_forward_falsification.jpg', 1400, 76)
 
           for name, width, quality in [
               ('01_measured_XZ_full_stack.jpg', 500, 20),
@@ -89,12 +81,23 @@ jobs:
               ('03_constrained_annular_phase_diagnostic.jpg', 650, 18),
               ('04_single_input_mask_forward_falsification.jpg', 850, 14),
           ]:
-              save_inline(out/name, name, max_w=width, quality=quality)
+              save_inline(out/name, name, width, quality)
 
-          save_embed(out/'01_measured_XZ_full_stack.jpg', '01_measured_XZ_full_stack', 420, 5)
-          save_embed(out/'02_measured_YZ_full_stack.jpg', '02_measured_YZ_full_stack', 420, 5)
-          save_embed(out/'03_constrained_annular_phase_diagnostic.jpg', '03_constrained_annular_phase_diagnostic', 500, 4)
-          save_embed(out/'04_single_input_mask_forward_falsification.jpg', '04_single_input_mask_forward_falsification', 650, 3)
+          for name, width, quality in [
+              ('01_measured_XZ_full_stack', 420, 5),
+              ('02_measured_YZ_full_stack', 420, 5),
+              ('03_constrained_annular_phase_diagnostic', 500, 4),
+              ('04_single_input_mask_forward_falsification', 650, 3),
+          ]:
+              save_webp(out/f'{name}.jpg', embed, name, width, quality)
+
+          for name, width in [
+              ('01_measured_XZ_full_stack', 260),
+              ('02_measured_YZ_full_stack', 260),
+              ('03_constrained_annular_phase_diagnostic', 300),
+              ('04_single_input_mask_forward_falsification', 360),
+          ]:
+              save_webp(out/f'{name}.jpg', tiny, name, width, 1)
 
       - name: Commit compact q20 chat figures
         shell: bash
@@ -102,7 +105,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add figures/chat_q20_current figures/chat_q20_inline figures/chat_q20_embed
+          git add figures/chat_q20_current figures/chat_q20_inline figures/chat_q20_embed figures/chat_q20_tiny
           if git diff --cached --quiet; then
             echo 'Compact q20 chat figures already current.'
             exit 0
