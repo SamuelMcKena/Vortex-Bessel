@@ -74,3 +74,5 @@ jobs:
           git commit -m 'Record nominal constraint artifact run' || exit 0
           git pull --rebase origin main
           git push origin HEAD:main
+
+# Triggered from the presentation workflow review on 2026-08-18.
