@@ -50,11 +50,11 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          from PIL import Image
+          import matplotlib.image as mpimg
           root = Path('outputs/figures/v3_visual_consistency')
           files = sorted(root.glob('*.png'))
-          sizes = {Image.open(p).size for p in files}
-          print({p.name: Image.open(p).size for p in files})
+          sizes = {tuple(mpimg.imread(p).shape[:2]) for p in files}
+          print({p.name: tuple(mpimg.imread(p).shape[:2]) for p in files})
           if len(sizes) != 1:
               raise SystemExit(f'Output PNG dimensions do not match: {sizes}')
           PY
