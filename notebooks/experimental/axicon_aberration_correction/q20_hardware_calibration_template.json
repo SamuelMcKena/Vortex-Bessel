@@ -1,7 +1,9 @@
 {
   "z_at_relative_zero_from_axicon_mm": null,
   "k_perp_nominal_m_inv": null,
+  "camera_optical_axis_yx_px_by_z": null,
   "camera_optical_axis_yx_px": null,
+  "camera_optical_axis_single_value_valid_for_all_z": false,
   "input_reference_annular_intensity_npy": null,
   "slm2_is_conjugate_to_input_plane": null,
   "slm2_shape": null,
@@ -11,5 +13,5 @@
   "slm2_parity_x": null,
   "slm2_parity_y": null,
   "slm2_phase_lut_1030nm_calibrated": false,
-  "notes": "Do not guess these values. The geometric SLM2 map is valid only if SLM2 is experimentally confirmed conjugate to the reconstructed input/axicon reference plane. If it is not conjugate, propagate/back-propagate the complex field through the measured relay instead of using a scale/rotation/parity remap."
+  "notes": "Prefer camera_optical_axis_yx_px_by_z as 18 raw-sensor [y,x] positions measured with an aligned reference beam at the same 18 stage positions; this removes camera-stage runout without erasing real Bessel-beam walk. A single axis is accepted only when camera_optical_axis_single_value_valid_for_all_z is experimentally verified true. Do not guess values. The geometric SLM2 map is valid only if SLM2 is experimentally confirmed conjugate to the reconstructed input/axicon reference plane. If it is not conjugate, propagate/back-propagate the complex field through the measured relay instead of using a scale/rotation/parity remap."
 }
