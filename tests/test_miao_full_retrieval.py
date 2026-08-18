@@ -14,6 +14,8 @@ from miao_full_retrieval import (
     correction_manifest,
 )
 from iterative_correction_controller_v2 import _candidate_mask
+from q20_experimental_acceptance_metrics import compute_plane_metrics
+from run_q20_miao_retrieval import calibrated_axes_in_crop
 
 
 def fake_plane(i, z, kp, theta, phase):
@@ -109,6 +111,37 @@ def test_native_slm_candidate_keeps_shape_and_signed_phase():
     assert np.allclose(candidate[5:30, 7:45], 0.04)
 
 
+def test_per_z_camera_axis_calibration_tracks_stage_runout():
+    n = 4
+    cal = {"camera_optical_axis_yx_px_by_z":
+           [[100.0, 200.0], [100.4, 199.8], [100.9, 199.5], [101.2, 199.3]]}
+    shifts = np.asarray([[0.1, -0.2], [0.0, 0.1], [-0.1, 0.0], [0.2, 0.2]])
+    axes, ready, source = calibrated_axes_in_crop(
+        cal, (10.0, 20.0), (50, 150), shifts, n)
+    expected = np.asarray(cal["camera_optical_axis_yx_px_by_z"]) + shifts - np.asarray([50, 150])
+    assert ready
+    assert "per-z" in source
+    assert np.allclose(axes, expected)
+
+
+def test_independent_acceptance_metric_is_near_ideal_for_synthetic_bessel():
+    q = 5
+    kp = 4.4e5
+    pixel = 2.0e-6
+    n = 192
+    cy = cx = (n-1)/2
+    yy, xx = np.indices((n, n), dtype=float)
+    r = np.hypot(yy-cy, xx-cx)*pixel
+    image = special.jv(q, kp*r)**2
+    result = compute_plane_metrics(
+        image, (cy, cx), pixel_pitch_m=pixel, q=q,
+        k_perp_nominal_m_inv=kp, roi_radius_um=150)
+    assert result["measured_vs_ideal_corr"] > 0.999999
+    assert result["measured_vs_ideal_rmse"] < 1e-8
+    assert result["measured_ring_cv"] < 0.25
+    assert result["measured_dark_core_ratio"] < 0.2
+
+
 def test_legacy_normalized_z_map_and_second_remap_are_not_consumed_by_v3_controller():
     text = (MOD/"iterative_correction_controller_v2.py").read_text(encoding="utf-8")
     assert "UNCALIBRATED_DO_NOT_APPLY_q20_modal_correction.npy" not in text
@@ -120,6 +153,15 @@ def test_legacy_normalized_z_map_and_second_remap_are_not_consumed_by_v3_control
 def test_runner_blocks_geometric_slm_mapping_without_conjugacy_and_axis_calibration():
     text = (MOD/"run_q20_miao_retrieval.py").read_text(encoding="utf-8")
     assert "slm2_is_conjugate_to_input_plane" in text
-    assert "camera_optical_axis_yx_px" in text
+    assert "camera_optical_axis_yx_px_by_z" in text
     assert "nonconjugate_relay_backpropagation_implemented" in text
     assert "k_perp_nominal_m_inv" in text
+
+
+def test_controller_acceptance_contract_matches_metric_generator():
+    controller = (MOD/"iterative_correction_controller_v2.py").read_text(encoding="utf-8")
+    metrics = (MOD/"q20_experimental_acceptance_metrics.py").read_text(encoding="utf-8")
+    for name in ("measured_vs_ideal_corr", "measured_vs_ideal_rmse",
+                 "measured_ring_cv", "measured_dark_core_ratio"):
+        assert name in controller
+        assert name in metrics
