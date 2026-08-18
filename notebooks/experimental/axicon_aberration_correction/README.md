@@ -1,108 +1,151 @@
 # Axicon vortex–Bessel z-scan correction
 
-This directory contains the experimental BeamGage z-scan analysis, constrained
-q=20 modal retrieval, inverse-error validation, SLM2 correction-mask preview,
-high-resolution propagation/profile figures, and measured beam-axis diagnostics.
+This directory contains the experimental BeamGage z-scan analysis and the q=20
+aberration-retrieval/correction pipeline.
 
-## Main entry point
+## Authoritative correction path
 
-Open `Bessel_zscan_alignment_correction.ipynb` in JupyterLab and run the cells in
-order. The notebook defaults to a local directory named `z-scan 2 1010` beside
-the notebook. To keep the raw acquisition elsewhere, set an environment variable
-before starting Jupyter:
+For aberration correction, use:
 
-```powershell
-$env:BESSEL_ZSCAN_DATA_DIR = 'D:\path\to\z-scan 2 1010'
-jupyter lab
+- `miao_full_retrieval.py` — full Miao-style inverse physics.
+- `run_q20_miao_retrieval.py` — 18-plane × 4-repeat BMG runner.
+- `q20_hardware_calibration_template.json` — bench calibration fields that must be measured, not guessed.
+- `iterative_correction_controller.py` — compatibility shim that now routes to `iterative_correction_controller_v2.py`.
+- `iterative_correction_controller_v2.py` — low-gain closed-loop trial/acceptance controller.
+
+The legacy normalized-z correction file
+`UNCALIBRATED_DO_NOT_APPLY_q20_modal_correction.npy` is no longer consumed by
+the controller.
+
+## What changed physically
+
+The retrieval now follows the two parts of the Bessel phase-retrieval method in
+Miao et al., *Optics Express* **30**, 11360–11371 (2022):
+
+1. **Each measured z plane gets its own optimized transverse wavenumber**
+   `k_perp_opt(z)`. A global ring-derived value is used only as an optimizer seed.
+2. **The complex Bessel modal coefficients are then fitted with increasing
+   aberration order** until the cost stops improving or reaches the threshold.
+
+For the deliberately programmed vortex charge `q`, the aberration Fourier order
+is represented by `m`, with Bessel order `n = m - q`; the ideal q-th order Bessel
+term is `m=0`. The inverse angular series therefore reconstructs the incident
+annular field with the programmed `q*theta` removed. The target vortex is never
+put into the aberration correction.
+
+The stationary-phase mapping used for each fitted plane is
+
+```text
+rho_z = z * k_perp_opt / k
 ```
 
-Install the Python dependencies with:
+and the radial phase error is recovered from
 
-```powershell
-python -m pip install -r requirements.txt
+```text
+d psi_rho / d rho = k_perp_nominal - k_perp_opt.
 ```
 
-## Analysis modules
+The radial gradient is integrated across the sampled annuli and added to the
+non-axisymmetric angular residual. Wrapped phases are interpolated through unit
+phasors, not directly as numbers.
 
-- `modal_vortex_bessel.py`: BeamGage loading and constrained vortex–Bessel modal fitting.
-- `q20_modal_analysis.py`: all-plane q=20 fit and legacy/diagnostic phase products.
-- `q20_phase_physics.py`: authoritative z-to-annulus physics and residual-phase assembly. It treats the z-stack as radial diversity for **one transverse phase**, removes the target q=20 vortex from the residual, fixes only the unobservable annular piston gauge, and blocks hardware-ready claims.
-- `rebuild_q20_presentation_from_bmg.py`: rebuilds the current q=20 presentation evidence directly from the complete 18-plane × 4-repeat BMG acquisition and generates measured-only XZ/YZ, the physics-safe residual-phase diagnostic, and a single-transverse-phase propagation comparison.
-- `phase_error_recreation.py`: per-plane inverse-error recreation test.
-- `single_mask_inverse_forward_test.py`: stricter single-input-mask propagation test.
-- `comprehensive_error_validation.py`: high-resolution slices, XZ/YZ maps, 1D/radial/angular profiles, metrics, and 3D meshes.
-- `measured_beam_path_trajectory.py`: absolute full-sensor beam-centre trajectory.
-- `slm2_complete_mask_preview.py`: native 1920×1080 correction-only or composed SLM2 phase previews.
-- `iterative_correction_controller.py`: held-out-plane correction proposal controller.
+## Coordinate handling
 
-## Physics-safe presentation rebuild
+The new BMG loader **does not recenter every z plane**. It removes only
+repeat-to-repeat acquisition jitter at a given z and crops all planes in the same
+raw camera coordinate system. Genuine beam translation/pointing along the scan
+is therefore retained for the inverse problem.
 
-For presentation figures derived from the experimental q=20 scan, use:
+## Conjugate ambiguity
 
-```powershell
-$env:BESSEL_ZSCAN_DATA_DIR = 'D:\path\to\z-scan 2 1010'
-python rebuild_q20_presentation_from_bmg.py
+Intensity-only Bessel retrieval has the `U` / `U*` ambiguity described by Miao
+et al. The conjugate solution corresponds to a 180-degree-rotated input
+intensity. The new code will only choose a branch when an independent annular
+input-intensity reference is supplied. Otherwise the branch is marked
+`unresolved` and SLM output is blocked.
+
+A known-sign SLM perturbation plus a second capture can be used as an equivalent
+experimental branch check if a direct input-plane intensity reference is not
+available.
+
+## Hardware gates
+
+`run_q20_miao_retrieval.py` will fit the local per-plane quantities even when
+hardware calibration is incomplete, but it will not create a trial-ready SLM2
+map until all of the following are known:
+
+- absolute distance from the axicon/input reference to relative `z=0`;
+- conjugate-branch choice from an independent reference/known-sign test;
+- measured input-plane → SLM2 scale;
+- SLM2 rotation, parity and beam centre;
+- SLM2 phase response/LUT at 1030 nm.
+
+The transform to SLM2 uses a measured end-to-end `input_plane_m_per_slm2_pixel`
+so the code does not silently assume a nominal SLM pixel pitch or a relay
+magnification.
+
+After those gates are satisfied, the v2 controller can propose only a **low-gain
+trial**. That proposal is not accepted from the model. A new, identically sampled
+18×4 BMG z-stack must be captured and pass the experimental before/after gates.
+
+## Calibration file
+
+Copy:
+
+```text
+q20_hardware_calibration_template.json
 ```
 
-The rebuild deliberately fails unless it finds the complete acquisition expected
-for this dataset: **18 z planes and 4 BMG repeats per plane (72 raw BMG files)**.
-It writes:
+to:
 
-- `01_measured_q20_BMG_stack_all_planes.png`
-- `02_measured_q20_XZ_all_planes.png`
-- `03_measured_q20_YZ_all_planes.png`
-- `04_measured_q20_XZ_YZ_combined_all_planes.png`
-- `05_retrieved_residual_phase_physics.png`
-- `06_single_transverse_phase_forward_model.png`
-- `q20_presentation_rebuild_provenance.json`
+```text
+q20_hardware_calibration.json
+```
 
-The first four are **measured-data figures**. The final two are explicitly
-**model-inferred diagnostics**.
+and fill only measured values. `null` values intentionally block the hardware
+path.
 
-### Phase interpretation lock
+## Running the full retrieval
 
-The q=20 z-scan does not imply separate transverse and longitudinal correction
-masks. For an axicon/conical wave, each measured z plane samples a different
-annulus of one transverse input field. The code uses the stationary-phase
-mapping `rho_z = z tan(alpha)` (with the exact k-vector form for the angle) to
-turn z diversity into radial annulus diversity.
+With the raw 72 BMG files in `z-scan 2 1010` beside the script:
 
-The modal retrieval already factors out the programmed q=20 vortex. Therefore
-`q*theta` must **not** be inserted into the residual aberration correction. Also,
-independent intensity fits do not measure annulus-to-annulus global phase
-(piston), so the new reconstruction makes that gauge ambiguity explicit instead
-of converting it into apparent radial structure.
+```powershell
+python run_q20_miao_retrieval.py
+```
 
-See `Q20_PHASE_RECONSTRUCTION_PHYSICS.md` for the derivation, scientific limits,
-and presentation wording.
+The runner writes under `outputs/miao_full_q20/`:
 
-The older normalized z-order-to-radius phase-map rendering remains only as
-legacy diagnostic evidence for backwards compatibility with existing validation
-scripts. It is **not** the authoritative physical reconstruction and should not
-be promoted as an SLM correction map.
+- `per_plane_retrieval.csv` — per-plane `k_perp_opt`, adaptive modal order and fit metrics;
+- `frame_qc_preserved_coordinates.csv` — raw camera core positions and repeat QC;
+- `rho_sampled_m.npy` — sampled input-annulus radii when absolute z is calibrated;
+- `radial_phase_gradient_rad_per_m.npy`;
+- `radial_phase_rad.npy`;
+- `angular_phase_rows_rad.npy`;
+- `retrieved_full_residual_phase_input_plane_rad.npy`;
+- `conjugate_correction_input_plane_rad.npy`;
+- `slm2_correction_phase_rad.npy` only after branch + coordinate calibration;
+- `correction_manifest.json` — authoritative readiness/blocker state.
 
-## Data and outputs
+## Presentation / diagnostic path
 
-Raw `.bmg` acquisitions and generated `outputs/` are intentionally excluded from
-Git because they are large and reproducible. Lightweight derived metrics and the
-current uncalibrated correction proposal are retained with the source.
+`rebuild_q20_presentation_from_bmg.py`, `q20_phase_physics.py` and
+`single_transverse_phase_forward_test.py` remain useful for measured XZ/YZ and
+forward-model presentation diagnostics. They are not the hardware correction
+pipeline.
 
-### Curated figure set
+`q20_modal_analysis.py` remains a legacy/diagnostic modal analysis. Its
+normalized z-order phase rendering must not be promoted as an SLM correction.
 
-The clean repository intentionally does **not** retain every historical rendering.
-The current figure set is under:
+## Tests
 
-`figures/current_q20/`
+`tests/test_miao_full_retrieval.py` checks the per-plane k-perp optimization,
+stationary-phase radius mapping, radial-gradient recovery, q-vortex exclusion,
+conjugate-branch logic, phasor interpolation and the removal of the legacy map
+from the active controller. The q20 CI workflow compiles the full pipeline and
+runs these tests together with the earlier phase-physics tests.
 
-It contains the newest realigned q=20 outputs together with the comprehensive
-all-z validation, phase-error-recreation, single-mask inverse-forward tests,
-measured beam-axis diagnostics, closed-loop gain-selection results and current
-SLM2 previews. Earlier `pre_realign` duplicates and the first root-level
-post-correction figures were removed from the clean figure tree because newer
-versions supersede them.
+## Reference
 
-The correction mesh and SLM mask are **model predictions**, not post-correction
-camera measurements. Files prefixed `UNCALIBRATED_DO_NOT_APPLY` must not be sent
-to hardware until the SLM phase LUT, beam footprint, parity/rotation, and
-camera-to-SLM transform have been calibrated and a new experimental z-scan has
-passed validation.
+B. Miao, L. Feder, J. E. Shrock, and H. M. Milchberg, “Phase front retrieval and
+correction of Bessel beams,” *Optics Express* **30**(7), 11360–11371 (2022),
+DOI: 10.1364/OE.454796.
