@@ -13,6 +13,7 @@ from miao_full_retrieval import (
     assemble_full_aperture, interpolate_to_cartesian, resolve_conjugate_branch,
     correction_manifest,
 )
+from iterative_correction_controller_v2 import _candidate_mask
 
 
 def fake_plane(i, z, kp, theta, phase):
@@ -41,7 +42,6 @@ def test_stationary_phase_radius_and_radial_gradient_are_recovered():
     nominal = 4.9e5
     z = np.linspace(0.020, 0.035, 6)
     theta = np.linspace(0, 2*np.pi, 720, endpoint=False)
-    # synthetic fitted k_perp deviations; assembly must use rho=z*kp/k
     kp = nominal + np.asarray([0, -800, -1200, -400, 500, 900], float)
     planes = [fake_plane(i, z[i], kp[i], theta, 0.2*np.cos(2*theta))
               for i in range(len(z))]
@@ -57,7 +57,6 @@ def test_programmed_vortex_is_not_reinserted_in_angular_residual():
     m = np.asarray([-2, -1, 0, 1, 2])
     c = np.asarray([0, 0.1j, 1.0, 0.2, 0], complex)
     g1 = angular_field_from_coefficients(c, m, theta)
-    # q never enters this inverse Fourier reconstruction; changing q elsewhere cannot add q*theta.
     g2 = angular_field_from_coefficients(c, m, theta)
     assert np.allclose(g1, g2)
     assert np.max(np.abs(np.unwrap(np.angle(g1)))) < 2*np.pi
@@ -99,7 +98,28 @@ def test_wrapped_phase_interpolation_is_finite_inside_sampled_annulus():
     assert np.isfinite(cart["residual_phase_rad"][cart["valid"]]).all()
 
 
-def test_legacy_normalized_z_map_is_not_consumed_by_v2_controller():
+def test_native_slm_candidate_keeps_shape_and_signed_phase():
+    residual = np.full((37, 53), np.nan)
+    residual[5:30, 7:45] = 0.8
+    accepted = np.zeros_like(residual)
+    accepted[~np.isfinite(residual)] = np.nan
+    candidate = _candidate_mask(residual, accepted, 0.05)
+    assert candidate.shape == residual.shape
+    assert np.isnan(candidate[0, 0])
+    assert np.allclose(candidate[5:30, 7:45], 0.04)
+
+
+def test_legacy_normalized_z_map_and_second_remap_are_not_consumed_by_v3_controller():
     text = (MOD/"iterative_correction_controller_v2.py").read_text(encoding="utf-8")
     assert "UNCALIBRATED_DO_NOT_APPLY_q20_modal_correction.npy" not in text
     assert "slm2_correction_phase_rad.npy" in text
+    assert "build_slm2_complete_preview" not in text
+    assert "second_coordinate_mapping_applied" in text
+
+
+def test_runner_blocks_geometric_slm_mapping_without_conjugacy_and_axis_calibration():
+    text = (MOD/"run_q20_miao_retrieval.py").read_text(encoding="utf-8")
+    assert "slm2_is_conjugate_to_input_plane" in text
+    assert "camera_optical_axis_yx_px" in text
+    assert "nonconjugate_relay_backpropagation_implemented" in text
+    assert "k_perp_nominal_m_inv" in text
