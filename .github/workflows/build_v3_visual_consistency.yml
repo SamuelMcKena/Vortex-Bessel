@@ -1,0 +1,92 @@
+name: Build V3 visual consistency figures
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/build_v3_visual_consistency.yml
+      - tools/build_phase2k_v3_visual_consistency.py
+      - tools/presentation_phase2j_style.py
+
+permissions:
+  contents: write
+
+env:
+  MPLBACKEND: Agg
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install numerical environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-report.txt
+          python -m pip install -e . --no-deps
+
+      - name: Render V3 visual consistency set
+        run: |
+          rm -rf outputs/figures/v3_visual_consistency
+          python tools/build_phase2k_v3_visual_consistency.py \
+            --grid-n 2048 \
+            --output-dir outputs/figures/v3_visual_consistency
+          test -f outputs/figures/v3_visual_consistency/00_V3_xy_intensity_square.png
+          test -f outputs/figures/v3_visual_consistency/01_V3_3d_intensity_square.png
+          test -f outputs/figures/v3_visual_consistency/02_V3_ideal_propagation_xz_square.png
+          test -f outputs/figures/v3_visual_consistency/03_V3_ideal_propagation_landscape_square.png
+
+      - name: Verify matched exported dimensions
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          root = Path('outputs/figures/v3_visual_consistency')
+          files = sorted(root.glob('*.png'))
+          sizes = {Image.open(p).size for p in files}
+          print({p.name: Image.open(p).size for p in files})
+          if len(sizes) != 1:
+              raise SystemExit(f'Output PNG dimensions do not match: {sizes}')
+          PY
+
+      - name: Upload V3 visual consistency figures
+        uses: actions/upload-artifact@v4
+        with:
+          name: v3_visual_consistency
+          path: outputs/figures/v3_visual_consistency/
+          if-no-files-found: error
+
+      - name: Promote rendered PNGs into repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p figures/presentation/v3_visual_consistency
+          cp outputs/figures/v3_visual_consistency/*.png figures/presentation/v3_visual_consistency/
+          cp outputs/figures/v3_visual_consistency/v3_visual_consistency_manifest.json figures/presentation/v3_visual_consistency/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add figures/presentation/v3_visual_consistency
+          git commit -m 'Regenerate V3 visual consistency figures' || true
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Record run id for chat retrieval
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p chat_v3_visual_consistency
+          printf '%s\n' '${{ github.run_id }}' > chat_v3_visual_consistency/RUN_ID.txt
+          git add chat_v3_visual_consistency/RUN_ID.txt
+          git commit -m 'Record V3 visual consistency artifact run' || exit 0
+          git pull --rebase origin main
+          git push origin HEAD:main
