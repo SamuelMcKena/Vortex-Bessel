@@ -32,6 +32,19 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Record run id immediately for diagnostics
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p chat_axicon_evidence
+          printf '%s\n' '${{ github.run_id }}' > chat_axicon_evidence/RUN_ID.txt
+          git add chat_axicon_evidence/RUN_ID.txt
+          git commit -m 'Record final focused axicon evidence run start' || true
+          git pull --rebase origin main
+          git push origin HEAD:main
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
@@ -74,8 +87,12 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git pull --rebase origin main
-          mkdir -p figures/presentation
+          # Update the checkout to the latest main *before* copying generated files.
+          # The outputs directory is untracked, so this avoids rebase conflicts with
+          # the early RUN_ID commit without losing the rendered artifact.
+          git fetch origin main
+          git reset --hard origin/main
+          mkdir -p figures/presentation chat_axicon_evidence
           cp outputs/figures/axicon_presentation_evidence/*.png figures/presentation/
           cp outputs/figures/axicon_presentation_evidence/axicon_presentation_evidence_manifest.json figures/presentation/
           printf '%s\n' '${{ github.run_id }}' > chat_axicon_evidence/RUN_ID.txt
