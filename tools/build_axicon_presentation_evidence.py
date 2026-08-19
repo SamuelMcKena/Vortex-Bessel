@@ -11,17 +11,17 @@ This script uses the current repository forward model and produces:
 
 Conventions
 -----------
-* Decentre XY windows follow the z=60 mm intensity centroid only for framing;
-  the displayed ticks remain absolute laboratory coordinates.  XZ maps remain
-  fixed-laboratory y=0 with no per-z recentering.
+* Decentre XY windows are framed about the imposed axicon lateral decentre
+  (-500, 0, +500 um), while displayed ticks remain absolute laboratory
+  coordinates. XZ maps remain fixed-laboratory y=0 with no per-z recentering.
 * Rounded-tip comparisons use the sharp-tip case as the shared intensity
-  reference.
+  reference and use a tighter presentation crop only; XZ physics is unchanged.
 * Tip-avoidance audit compares (i) centred beam through a 200 um rounded-tip
   axicon, (ii) the same incident field propagated with no axicon as a straight-
   through control, and (iii) a same-total-power vortex target whose dark core
   exceeds the 200 um rounded apex before the same rounded-tip axicon.
 * The wide-core vortex is an axicon-plane target field used to audit the optical
-  idea.  It is not yet claimed as a calibrated phase-only SLM implementation.
+  idea. It is not yet claimed as a calibrated phase-only SLM implementation.
 """
 
 from __future__ import annotations
@@ -33,6 +33,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 import matplotlib.pyplot as plt
+from matplotlib.patches import Circle
 import numpy as np
 
 import build_phase2i_presentation_figures as core
@@ -58,8 +59,8 @@ DECENTRES_M = (-500e-6, 0.0, 500e-6)
 DECENTRE_LABELS = ("-500 µm", "aligned", "+500 µm")
 TIP_RADII_M = (0.0, 200e-6, 800e-6)
 TIP_LABELS = ("ideal sharp tip", "200 µm radial rounding", "800 µm radial rounding")
-DECENTRE_XY_HALF_M = 0.24e-3
-TIP_XY_HALF_M = 0.24e-3
+DECENTRE_XY_HALF_M = 0.20e-3
+TIP_XY_HALF_M = 0.18e-3
 TIP_RADIUS_M = 200e-6
 VORTEX_DARK_CORE_RADIUS_M = 260e-6
 LINE_COLORS = ("#fff176", "#ff7600", "#ff3b30")
@@ -88,11 +89,7 @@ def _centred_crop(intensity: np.ndarray, grid: Mapping[str, Any], cx: float, cy:
 
 
 def _fixed_crop(intensity: np.ndarray, grid: Mapping[str, Any], halfwidth: float):
-    x = np.asarray(grid["x"], float)
-    ids = np.flatnonzero(np.abs(x) <= float(halfwidth))
-    if ids.size < 70:
-        raise RuntimeError(f"under-sampled XY crop: {ids.size}")
-    return np.asarray(intensity)[np.ix_(ids, ids)], [x[ids[0]]*1e3, x[ids[-1]]*1e3, x[ids[0]]*1e3, x[ids[-1]]*1e3]
+    return _centred_crop(intensity, grid, 0.0, 0.0, halfwidth)
 
 
 def _lineout_x(intensity: np.ndarray, grid: Mapping[str, Any], y_m: float = 0.0):
@@ -148,28 +145,29 @@ def build_decentre_2d(out: Path, grid_n: int):
     fig, axes = plt.subplots(2, 3, figsize=(11.8, 6.6), constrained_layout=True)
     style.style_fig(fig)
     for col, c in enumerate(cases):
-        crop, extent = _centred_crop(c["intensity"], c["route"]["grid"], c["cx"], c["cy"], DECENTRE_XY_HALF_M)
+        crop, extent = _centred_crop(c["intensity"], c["route"]["grid"], c["dec"], 0.0, DECENTRE_XY_HALF_M)
         style.draw_xy(axes[0,col], crop, extent, title=c["label"], peak=ref_xy, show_y=(col==0))
-        axes[0,col].scatter([c["cx"]*1e3], [c["cy"]*1e3], s=24, facecolors="none", edgecolors="white", linewidths=0.8)
+        axes[0,col].scatter([c["dec"]*1e3], [0.0], s=28, facecolors="none", edgecolors="white", linewidths=0.9)
         style.draw_xz(axes[1,col], c["xz"], suite.DECENTRE_COORD_M, suite.Z_VALUES_M, peak=ref_xz, show_y=(col==0), z_ref_m=Z_REF_M)
-    fig.suptitle("V1 axicon lateral decentre — tight XY framing, fixed-lab XZ", color=style.TEXT, fontsize=16, y=1.025)
-    fig.text(0.5,-0.012,"XY crop follows each z=60 mm centroid for visibility; axis values remain absolute laboratory coordinates. XZ stays fixed y=0.",ha="center",color=style.MUTED,fontsize=9)
+    fig.suptitle("V1 axicon lateral decentre — zoomed XY, fixed-lab XZ", color=style.TEXT, fontsize=16, y=1.025)
+    fig.text(0.5,-0.012,"XY window is centred on the imposed axicon decentre; tick values remain absolute lab coordinates. XZ is unchanged and fixed at y=0.",ha="center",color=style.MUTED,fontsize=9)
     path = out/"04_V1_axicon_decentre_fixed_lab_thermal_tight.png"
     style.save(fig,path)
     return path, cases
 
 
 def build_decentre_1d(out: Path, cases):
-    ref = max(float(np.max(_lineout_x(cases[1]["intensity"], cases[1]["route"]["grid"], cases[1]["cy"])[1])), EPS)
+    _, aligned_line = _lineout_x(cases[1]["intensity"], cases[1]["route"]["grid"], 0.0)
+    ref = max(float(np.max(aligned_line)), EPS)
     fig, ax = plt.subplots(figsize=(9.6,4.8), constrained_layout=True)
     style.style_fig(fig); _style_line_axis(ax)
     rows=[]
     for c, colour in zip(cases, LINE_COLORS):
-        x,line = _lineout_x(c["intensity"], c["route"]["grid"], c["cy"])
-        keep = np.abs(x-c["cx"]) <= DECENTRE_XY_HALF_M
+        x,line = _lineout_x(c["intensity"], c["route"]["grid"], 0.0)
+        keep = np.abs(x-c["dec"]) <= DECENTRE_XY_HALF_M
         ax.plot(x[keep]*1e3, line[keep]/ref, color=colour, lw=1.8, label=c["label"])
-        ax.axvline(c["cx"]*1e3, color=colour, alpha=.3, lw=.8, ls="--")
-        rows.append(dict(label=c["label"], centroid_x_m=c["cx"], peak_ratio=float(np.max(line)/ref)))
+        ax.axvline(c["dec"]*1e3, color=colour, alpha=.3, lw=.8, ls="--")
+        rows.append(dict(label=c["label"], imposed_decentre_m=c["dec"], centroid_x_m=c["cx"], peak_ratio=float(np.max(line)/ref)))
     ax.set_xlabel("laboratory x (mm)"); ax.set_ylabel("intensity / aligned peak")
     ax.set_title("V1 axicon decentre — 1D transverse intensity at z = 60 mm", color=style.TEXT, fontsize=13)
     leg=ax.legend(frameon=False,fontsize=9)
@@ -192,13 +190,13 @@ def build_tip_2d(out: Path, grid_n: int):
         crop,extent=_fixed_crop(c["intensity"],c["route"]["grid"],TIP_XY_HALF_M)
         style.draw_xy(axes[0,col],crop,extent,title=c["label"],peak=ref_xy,show_y=(col==0))
         style.draw_xz(axes[1,col],c["xz"],suite.TIP_COORD_M,suite.Z_VALUES_M,peak=ref_xz,show_y=(col==0),z_ref_m=Z_REF_M)
-    fig.suptitle("V1 non-ideal axicon tip — common sharp-tip reference",color=style.TEXT,fontsize=16,y=1.025)
+    fig.suptitle("V1 non-ideal axicon tip — zoomed XY, common sharp-tip reference",color=style.TEXT,fontsize=16,y=1.025)
     path=out/"05_V1_nonideal_tip_fixed_lab_thermal_tight.png"; style.save(fig,path)
     return path,cases
 
 
 def build_tip_1d(out: Path, cases):
-    x0,l0=_lineout_x(cases[0]["intensity"],cases[0]["route"]["grid"],0.0); ref=max(float(np.max(l0)),EPS)
+    _,l0=_lineout_x(cases[0]["intensity"],cases[0]["route"]["grid"],0.0); ref=max(float(np.max(l0)),EPS)
     fig,ax=plt.subplots(figsize=(9.6,4.8),constrained_layout=True); style.style_fig(fig); _style_line_axis(ax)
     rows=[]
     for c,colour in zip(cases,LINE_COLORS):
@@ -215,20 +213,15 @@ def build_tip_1d(out: Path, cases):
 
 def _wide_vortex_target(field_ax: np.ndarray, grid: Mapping[str, Any], dark_core_radius_m: float):
     X=np.asarray(grid["X"],float); Y=np.asarray(grid["Y"],float); R=np.hypot(X,Y); phi=np.arctan2(Y,X)
-    # Smooth l=1 vortex target.  The amplitude reaches 50% at approximately
-    # dark_core_radius_m and approaches the original envelope outside it.
     r0=max(float(dark_core_radius_m),EPS)
     amp=1.0-np.exp(-(R/r0)**4)
     target=np.abs(field_ax)*amp*np.exp(1j*(np.angle(field_ax)+phi))
     p0=float(np.sum(np.abs(field_ax)**2)); p1=float(np.sum(np.abs(target)**2))
-    if p1>EPS: target*=math.sqrt(p0/p1)  # same incident power, not same output peak
+    if p1>EPS: target*=math.sqrt(p0/p1)
     return target
 
 
 def build_tip_avoidance(out: Path, grid_n: int):
-    # Use the B0 route to define one common centred field arriving at the axicon.
-    # The wide-vortex case then modifies that same axicon-plane field into an l=1
-    # target with a dark core wider than the 200 um rounded apex.
     base=build_system_route("B0",grid_n=grid_n)
     grid=dict(base["grid"]); field_ax=np.asarray(base["field_on_axicon_plane"],np.complex128)
     manifest=canonical_hardware_manifest(); wavelength=float(hardware_value(manifest,"wavelength_m")); gamma=math.radians(float(hardware_value(manifest,"axicon_base_angle_deg"))); n_ax=float(hardware_value(manifest,"axicon_refractive_index")); n_ext=float(hardware_value(manifest,"axicon_external_medium_index"))
@@ -245,26 +238,37 @@ def build_tip_avoidance(out: Path, grid_n: int):
         c["xz"],c["retained"]=_xz_from_field(c["field"],grid,wavelength,suite.TIP_COORD_M,f"tip-avoidance-{i}")
         pin=float(np.sum(np.abs(c["incident"])**2)); c["fraction_incident_power_inside_tip"]=float(np.sum(np.abs(c["incident"][R<=TIP_RADIUS_M])**2)/max(pin,EPS))
     ref_xy=max(float(np.max(cases[0]["xy"])),EPS); ref_xz=max(float(np.max(cases[0]["xz"])),EPS)
-    fig,axes=plt.subplots(2,3,figsize=(12.2,6.8),constrained_layout=True); style.style_fig(fig)
+
+    fig,axes=plt.subplots(3,3,figsize=(12.5,9.2),constrained_layout=True); style.style_fig(fig)
+    incident_ref=float(np.max(np.abs(field_ax)**2))
+    x=np.asarray(grid["x"],float); ids=np.flatnonzero(np.abs(x)<=0.60e-3); inc_extent=[x[ids[0]]*1e3,x[ids[-1]]*1e3,x[ids[0]]*1e3,x[ids[-1]]*1e3]
     for col,c in enumerate(cases):
+        inc=np.abs(c["incident"])**2
+        style.draw_xy(axes[0,col],inc[np.ix_(ids,ids)],inc_extent,title=c["label"],peak=incident_ref if col<2 else None,show_y=(col==0))
+        axes[0,col].add_patch(Circle((0,0),TIP_RADIUS_M*1e3,fill=False,edgecolor="#ff453a",linewidth=1.2,linestyle="--"))
+        axes[0,col].text(.03,.04,f"incident within 200 µm: {100*c['fraction_incident_power_inside_tip']:.3f}%",transform=axes[0,col].transAxes,color=style.TEXT,fontsize=7.5,bbox=dict(facecolor=style.FIG_BG,edgecolor=style.BORDER,alpha=.86,pad=3))
+
         crop,extent=_fixed_crop(c["xy"],grid,0.34e-3)
-        style.draw_xy(axes[0,col],crop,extent,title=c["label"],peak=ref_xy,show_y=(col==0))
-        axes[0,col].text(.03,.04,f"incident power within 200 µm: {100*c['fraction_incident_power_inside_tip']:.2f}%",transform=axes[0,col].transAxes,color=style.TEXT,fontsize=7.8,bbox=dict(facecolor=style.FIG_BG,edgecolor=style.BORDER,alpha=.86,pad=3))
-        style.draw_xz(axes[1,col],c["xz"],suite.TIP_COORD_M,suite.Z_VALUES_M,peak=ref_xz,show_y=(col==0),z_ref_m=Z_REF_M)
-    fig.suptitle("Rounded-tip axicon avoidance audit — straight-through and wide-vortex controls",color=style.TEXT,fontsize=16,y=1.025)
-    fig.text(.5,-.012,"All three start from the same pre-axicon power. The wide-vortex target is power-normalised before the axicon; output peaks are not renormalised.",ha="center",color="#f2c14e",fontsize=9)
+        style.draw_xy(axes[1,col],crop,extent,title=f"output at z=60 mm — peak {np.max(c['xy'])/ref_xy:.3f}×",peak=ref_xy,show_y=(col==0))
+        style.draw_xz(axes[2,col],c["xz"],suite.TIP_COORD_M,suite.Z_VALUES_M,peak=ref_xz,show_y=(col==0),z_ref_m=Z_REF_M)
+    axes[0,0].set_ylabel("axicon-plane y (mm)",fontsize=9)
+    axes[1,0].set_ylabel("output y (mm)",fontsize=9)
+    fig.suptitle("Rounded-tip axicon avoidance audit — centred, straight-through, and wide-vortex cases",color=style.TEXT,fontsize=16,y=1.018)
+    fig.text(.5,-.006,"Rows: incident field at axicon plane → shared-scale output XY at z=60 mm → shared-scale fixed-lab XZ. Same pre-axicon total power; output peaks are not renormalised.",ha="center",color="#f2c14e",fontsize=8.8)
     p2d=out/"09_tip_avoidance_three_way_audit.png"; style.save(fig,p2d)
 
-    fig1,ax=plt.subplots(figsize=(9.8,4.9),constrained_layout=True); style.style_fig(fig1); _style_line_axis(ax)
+    fig1,(ax_lin,ax_log)=plt.subplots(1,2,figsize=(12.2,4.8),constrained_layout=True); style.style_fig(fig1); _style_line_axis(ax_lin); _style_line_axis(ax_log)
     rows=[]
     for c,colour in zip(cases,LINE_COLORS):
-        x,line=_lineout_x(c["xy"],grid,0.0); keep=np.abs(x)<=0.34e-3
-        ax.plot(x[keep]*1e3,line[keep]/ref_xy,color=colour,lw=1.8,label=c["label"])
+        xx,line=_lineout_x(c["xy"],grid,0.0); keep=np.abs(xx)<=0.34e-3; norm=line/ref_xy
+        ax_lin.plot(xx[keep]*1e3,norm[keep],color=colour,lw=1.8,label=c["label"])
+        ax_log.plot(xx[keep]*1e3,np.clip(norm[keep],1e-5,None),color=colour,lw=1.8,label=c["label"])
         rows.append(dict(label=c["label"],peak_ratio_to_rounded_tip=float(np.max(line)/ref_xy),fraction_incident_power_inside_tip=c["fraction_incident_power_inside_tip"]))
-    ax.set_xlabel("x at y = 0 (mm)"); ax.set_ylabel("intensity / rounded-tip peak")
-    ax.set_title("Tip avoidance audit — 1D transverse intensity at z = 60 mm",color=style.TEXT,fontsize=13)
-    leg=ax.legend(frameon=False,fontsize=8.5)
+    ax_lin.set_xlabel("x at y = 0 (mm)"); ax_lin.set_ylabel("intensity / rounded-tip peak"); ax_lin.set_title("shared linear scale",color=style.TEXT,fontsize=12)
+    ax_log.set_xlabel("x at y = 0 (mm)"); ax_log.set_ylabel("intensity / rounded-tip peak"); ax_log.set_yscale("log"); ax_log.set_ylim(1e-4,1.3); ax_log.set_title("same data — log intensity",color=style.TEXT,fontsize=12)
+    leg=ax_log.legend(frameon=False,fontsize=8.2)
     for t in leg.get_texts(): t.set_color(style.TEXT)
+    fig1.suptitle("Tip avoidance audit — 1D transverse intensity at z = 60 mm",color=style.TEXT,fontsize=14)
     p1d=out/"09b_tip_avoidance_three_way_1D_intensity.png"; style.save(fig1,p1d)
     return p2d,p1d,rows
 
@@ -277,11 +281,15 @@ def main():
     p05,tip_cases=build_tip_2d(args.output_dir,args.grid_n); p05b,tip1=build_tip_1d(args.output_dir,tip_cases)
     p09,p09b,avoid=build_tip_avoidance(args.output_dir,args.grid_n)
     payload={
-        "outcome":"AXICON-PRESENTATION-EVIDENCE-AUDIT-V1",
+        "outcome":"AXICON-PRESENTATION-EVIDENCE-AUDIT-V2",
         "grid_n":args.grid_n,
         "z_ref_m":Z_REF_M,
         "figures":[str(p) for p in (p04,p04b,p05,p05b,p09,p09b)],
+        "decentre_xy_display_halfwidth_m":DECENTRE_XY_HALF_M,
+        "decentre_xy_display_centres_m":list(DECENTRES_M),
+        "decentre_xz_fixed_lab":True,
         "decentre_1d":dec1,
+        "rounded_tip_xy_display_halfwidth_m":TIP_XY_HALF_M,
         "rounded_tip_1d":tip1,
         "tip_avoidance":avoid,
         "tip_avoidance_dark_core_radius_m":VORTEX_DARK_CORE_RADIUS_M,
