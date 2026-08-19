@@ -99,3 +99,4 @@ jobs:
 # Cross-section rebuild requested 2026-08-19: add fixed-lab y=0 1D lineout comparison and difference curves.
 # Audit requested 2026-08-19: verify continuous ideal and nominal bench-constrained routes differ at each physical stage.
 # Route-panel correction 2026-08-19: wrap phase correctly, use native SLM pixels, draw the physical +1 iris, include the axicon, and label final output as intensity.
+# Forced rebuild 2026-08-19 after route-panel annotation collision fix.
