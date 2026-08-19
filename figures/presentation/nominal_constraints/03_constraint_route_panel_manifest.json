@@ -1,0 +1,33 @@
+{
+  "claim": "nominal_fixed_parameter_route_visualisation_not_calibrated_bench_prediction",
+  "case_id": "V3",
+  "vortex_charge": 3,
+  "continuous_phase_wrapped_for_display": true,
+  "slm_display_grid": "native_pixel_centres",
+  "slm_pixel_pitch_m": 8e-06,
+  "slm_phase_levels": 256,
+  "carrier_frequency_cpm": 6250.0,
+  "carrier_period_px": 20,
+  "fourier_iris_centre_m": [
+    0.0019294149016548608,
+    0.0
+  ],
+  "fourier_nominal_order_centre_m": [
+    0.0019294149016548608,
+    0.0
+  ],
+  "fourier_iris_radius_m": 0.0007717500000000001,
+  "fourier_selected_power_fraction": 0.9822840344670168,
+  "axicon_base_angle_deg": 2.0,
+  "final_plane_z_m": 0.06,
+  "panels": [
+    "continuous_wrapped_v3_target",
+    "slm1_native_8um_sampled_command",
+    "slm1_8bit_quantised_command",
+    "slm2_8bit_carrier_command",
+    "fourier_plane_before_iris_with_physical_iris_overlay",
+    "fourier_plane_after_iris",
+    "physical_axicon_wrapped_phase",
+    "normalised_v3_intensity_z_60mm"
+  ]
+}
