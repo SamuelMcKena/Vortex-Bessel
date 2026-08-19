@@ -1,21 +1,23 @@
 """Presentation-ready one-plane q=20 inverse-correction figure.
 
-This renderer deliberately reuses the validated q20 modal analysis rather than
-re-labelling a saved bitmap.  The four panels are therefore generated from the
-same arrays used for the quantitative comparison:
+This renderer reuses the validated q20 modal analysis rather than relabelling a
+saved bitmap.  The four panels are generated from the same arrays used for the
+quantitative comparison:
 
     measured -> best-fit model -> predicted after correction -> ideal target
 
-The corrected panel is a *per-plane model prediction*, not a post-SLM camera
-measurement.  The metric banner reports ROI-normalized RMSE and Pearson
+The corrected panel is a per-plane model prediction, not a post-SLM camera
+measurement.  The metric footer reports ROI-normalized RMSE and Pearson
 correlation to the ideal target before and after the model correction.
 """
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
 import numpy as np
 
 from modal_vortex_bessel import load_first_scan, estimate_global_kr, fit_plane
@@ -51,7 +53,6 @@ def make_q20_inverse_presentation_quad(
         raise FileNotFoundError(f"No z*_*.bmg files found in {data_dir.resolve()}")
 
     if z_positions_mm is None:
-        # Current realigned q20 acquisition convention: -17 ... 0 mm.
         z_positions_mm = np.arange(-17, -17 + len(images), dtype=float)
     z_positions_mm = np.asarray(z_positions_mm, float)
     if len(z_positions_mm) != len(images):
@@ -80,55 +81,58 @@ def make_q20_inverse_presentation_quad(
     after_corr, after_rmse = _similarity(corrected[iz], ideal, roi)
 
     arrays = (measured[iz], model[iz], corrected[iz], ideal)
-    titles = (
-        "measured",
-        "best-fit model",
-        "predicted after correction",
-        "ideal target",
-    )
+    titles = ("measured", "best-fit model", "predicted after correction", "ideal target")
     extent = [axis[0], axis[-1], axis[0], axis[-1]]
 
-    fig, axes = plt.subplots(1, 4, figsize=(15.8, 4.35), constrained_layout=True)
-    fig.patch.set_facecolor("white")
-    for ax, image, title in zip(axes, arrays, titles):
+    # Explicit GridSpec/margins prevent titles, axes and the footer from colliding.
+    fig = plt.figure(figsize=(17.4, 5.45), facecolor="white")
+    gs = GridSpec(1, 5, figure=fig, width_ratios=[1, 1, 1, 1, 0.055],
+                  left=0.045, right=0.965, bottom=0.23, top=0.77, wspace=0.26)
+    axes = [fig.add_subplot(gs[0, i]) for i in range(4)]
+    cax = fig.add_subplot(gs[0, 4])
+
+    shown = None
+    for i, (ax, image, title) in enumerate(zip(axes, arrays, titles)):
         shown = ax.imshow(
             image, origin="lower", extent=extent, cmap="inferno",
             vmin=0, vmax=1, interpolation="nearest"
         )
         ax.axhline(0, color="#00a6a6", lw=.45, alpha=.55)
         ax.axvline(0, color="#00a6a6", lw=.45, alpha=.55)
-        ax.set_title(title, fontsize=11, pad=8)
-        ax.set_xlabel("signed x (µm)")
-        ax.set_ylabel("signed y (µm)")
+        ax.set_title(title, fontsize=12.5, weight="bold", pad=11)
+        ax.set_xlabel("signed x (µm)", fontsize=9.5)
+        if i == 0:
+            ax.set_ylabel("signed y (µm)", fontsize=9.5)
+        else:
+            ax.set_ylabel("")
+        ax.tick_params(labelsize=8.5)
         ax.set_aspect("equal")
 
-    cbar = fig.colorbar(shown, ax=axes, label="plane-normalized intensity", shrink=.82, pad=.015)
-    cbar.ax.tick_params(labelsize=8)
+    cbar = fig.colorbar(shown, cax=cax)
+    cbar.set_label("plane-normalized intensity", fontsize=9.5)
+    cbar.ax.tick_params(labelsize=8.5)
 
-    # Keep technical detail subordinate to the visual comparison.
-    fig.suptitle(
-        f"Representative inverse-correction plane  |  q={q}, z={selected_z:g} mm",
-        fontsize=13, y=1.02,
-    )
+    fig.text(0.5, 0.935, "Representative inverse-correction result",
+             ha="center", va="center", fontsize=18, weight="bold", color="#202428")
+    fig.text(0.5, 0.875,
+             f"q = {q}   •   z = {selected_z:g} mm   •   160 µm comparison ROI",
+             ha="center", va="center", fontsize=10.5, color="#626a70")
 
-    # Primary quantitative takeaway: same ROI and normalization as the figure.
     metric_text = (
-        f"RMSE to ideal:  {before_rmse:.3f}  →  {after_rmse:.3f}"
-        f"     |     correlation to ideal:  {before_corr:.3f}  →  {after_corr:.3f}"
-        f"     |     best-fit vs measured: r = {fit_corr:.3f}"
+        f"RMSE to ideal:  {before_rmse:.3f} → {after_rmse:.3f}"
+        f"     |     Pearson r:  {before_corr:.3f} → {after_corr:.3f}"
+        f"     |     best-fit vs measured r = {fit_corr:.3f}"
     )
-    fig.text(
-        0.5, -0.015, metric_text,
-        ha="center", va="top", fontsize=10.5, weight="bold", color="#202428",
-    )
-    fig.text(
-        0.5, -0.075,
-        "Predicted after correction is a per-plane model result, not a post-SLM camera measurement.",
-        ha="center", va="top", fontsize=8.5, color="#59636b",
-    )
+    fig.text(0.5, 0.105, metric_text,
+             ha="center", va="center", fontsize=11, weight="bold", color="#25292d",
+             bbox=dict(boxstyle="round,pad=0.45", facecolor="#f0f2f4",
+                       edgecolor="#c6cbd0", linewidth=0.8))
+    fig.text(0.5, 0.035,
+             "Predicted after correction is a per-plane model prediction, not a post-SLM camera measurement.",
+             ha="center", va="center", fontsize=8.8, color="#697177")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output_path, dpi=400, bbox_inches="tight", facecolor="white")
+    fig.savefig(output_path, dpi=400, facecolor="white")
     plt.close(fig)
 
     result = {
@@ -143,9 +147,7 @@ def make_q20_inverse_presentation_quad(
         "corrected_model_vs_ideal_rmse_after": after_rmse,
         "scope": "predicted after correction is a per-plane model prediction, not a measured post-SLM field",
     }
-    output_path.with_suffix(".json").write_text(
-        __import__("json").dumps(result, indent=2) + "\n", encoding="utf-8"
-    )
+    output_path.with_suffix(".json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     return result
 
 
@@ -154,10 +156,8 @@ def _args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--data-dir", type=Path, default=here / "z-scan 2 1010")
     p.add_argument(
-        "--output",
-        type=Path,
-        default=here / "outputs" / "slm_closed_loop_alignment" / "modal_q20" /
-                "q20_inverse_correction_presentation_zminus10.png",
+        "--output", type=Path,
+        default=Path("figures/presentation/10_q20_inverse_correction_presentation.png"),
     )
     p.add_argument("--z-mm", type=float, default=-10.0)
     return p.parse_args()
@@ -166,4 +166,4 @@ def _args() -> argparse.Namespace:
 if __name__ == "__main__":
     a = _args()
     result = make_q20_inverse_presentation_quad(a.data_dir, a.output, z_target_mm=a.z_mm)
-    print(__import__("json").dumps(result, indent=2))
+    print(json.dumps(result, indent=2))
