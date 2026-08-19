@@ -4,10 +4,10 @@ This is presentation rendering only. The forward-model physics, physical error
 injection planes, fixed-laboratory coordinate convention, common nominal
 normalisation, tip sampling gate and claim boundaries are preserved.
 
-Version 2 fixes the first Phase 2J visual pass: all *intensity* panels now use
-an explicit no-blue black -> red -> orange -> yellow thermal palette, output
-beam crops are materially tighter, and the native model grid is raised to 2048
-rather than relying on export DPI to make a sparse field look sharper.
+Version 3 keeps the fixed-laboratory physics but improves the decentre XY
+presentation framing: each z=60 mm XY panel is cropped about its measured beam
+centroid while retaining true laboratory x/y coordinates.  The x-z maps remain
+strictly fixed-laboratory and are not recentered or altered.
 """
 
 from __future__ import annotations
@@ -32,6 +32,12 @@ IDEAL_COORD_M = np.linspace(-0.18e-3, 0.18e-3, 481)
 DECENTRE_COORD_M = np.linspace(-0.62e-3, 0.62e-3, 621)
 TIP_COORD_M = np.linspace(-0.30e-3, 0.30e-3, 601)
 ERROR_COORD_M = np.linspace(-0.52e-3, 0.52e-3, 521)
+
+# Presentation-only XY window for the axicon-decentre row.  This is deliberately
+# tighter than the old ±0.52 mm window and follows the measured beam centroid.
+# The extent remains in laboratory coordinates; the data themselves are never
+# shifted, interpolated or numerically recentered.
+DECENTRE_XY_HALF_M = 0.24e-3
 
 STALE_GLOBS = (
     "*_inferno*.png",
@@ -76,20 +82,41 @@ def _patch_core_renderer() -> None:
         )
 
     def crop(intensity: np.ndarray, grid: Mapping[str, Any], halfwidth_m: float):
-        halfwidth = style.presentation_crop_halfwidth(float(halfwidth_m))
+        requested = float(halfwidth_m)
         x = np.asarray(grid["x"], dtype=float)
-        ids = np.flatnonzero(np.abs(x) <= halfwidth)
-        if ids.size < 70:
+
+        # build_v1_decentre historically requests a 1 mm fixed-lab crop.  For
+        # Phase 2J presentation rendering only, use that request as the signal
+        # that this is the decentre XY row and frame each panel around the actual
+        # z=60 mm beam centroid.  The axis values remain absolute laboratory
+        # coordinates, so the displacement is still visible quantitatively.
+        if requested >= 0.8e-3:
+            values = np.maximum(np.asarray(intensity, dtype=float), 0.0)
+            total = float(np.sum(values))
+            X = np.asarray(grid["X"], dtype=float)
+            Y = np.asarray(grid["Y"], dtype=float)
+            centre_x = float(np.sum(values * X) / max(total, np.finfo(float).tiny))
+            centre_y = float(np.sum(values * Y) / max(total, np.finfo(float).tiny))
+            halfwidth = float(DECENTRE_XY_HALF_M)
+            x_ids = np.flatnonzero(np.abs(x - centre_x) <= halfwidth)
+            y_ids = np.flatnonzero(np.abs(x - centre_y) <= halfwidth)
+        else:
+            halfwidth = style.presentation_crop_halfwidth(requested)
+            x_ids = np.flatnonzero(np.abs(x) <= halfwidth)
+            y_ids = x_ids
+
+        if x_ids.size < 70 or y_ids.size < 70:
             raise RuntimeError(
-                f"Phase 2J crop has only {ids.size} native samples; "
+                f"Phase 2J crop has only {x_ids.size}x{y_ids.size} native samples; "
                 "increase grid_n instead of inventing display resolution."
             )
-        crop_values = np.asarray(intensity)[np.ix_(ids, ids)]
+
+        crop_values = np.asarray(intensity)[np.ix_(y_ids, x_ids)]
         extent = [
-            x[ids[0]] * 1e3,
-            x[ids[-1]] * 1e3,
-            x[ids[0]] * 1e3,
-            x[ids[-1]] * 1e3,
+            x[x_ids[0]] * 1e3,
+            x[x_ids[-1]] * 1e3,
+            x[y_ids[0]] * 1e3,
+            x[y_ids[-1]] * 1e3,
         ]
         return crop_values, extent
 
@@ -209,7 +236,7 @@ def build_suite(output_dir: Path, grid_n: int, inverse_grid_n: int) -> dict[str,
     contact = _contact_sheet(figures, output_dir / "00_phase2j_visual_audit_contact_sheet.jpg")
 
     manifest: dict[str, Any] = {
-        "outcome": "PHASE2J-PRESENTATION-VISUAL-STANDARDISATION-V2",
+        "outcome": "PHASE2J-PRESENTATION-VISUAL-STANDARDISATION-V3",
         "physics_source": "current repository dual-SLM -> explicit 4F -> physical axicon model",
         "grid_n": int(grid_n),
         "inverse_grid_n": int(inverse_grid_n),
@@ -225,7 +252,9 @@ def build_suite(output_dir: Path, grid_n: int, inverse_grid_n: int) -> dict[str,
             "per_z_recentering": False,
             "ideal_transverse_halfwidth_m": 0.18e-3,
             "tip_output_transverse_halfwidth_m": 0.24e-3,
-            "decentre_and_error_output_transverse_halfwidth_m": 0.52e-3,
+            "decentre_xy_halfwidth_m": float(DECENTRE_XY_HALF_M),
+            "decentre_xy_display_center": "measured z=60 mm intensity centroid, with absolute laboratory x/y axes preserved",
+            "decentre_xy_data_recentering": False,
             "decentre_longitudinal_halfwidth_m": abs(float(DECENTRE_COORD_M[0])),
             "tip_longitudinal_halfwidth_m": abs(float(TIP_COORD_M[0])),
             "error_longitudinal_halfwidth_m": abs(float(ERROR_COORD_M[0])),
@@ -239,6 +268,8 @@ def build_suite(output_dir: Path, grid_n: int, inverse_grid_n: int) -> dict[str,
         "synthetic_inverse_recovery": m10,
         "claim_boundaries": [
             "presentation rendering changes do not alter optical physics",
+            "decentre XY windows follow the measured beam centroid for visibility but retain absolute laboratory coordinates",
+            "decentre x-z maps remain fixed laboratory coordinates with no recentering",
             "phase panels remain cyclic because phase is not an intensity quantity",
             "signed residual panels remain diverging because residual sign must be visible",
             "axicon perturbation magnitudes remain sensitivity examples unless independently calibrated",
