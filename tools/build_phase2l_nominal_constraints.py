@@ -41,9 +41,10 @@ def continuous_ideal(cid,n):
 
 def ideal_vs_nominal(out,n):
     cases=[('B0','B0 — ℓ=0'),('V1','V1 — ℓ=1'),('V3','V3 — ℓ=3')]
-    # Each beam occupies one row: ideal → nominal bench-constrained → absolute difference.
-    fig,ax=plt.subplots(3,3,figsize=(13.8,11.6),facecolor=BG)
-    fig.subplots_adjust(left=.075,right=.985,bottom=.085,top=.84,wspace=.10,hspace=.25)
+    # Clean 3x3 comparison with a reserved header and footer band so text never
+    # collides with column titles, plots or the difference colourbar.
+    fig,ax=plt.subplots(3,3,figsize=(14.2,10.8),facecolor=BG)
+    fig.subplots_adjust(left=.075,right=.985,bottom=.115,top=.79,wspace=.11,hspace=.20)
 
     prepared=[]
     max_diff=0.0
@@ -73,27 +74,44 @@ def ideal_vs_nominal(out,n):
                 interpolation=style.DISPLAY_INTERPOLATION,aspect='equal'
             )
             if r==0:
-                q.set_title(column_titles[c],color=TEXT,fontsize=12.0,weight='bold',pad=9)
+                q.set_title(column_titles[c],color=TEXT,fontsize=12.4,weight='bold',pad=10)
             if c==0:
-                q.set_ylabel(f'{case_label}\ny (mm)',fontsize=9,weight='bold')
+                q.set_ylabel(f'{case_label}\ny (mm)',fontsize=9.2,weight='bold',labelpad=7)
             else:
                 q.tick_params(labelleft=False)
-            q.set_xlabel('x (mm)',fontsize=8)
+            q.set_xlabel('x (mm)',fontsize=8.4,labelpad=4)
             if c==2:
                 diff_mappable=im
         del ideal,nominal,ideal_xy,nominal_xy,difference
         gc.collect()
 
-    fig.suptitle('Ideal beam family → nominal experimental constraints',color=TEXT,fontsize=18,weight='bold',y=.972)
-    fig.text(.5,.918,'SLM pixelation + 8-bit phase + fill-factor throughput + carrier/blaze + finite 4F order selection',ha='center',color=MUTED,fontsize=10.2)
-    fig.text(.5,.883,'Difference column: |I_nominal − I_ideal| on a shared scale across B0, V1 and V3',ha='center',color=MUTED,fontsize=9.3)
-    fig.text(.5,.858,'No deliberate misalignment, wavefront error, axicon defect or measured correction map',ha='center',color=MUTED,fontsize=9.1)
+    # Header: intentionally only two lines.
+    fig.suptitle(
+        'Ideal beam family vs nominal experimental constraints',
+        color=TEXT,fontsize=18.5,weight='bold',y=.968
+    )
+    fig.text(
+        .5,.922,
+        'B0, V1 and V3 at z = 60 mm · each intensity panel is peak-normalised for morphology',
+        ha='center',color=MUTED,fontsize=10.0
+    )
+
+    # Difference colourbar belongs visually to the third column and sits in its
+    # own reserved footer band.
     if diff_mappable is not None:
-        cax=fig.add_axes([0.70,0.045,0.235,0.015])
+        cax=fig.add_axes([0.695,0.061,0.245,0.014])
         cb=fig.colorbar(diff_mappable,cax=cax,orientation='horizontal')
-        cb.ax.tick_params(colors=MUTED,labelsize=7,length=2)
+        cb.ax.tick_params(colors=MUTED,labelsize=7,length=2,pad=2)
         cb.outline.set_edgecolor((*colors.to_rgb(MUTED),0.28))
-        cb.set_label('|I_nominal − I_ideal|',color=MUTED,fontsize=8,labelpad=2)
+        cb.set_label('|I_nominal − I_ideal|',color=MUTED,fontsize=8.2,labelpad=3)
+
+    # Small footer note, deliberately separated from the colourbar and plots.
+    fig.text(
+        .075,.032,
+        'Nominal route: 8 µm SLM sampling · 8-bit phase · fill-factor throughput · carrier/blaze · finite +1-order 4F iris.  No deliberate misalignment or measured correction map.',
+        ha='left',color=MUTED,fontsize=7.8,alpha=.88
+    )
+
     p=out/'01_ideal_vs_nominal_constraints_B0_V1_V3.png'
     fig.savefig(p,dpi=480,bbox_inches='tight',facecolor=BG,pad_inches=.06)
     plt.close(fig)
