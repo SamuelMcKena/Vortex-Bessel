@@ -6,6 +6,8 @@ on:
     branches: [main]
     paths:
       - .github/workflows/build_axicon_decentre_presentation.yml
+      - tools/build_axicon_hollow_sweep.py
+      - tools/render_selected_axicon_hollow_avoidance.py
       - tools/build_axicon_hollow_avoidance.py
       - tools/build_axicon_presentation_evidence_v4.py
       - tools/build_axicon_presentation_evidence_v3.py
@@ -58,11 +60,30 @@ jobs:
           python -m pip install -r requirements-report.txt
           python -m pip install -e . --no-deps
 
-      - name: Render final axicon presentation evidence
+      - name: Sweep hollow-core radius at 1024 grid
+        shell: bash
         run: |
+          set -euo pipefail
+          rm -rf outputs/figures/axicon_hollow_sweep
+          python tools/build_axicon_hollow_sweep.py \
+            --grid-n 1024 \
+            --radii-um 160 180 200 220 240 260 280 300 320 340 360 \
+            --output-dir outputs/figures/axicon_hollow_sweep
+          test -f outputs/figures/axicon_hollow_sweep/10_hollow_tip_avoidance_radius_sweep.png
+          test -f outputs/figures/axicon_hollow_sweep/hollow_tip_avoidance_sweep_manifest.json
+          test -f outputs/figures/axicon_hollow_sweep/selected_hollow_core_um.txt
+          SELECTED_CORE_UM="$(tr -d '[:space:]' < outputs/figures/axicon_hollow_sweep/selected_hollow_core_um.txt)"
+          echo "SELECTED_CORE_UM=$SELECTED_CORE_UM" >> "$GITHUB_ENV"
+          echo "Selected hollow-core radius: ${SELECTED_CORE_UM} um"
+
+      - name: Render selected hollow-core evidence at 2048 grid
+        shell: bash
+        run: |
+          set -euo pipefail
           rm -rf outputs/figures/axicon_presentation_evidence
-          python tools/build_axicon_hollow_avoidance.py \
+          python tools/render_selected_axicon_hollow_avoidance.py \
             --grid-n 2048 \
+            --hollow-core-um "$SELECTED_CORE_UM" \
             --output-dir outputs/figures/axicon_presentation_evidence
           for name in \
             04_V1_axicon_decentre_fixed_lab_thermal_tight.png \
@@ -80,10 +101,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: axicon_presentation_evidence
-          path: outputs/figures/axicon_presentation_evidence/
+          path: |
+            outputs/figures/axicon_presentation_evidence/
+            outputs/figures/axicon_hollow_sweep/
           if-no-files-found: error
 
-      - name: Promote final outputs into canonical presentation library
+      - name: Promote selected outputs and sweep into canonical presentation library
         shell: bash
         run: |
           set -euo pipefail
@@ -94,9 +117,12 @@ jobs:
           mkdir -p figures/presentation chat_axicon_evidence
           cp outputs/figures/axicon_presentation_evidence/*.png figures/presentation/
           cp outputs/figures/axicon_presentation_evidence/axicon_presentation_evidence_manifest.json figures/presentation/
+          cp outputs/figures/axicon_hollow_sweep/10_hollow_tip_avoidance_radius_sweep.png figures/presentation/
+          cp outputs/figures/axicon_hollow_sweep/hollow_tip_avoidance_sweep_manifest.json figures/presentation/
           printf '%s\n' '${{ github.run_id }}' > chat_axicon_evidence/RUN_ID.txt
-          git add figures/presentation chat_axicon_evidence/RUN_ID.txt
+          printf '%s\n' "$SELECTED_CORE_UM" > chat_axicon_evidence/SELECTED_HOLLOW_CORE_UM.txt
+          git add figures/presentation chat_axicon_evidence
           if ! git diff --cached --quiet; then
-            git commit -m 'Regenerate final axicon presentation evidence'
+            git commit -m 'Regenerate optimised hollow-tip avoidance evidence'
             git push origin HEAD:main
           fi
