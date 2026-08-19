@@ -1,5 +1,5 @@
 {
-  "outcome": "PHASE2J-PRESENTATION-VISUAL-STANDARDISATION-V2",
+  "outcome": "PHASE2J-PRESENTATION-VISUAL-STANDARDISATION-V3",
   "physics_source": "current repository dual-SLM -> explicit 4F -> physical axicon model",
   "grid_n": 2048,
   "inverse_grid_n": 512,
@@ -26,7 +26,9 @@
     "per_z_recentering": false,
     "ideal_transverse_halfwidth_m": 0.00018,
     "tip_output_transverse_halfwidth_m": 0.00024,
-    "decentre_and_error_output_transverse_halfwidth_m": 0.00052,
+    "decentre_xy_halfwidth_m": 0.00024,
+    "decentre_xy_display_center": "measured z=60 mm intensity centroid, with absolute laboratory x/y axes preserved",
+    "decentre_xy_data_recentering": false,
     "decentre_longitudinal_halfwidth_m": 0.00062,
     "tip_longitudinal_halfwidth_m": 0.0003,
     "error_longitudinal_halfwidth_m": 0.00052
@@ -197,6 +199,8 @@
   },
   "claim_boundaries": [
     "presentation rendering changes do not alter optical physics",
+    "decentre XY windows follow the measured beam centroid for visibility but retain absolute laboratory coordinates",
+    "decentre x-z maps remain fixed laboratory coordinates with no recentering",
     "phase panels remain cyclic because phase is not an intensity quantity",
     "signed residual panels remain diverging because residual sign must be visible",
     "axicon perturbation magnitudes remain sensitivity examples unless independently calibrated",
