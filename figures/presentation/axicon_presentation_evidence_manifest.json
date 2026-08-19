@@ -1,5 +1,5 @@
 {
-  "outcome": "AXICON-PRESENTATION-EVIDENCE-AUDIT-V2",
+  "outcome": "AXICON-PRESENTATION-EVIDENCE-V3-ROUNDED-TIP-PHYSICS-AUDIT",
   "grid_n": 2048,
   "z_ref_m": 0.06,
   "figures": [
@@ -8,68 +8,89 @@
     "outputs/figures/axicon_presentation_evidence/05_V1_nonideal_tip_fixed_lab_thermal_tight.png",
     "outputs/figures/axicon_presentation_evidence/05b_V1_nonideal_tip_1D_intensity.png",
     "outputs/figures/axicon_presentation_evidence/09_tip_avoidance_three_way_audit.png",
-    "outputs/figures/axicon_presentation_evidence/09b_tip_avoidance_three_way_1D_intensity.png"
+    "outputs/figures/axicon_presentation_evidence/09b_tip_avoidance_three_way_1D_intensity.png",
+    "outputs/figures/axicon_presentation_evidence/09c_tip_avoidance_transverse_1D_intensity.png"
   ],
-  "decentre_xy_display_halfwidth_m": 0.0002,
-  "decentre_xy_display_centres_m": [
-    -0.0005,
-    0.0,
-    0.0005
-  ],
-  "decentre_xz_fixed_lab": true,
+  "decentre_xy_policy": {
+    "x_halfwidth_m": 0.00038,
+    "y_halfwidth_m": 0.00024,
+    "centres_m": [
+      -0.0005,
+      0.0,
+      0.0005
+    ],
+    "axes_are_absolute_lab_coordinates": true,
+    "xz_fixed_lab_y0_unchanged": true
+  },
   "decentre_1d": [
     {
-      "label": "-500 \u00b5m",
+      "label": "\u2212500 \u00b5m",
       "imposed_decentre_m": -0.0005,
       "centroid_x_m": -0.000290598489517513,
-      "peak_ratio": 0.7109975099377861
+      "peak_ratio_to_aligned": 0.7109975099377861
     },
     {
       "label": "aligned",
       "imposed_decentre_m": 0.0,
       "centroid_x_m": 7.568870218810655e-08,
-      "peak_ratio": 1.0
+      "peak_ratio_to_aligned": 1.0
     },
     {
       "label": "+500 \u00b5m",
       "imposed_decentre_m": 0.0005,
       "centroid_x_m": 0.0002907451088218217,
-      "peak_ratio": 0.7535865231225303
+      "peak_ratio_to_aligned": 0.7535865231225303
     }
   ],
-  "rounded_tip_xy_display_halfwidth_m": 0.00018,
   "rounded_tip_1d": [
     {
       "label": "ideal sharp tip",
-      "peak_ratio": 1.0
+      "peak_ratio_to_sharp": 1.0
     },
     {
       "label": "200 \u00b5m radial rounding",
-      "peak_ratio": 1.00871650217292
+      "peak_ratio_to_sharp": 1.00871650217292
     },
     {
       "label": "800 \u00b5m radial rounding",
-      "peak_ratio": 1.2933533727324136
+      "peak_ratio_to_sharp": 1.2933533727324136
     }
   ],
-  "tip_avoidance": [
+  "tip_avoidance_audit": [
     {
-      "label": "centred beam \u2192 200 \u00b5m rounded tip",
-      "peak_ratio_to_rounded_tip": 1.0,
-      "fraction_incident_power_inside_tip": 0.019836991656745805
+      "label": "sharp B0",
+      "fraction_incident_power_inside_200um_tip": 0.019836991656745805,
+      "z60_peak_ratio_to_sharp_B0": 1.0,
+      "peak_vs_z_modulation_cv_20_to_100mm": 0.1442393705781976,
+      "fixed_support_retained_power_fraction": 0.9999995039285036
     },
     {
-      "label": "straight-through control (no axicon)",
-      "peak_ratio_to_rounded_tip": 0.0028346323577724567,
-      "fraction_incident_power_inside_tip": 0.019836991656745805
+      "label": "rounded B0",
+      "fraction_incident_power_inside_200um_tip": 0.019836991656745805,
+      "z60_peak_ratio_to_sharp_B0": 1.015734576346874,
+      "peak_vs_z_modulation_cv_20_to_100mm": 0.14279581365245503,
+      "fixed_support_retained_power_fraction": 0.9999999437889381
     },
     {
-      "label": "wide-core vortex \u2192 same rounded tip",
-      "peak_ratio_to_rounded_tip": 0.3645015712146701,
-      "fraction_incident_power_inside_tip": 0.0003935335899933527
+      "label": "rounded V1",
+      "fraction_incident_power_inside_200um_tip": 0.014657889657233341,
+      "z60_peak_ratio_to_sharp_B0": 0.3635845007054768,
+      "peak_vs_z_modulation_cv_20_to_100mm": 0.1369984919802649,
+      "fixed_support_retained_power_fraction": 0.9999999330497593
+    },
+    {
+      "label": "rounded wide V1",
+      "fraction_incident_power_inside_200um_tip": 0.00011637307207233973,
+      "z60_peak_ratio_to_sharp_B0": 0.37562947280130066,
+      "peak_vs_z_modulation_cv_20_to_100mm": 0.18668039495759295,
+      "fixed_support_retained_power_fraction": 0.999999930725648
     }
   ],
-  "tip_avoidance_dark_core_radius_m": 0.00026,
   "tip_radius_m": 0.0002,
-  "claim_boundary": "wide-core vortex is an axicon-plane target field for optical auditing; calibrated phase-only SLM generation is not claimed"
+  "wide_vortex_core_m": 0.00026,
+  "literature_basis": [
+    "Brzobohaty et al., Optics Express 16, 12688-12700 (2008), DOI 10.1364/OE.16.012688",
+    "Rao and Samanta, Optics Letters 43, 3029-3032 (2018), hollow-input suppression of axicon-tip modulation"
+  ],
+  "claim_boundary": "wide-core V1 is an axicon-plane complex-field planning target; calibrated phase-only SLM realisation is not claimed"
 }
