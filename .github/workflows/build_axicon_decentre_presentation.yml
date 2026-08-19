@@ -6,12 +6,16 @@ on:
     branches: [main]
     paths:
       - .github/workflows/build_axicon_decentre_presentation.yml
-      - tools/build_axicon_presentation_evidence.py
+      - tools/build_axicon_presentation_evidence_v3.py
       - tools/build_phase2j_presentation_suite.py
       - tools/build_phase2i_presentation_figures.py
       - tools/presentation_phase2j_style.py
       - vbb_study/digital_twin/vortex_system_route.py
       - vbb_study/digital_twin/vortex_continuous_propagation.py
+
+concurrency:
+  group: focused-axicon-presentation
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -28,19 +32,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Record run id immediately for diagnostics
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          mkdir -p chat_axicon_evidence
-          printf '%s\n' '${{ github.run_id }}' > chat_axicon_evidence/RUN_ID.txt
-          git add chat_axicon_evidence/RUN_ID.txt
-          git commit -m 'Record focused axicon evidence run start' || true
-          git pull --rebase origin main
-          git push origin HEAD:main
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
@@ -52,10 +43,10 @@ jobs:
           python -m pip install -r requirements-report.txt
           python -m pip install -e . --no-deps
 
-      - name: Render focused axicon presentation evidence
+      - name: Render final axicon presentation evidence
         run: |
           rm -rf outputs/figures/axicon_presentation_evidence
-          python tools/build_axicon_presentation_evidence.py \
+          python tools/build_axicon_presentation_evidence_v3.py \
             --grid-n 2048 \
             --output-dir outputs/figures/axicon_presentation_evidence
           for name in \
@@ -65,6 +56,7 @@ jobs:
             05b_V1_nonideal_tip_1D_intensity.png \
             09_tip_avoidance_three_way_audit.png \
             09b_tip_avoidance_three_way_1D_intensity.png \
+            09c_tip_avoidance_transverse_1D_intensity.png \
             axicon_presentation_evidence_manifest.json; do
               test -f "outputs/figures/axicon_presentation_evidence/$name"
           done
@@ -76,18 +68,19 @@ jobs:
           path: outputs/figures/axicon_presentation_evidence/
           if-no-files-found: error
 
-      - name: Promote focused outputs into canonical presentation library
+      - name: Promote final outputs into canonical presentation library
         shell: bash
         run: |
           set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin main
           mkdir -p figures/presentation
           cp outputs/figures/axicon_presentation_evidence/*.png figures/presentation/
           cp outputs/figures/axicon_presentation_evidence/axicon_presentation_evidence_manifest.json figures/presentation/
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add figures/presentation
+          printf '%s\n' '${{ github.run_id }}' > chat_axicon_evidence/RUN_ID.txt
+          git add figures/presentation chat_axicon_evidence/RUN_ID.txt
           if ! git diff --cached --quiet; then
-            git commit -m 'Regenerate focused axicon presentation evidence'
-            git pull --rebase origin main
+            git commit -m 'Regenerate final axicon presentation evidence'
             git push origin HEAD:main
           fi
