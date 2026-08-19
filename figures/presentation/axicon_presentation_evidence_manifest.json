@@ -66,14 +66,14 @@
     },
     {
       "input_family": "annular_l0",
-      "fraction_incident_power_inside_200um_tip": 0.00010827292063318118,
-      "z60_rounded_to_sharp_peak_ratio": 1.0255546684214916,
-      "rounded_vs_sharp_rms_fractional_deviation_20_to_100mm": 0.10344235597021217,
-      "rounded_vs_sharp_max_abs_fractional_deviation_20_to_100mm": 0.5089347143520611
+      "fraction_incident_power_inside_200um_tip": 0.000631268338941211,
+      "z60_rounded_to_sharp_peak_ratio": 1.0250640476482886,
+      "rounded_vs_sharp_rms_fractional_deviation_20_to_100mm": 0.07520428649278617,
+      "rounded_vs_sharp_max_abs_fractional_deviation_20_to_100mm": 0.3708760019660289
     }
   ],
   "tip_radius_m": 0.0002,
-  "hollow_core_m": 0.00026,
+  "hollow_core_m": 0.00021999999999999998,
   "literature_basis": [
     "Brzobohaty et al., Optics Express 16, 12688-12700 (2008), DOI 10.1364/OE.16.012688",
     "Rao and Samanta, Optics Letters 43, 3029-3032 (2018), hollow-input suppression of axicon-tip modulation"
