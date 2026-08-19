@@ -1,16 +1,16 @@
-"""Build 1D transverse cross-section comparisons for nominal hardware constraints.
+"""Build 1D transverse overlay comparisons for nominal hardware constraints.
 
 This presentation diagnostic complements ``build_phase2l_nominal_constraints``.
 For B0, V1 and V3 it takes the same z=60 mm transverse planes used by the 2D
 ideal-versus-nominal comparison, extracts the fixed laboratory y=0 line, and
-plots:
-
-* continuous ideal versus nominal bench-constrained intensity; and
-* the absolute 1D morphology difference |I_nominal - I_ideal|.
+plots continuous ideal and nominal bench-constrained intensity directly on the
+same axes for immediate visual comparison.
 
 The two parent transverse fields are independently peak-normalised exactly as in
 the 2D morphology comparison.  This is therefore a morphology diagnostic, not
-an absolute-throughput comparison and not a calibrated bench prediction.
+an absolute-throughput comparison and not a calibrated bench prediction.  The
+absolute difference is retained in the CSV export for numerical inspection but
+is intentionally not shown as a separate presentation panel.
 """
 
 from __future__ import annotations
@@ -25,7 +25,6 @@ import numpy as np
 import presentation_phase2j_style as style
 from build_phase2l_nominal_constraints import (
     XY_HALF_M,
-    Z_REF_M,
     _crop,
     _norm,
     _xy,
@@ -61,7 +60,7 @@ def build_cross_sections(output_dir: Path, grid_n: int) -> tuple[Path, Path]:
             raise RuntimeError(f"{case_id}: ideal and nominal lineout coordinates differ")
 
         difference = np.abs(nominal_line - ideal_line)
-        prepared.append((case_id, case_label, x_i, ideal_line, nominal_line, difference))
+        prepared.append((case_id, case_label, x_i, ideal_line, nominal_line))
 
         for x_m, i_ideal, i_nominal, d_abs in zip(x_i, ideal_line, nominal_line, difference):
             rows.append(
@@ -74,48 +73,48 @@ def build_cross_sections(output_dir: Path, grid_n: int) -> tuple[Path, Path]:
                 }
             )
 
-    fig, axes = plt.subplots(3, 2, figsize=(13.4, 10.0), facecolor=style.FIG_BG, sharex="col")
-    fig.subplots_adjust(left=0.085, right=0.985, bottom=0.09, top=0.83, wspace=0.16, hspace=0.28)
+    fig, axes = plt.subplots(3, 1, figsize=(11.8, 9.2), facecolor=style.FIG_BG, sharex=True)
+    fig.subplots_adjust(left=0.105, right=0.985, bottom=0.09, top=0.83, hspace=0.34)
 
-    for r, (case_id, case_label, x_m, ideal_line, nominal_line, difference) in enumerate(prepared):
+    for r, (case_id, case_label, x_m, ideal_line, nominal_line) in enumerate(prepared):
         x_mm = x_m * 1e3
-        ax_overlay = axes[r, 0]
-        ax_diff = axes[r, 1]
-        style.style_ax(ax_overlay)
-        style.style_ax(ax_diff)
+        ax = axes[r]
+        style.style_ax(ax)
 
-        ax_overlay.plot(x_mm, ideal_line, color=style.TEXT, linewidth=1.9, label="continuous ideal")
-        ax_overlay.plot(x_mm, nominal_line, color=style.RED, linewidth=1.55, label="nominal constrained")
-        ax_overlay.set_ylim(-0.02, 1.04)
-        ax_overlay.set_ylabel(f"{case_label}\nnormalised intensity", fontsize=9, weight="bold")
-        ax_overlay.axvline(0.0, color=style.MUTED, alpha=0.18, linewidth=0.7)
-        if r == 0:
-            ax_overlay.set_title("Fixed-lab y = 0 transverse cross-section", fontsize=12.2, weight="bold", pad=9)
-            ax_overlay.legend(frameon=False, fontsize=8.5, loc="upper right", labelcolor=style.MUTED)
-
-        ax_diff.plot(x_mm, difference, color=style.GOLD, linewidth=1.7)
-        ax_diff.fill_between(x_mm, 0.0, difference, color=style.GOLD, alpha=0.14, linewidth=0.0)
-        ax_diff.set_ylim(bottom=0.0)
-        ax_diff.axvline(0.0, color=style.MUTED, alpha=0.18, linewidth=0.7)
-        ax_diff.text(
-            0.985,
-            0.88,
-            f"max |ΔI| = {float(np.max(difference)):.3f}",
-            transform=ax_diff.transAxes,
-            ha="right",
-            va="top",
-            color=style.MUTED,
-            fontsize=8.5,
+        ax.plot(
+            x_mm,
+            ideal_line,
+            color=style.TEXT,
+            linewidth=2.2,
+            label="continuous ideal",
         )
-        if r == 0:
-            ax_diff.set_title("Absolute 1D morphology difference", fontsize=12.2, weight="bold", pad=9)
+        ax.plot(
+            x_mm,
+            nominal_line,
+            color=style.RED,
+            linewidth=1.8,
+            label="nominal constrained",
+        )
+        ax.set_ylim(-0.02, 1.04)
+        ax.set_ylabel("normalised intensity", fontsize=9.5, weight="bold")
+        ax.axvline(0.0, color=style.MUTED, alpha=0.18, linewidth=0.7)
+        ax.set_title(
+            f"{case_label}   ·   z = 60 mm   ·   fixed-lab y = 0",
+            fontsize=11.8,
+            weight="bold",
+            pad=8,
+        )
+        ax.legend(
+            frameon=False,
+            fontsize=8.8,
+            loc="upper right",
+            labelcolor=style.MUTED,
+        )
 
-        if r == 2:
-            ax_overlay.set_xlabel("x (mm)", fontsize=9)
-            ax_diff.set_xlabel("x (mm)", fontsize=9)
+    axes[-1].set_xlabel("x (mm)", fontsize=9.5)
 
     fig.suptitle(
-        "1D cross-sections: ideal beam family → nominal experimental constraints",
+        "1D transverse cross-sections: continuous ideal vs nominal constrained",
         color=style.TEXT,
         fontsize=17.5,
         weight="bold",
@@ -124,7 +123,7 @@ def build_cross_sections(output_dir: Path, grid_n: int) -> tuple[Path, Path]:
     fig.text(
         0.5,
         0.905,
-        "z = 60 mm, fixed laboratory y = 0; same transverse coordinates as the 2D comparison",
+        "B0, V1 and V3 overlaid directly on the same fixed laboratory cross-section",
         ha="center",
         color=style.MUTED,
         fontsize=10.0,
@@ -132,7 +131,7 @@ def build_cross_sections(output_dir: Path, grid_n: int) -> tuple[Path, Path]:
     fig.text(
         0.5,
         0.872,
-        "Each parent field is peak-normalised before subtraction: this isolates morphology rather than absolute throughput",
+        "Each parent field is independently peak-normalised: comparison isolates transverse morphology rather than throughput",
         ha="center",
         color=style.MUTED,
         fontsize=9.1,
