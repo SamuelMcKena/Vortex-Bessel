@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - .github/workflows/build_axicon_decentre_presentation.yml
+      - tools/build_axicon_severe_tip_threefig.py
       - tools/build_axicon_severe_tip_comparison.py
       - tools/build_axicon_presentation_evidence_v3.py
       - tools/build_phase2j_presentation_suite.py
@@ -33,7 +34,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Record run id immediately for diagnostics
+      - name: Record severe-tip run id
         shell: bash
         run: |
           set -euo pipefail
@@ -42,7 +43,7 @@ jobs:
           mkdir -p chat_axicon_evidence
           printf '%s\n' '${{ github.run_id }}' > chat_axicon_evidence/RUN_ID.txt
           git add chat_axicon_evidence/RUN_ID.txt
-          git commit -m 'Record severe-tip axicon evidence run start' || true
+          git commit -m 'Record severe-tip three-figure run start' || true
           git pull --rebase origin main
           git push origin HEAD:main
 
@@ -57,24 +58,28 @@ jobs:
           python -m pip install -r requirements-report.txt
           python -m pip install -e . --no-deps
 
-      - name: Optimise severe-tip annular clearance and render at 2048 grid
+      - name: Optimise severe-tip clearance and render three figures
         shell: bash
         run: |
           set -euo pipefail
           rm -rf outputs/figures/axicon_severe_tip
-          python tools/build_axicon_severe_tip_comparison.py \
+          python tools/build_axicon_severe_tip_threefig.py \
             --sweep-grid-n 1024 \
             --render-grid-n 2048 \
             --output-dir outputs/figures/axicon_severe_tip
-          test -f outputs/figures/axicon_severe_tip/09_severe_tip_avoidance_xy_xz.png
-          test -f outputs/figures/axicon_severe_tip/09b_severe_tip_avoidance_1D.png
-          test "$(find outputs/figures/axicon_severe_tip -maxdepth 1 -type f | wc -l)" -eq 2
+          test -f outputs/figures/axicon_severe_tip/09_severe_tip_avoidance_XY.png
+          test -f outputs/figures/axicon_severe_tip/09b_severe_tip_avoidance_XZ.png
+          test -f outputs/figures/axicon_severe_tip/09c_severe_tip_avoidance_1D.png
+          test "$(find outputs/figures/axicon_severe_tip -maxdepth 1 -type f -name '*.png' | wc -l)" -eq 3
 
       - name: Upload exact GitHub-generated presentation files
         uses: actions/upload-artifact@v4
         with:
           name: axicon_severe_tip_evidence
-          path: outputs/figures/axicon_severe_tip/
+          path: |
+            outputs/figures/axicon_severe_tip/09_severe_tip_avoidance_XY.png
+            outputs/figures/axicon_severe_tip/09b_severe_tip_avoidance_XZ.png
+            outputs/figures/axicon_severe_tip/09c_severe_tip_avoidance_1D.png
           if-no-files-found: error
 
       - name: Promote only XY XZ and 1D outputs
@@ -91,12 +96,14 @@ jobs:
             figures/presentation/09b_tip_avoidance_three_way_1D_intensity.png \
             figures/presentation/09c_tip_avoidance_transverse_1D_intensity.png \
             figures/presentation/10_hollow_tip_avoidance_radius_sweep.png \
-            figures/presentation/hollow_tip_avoidance_sweep_manifest.json
-          cp outputs/figures/axicon_severe_tip/09_severe_tip_avoidance_xy_xz.png figures/presentation/
-          cp outputs/figures/axicon_severe_tip/09b_severe_tip_avoidance_1D.png figures/presentation/
+            figures/presentation/09_severe_tip_avoidance_xy_xz.png \
+            figures/presentation/09b_severe_tip_avoidance_1D.png
+          cp outputs/figures/axicon_severe_tip/09_severe_tip_avoidance_XY.png figures/presentation/
+          cp outputs/figures/axicon_severe_tip/09b_severe_tip_avoidance_XZ.png figures/presentation/
+          cp outputs/figures/axicon_severe_tip/09c_severe_tip_avoidance_1D.png figures/presentation/
           printf '%s\n' '${{ github.run_id }}' > chat_axicon_evidence/RUN_ID.txt
           git add figures/presentation chat_axicon_evidence/RUN_ID.txt
           if ! git diff --cached --quiet; then
-            git commit -m 'Promote severe rounded-tip comparison figures'
+            git commit -m 'Promote severe-tip XY XZ and 1D figures'
             git push origin HEAD:main
           fi
