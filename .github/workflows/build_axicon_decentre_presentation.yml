@@ -7,6 +7,7 @@ on:
     paths:
       - .github/workflows/build_axicon_decentre_presentation.yml
       - tools/build_axicon_localized_round_tip_threefig.py
+      - tools/build_axicon_slide_refinements.py
       - tools/build_axicon_presentation_evidence_v3.py
       - tools/build_phase2j_presentation_suite.py
       - tools/build_phase2i_presentation_figures.py
@@ -57,18 +58,24 @@ jobs:
           python -m pip install -r requirements-report.txt
           python -m pip install -e . --no-deps
 
-      - name: Optimise localized tip clearance and render three figures
+      - name: Render localized-tip evidence and refined slide assets
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf outputs/figures/axicon_severe_tip
+          rm -rf outputs/figures/axicon_severe_tip outputs/figures/presentation_refinements
           python tools/build_axicon_localized_round_tip_threefig.py \
             --sweep-grid-n 1024 \
             --render-grid-n 2048 \
             --output-dir outputs/figures/axicon_severe_tip
+          python tools/build_axicon_slide_refinements.py \
+            --output-dir outputs/figures/presentation_refinements
+          cp outputs/figures/presentation_refinements/09c_severe_tip_avoidance_1D_longitudinal.png \
+             outputs/figures/axicon_severe_tip/09c_severe_tip_avoidance_1D.png
           test -f outputs/figures/axicon_severe_tip/09_severe_tip_avoidance_XY.png
           test -f outputs/figures/axicon_severe_tip/09b_severe_tip_avoidance_XZ.png
           test -f outputs/figures/axicon_severe_tip/09c_severe_tip_avoidance_1D.png
+          test -f outputs/figures/presentation_refinements/schematic_axicon_lateral_decentre_clean.png
+          test -f outputs/figures/presentation_refinements/schematic_axicon_rounded_apex_clean.png
           test "$(find outputs/figures/axicon_severe_tip -maxdepth 1 -type f -name '*.png' | wc -l)" -eq 3
 
       - name: Upload exact GitHub-generated presentation files
@@ -79,9 +86,11 @@ jobs:
             outputs/figures/axicon_severe_tip/09_severe_tip_avoidance_XY.png
             outputs/figures/axicon_severe_tip/09b_severe_tip_avoidance_XZ.png
             outputs/figures/axicon_severe_tip/09c_severe_tip_avoidance_1D.png
+            outputs/figures/presentation_refinements/schematic_axicon_lateral_decentre_clean.png
+            outputs/figures/presentation_refinements/schematic_axicon_rounded_apex_clean.png
           if-no-files-found: error
 
-      - name: Promote only XY XZ and 1D outputs
+      - name: Promote refined presentation outputs
         shell: bash
         run: |
           set -euo pipefail
@@ -100,9 +109,11 @@ jobs:
           cp outputs/figures/axicon_severe_tip/09_severe_tip_avoidance_XY.png figures/presentation/
           cp outputs/figures/axicon_severe_tip/09b_severe_tip_avoidance_XZ.png figures/presentation/
           cp outputs/figures/axicon_severe_tip/09c_severe_tip_avoidance_1D.png figures/presentation/
+          cp outputs/figures/presentation_refinements/schematic_axicon_lateral_decentre_clean.png figures/presentation/
+          cp outputs/figures/presentation_refinements/schematic_axicon_rounded_apex_clean.png figures/presentation/
           printf '%s\n' '${{ github.run_id }}' > chat_axicon_evidence/RUN_ID.txt
           git add figures/presentation chat_axicon_evidence/RUN_ID.txt
           if ! git diff --cached --quiet; then
-            git commit -m 'Promote localized rounded-tip XY XZ and 1D figures'
+            git commit -m 'Promote clean axicon schematics and longitudinal mitigation plot'
             git push origin HEAD:main
           fi
