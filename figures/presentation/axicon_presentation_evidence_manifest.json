@@ -1,0 +1,64 @@
+{
+  "outcome": "AXICON-PRESENTATION-EVIDENCE-AUDIT-V1",
+  "grid_n": 2048,
+  "z_ref_m": 0.06,
+  "figures": [
+    "outputs/figures/axicon_presentation_evidence/04_V1_axicon_decentre_fixed_lab_thermal_tight.png",
+    "outputs/figures/axicon_presentation_evidence/04b_V1_axicon_decentre_1D_intensity.png",
+    "outputs/figures/axicon_presentation_evidence/05_V1_nonideal_tip_fixed_lab_thermal_tight.png",
+    "outputs/figures/axicon_presentation_evidence/05b_V1_nonideal_tip_1D_intensity.png",
+    "outputs/figures/axicon_presentation_evidence/09_tip_avoidance_three_way_audit.png",
+    "outputs/figures/axicon_presentation_evidence/09b_tip_avoidance_three_way_1D_intensity.png"
+  ],
+  "decentre_1d": [
+    {
+      "label": "-500 \u00b5m",
+      "centroid_x_m": -0.00029059848951751294,
+      "peak_ratio": 0.7109975099377863
+    },
+    {
+      "label": "aligned",
+      "centroid_x_m": 7.568870218811776e-08,
+      "peak_ratio": 1.0
+    },
+    {
+      "label": "+500 \u00b5m",
+      "centroid_x_m": 0.0002907451088218217,
+      "peak_ratio": 0.75358652312253
+    }
+  ],
+  "rounded_tip_1d": [
+    {
+      "label": "ideal sharp tip",
+      "peak_ratio": 1.0
+    },
+    {
+      "label": "200 \u00b5m radial rounding",
+      "peak_ratio": 1.00871650217292
+    },
+    {
+      "label": "800 \u00b5m radial rounding",
+      "peak_ratio": 1.2933533727324136
+    }
+  ],
+  "tip_avoidance": [
+    {
+      "label": "centred beam \u2192 200 \u00b5m rounded tip",
+      "peak_ratio_to_rounded_tip": 1.0,
+      "fraction_incident_power_inside_tip": 0.019836991656745805
+    },
+    {
+      "label": "straight-through control (no axicon)",
+      "peak_ratio_to_rounded_tip": 0.002834632357772455,
+      "fraction_incident_power_inside_tip": 0.019836991656745805
+    },
+    {
+      "label": "wide-core vortex \u2192 same rounded tip",
+      "peak_ratio_to_rounded_tip": 0.3645015712146701,
+      "fraction_incident_power_inside_tip": 0.0003935335899933527
+    }
+  ],
+  "tip_avoidance_dark_core_radius_m": 0.00026,
+  "tip_radius_m": 0.0002,
+  "claim_boundary": "wide-core vortex is an axicon-plane target field for optical auditing; calibrated phase-only SLM generation is not claimed"
+}
