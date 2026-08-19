@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - .github/workflows/build_axicon_decentre_presentation.yml
+      - tools/build_axicon_presentation_evidence_v4.py
       - tools/build_axicon_presentation_evidence_v3.py
       - tools/build_phase2j_presentation_suite.py
       - tools/build_phase2i_presentation_figures.py
@@ -59,7 +60,7 @@ jobs:
       - name: Render final axicon presentation evidence
         run: |
           rm -rf outputs/figures/axicon_presentation_evidence
-          python tools/build_axicon_presentation_evidence_v3.py \
+          python tools/build_axicon_presentation_evidence_v4.py \
             --grid-n 2048 \
             --output-dir outputs/figures/axicon_presentation_evidence
           for name in \
@@ -87,9 +88,6 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # Update the checkout to the latest main *before* copying generated files.
-          # The outputs directory is untracked, so this avoids rebase conflicts with
-          # the early RUN_ID commit without losing the rendered artifact.
           git fetch origin main
           git reset --hard origin/main
           mkdir -p figures/presentation chat_axicon_evidence
