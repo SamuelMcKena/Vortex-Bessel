@@ -1,14 +1,14 @@
 """Build the corrected V3 nominal experimental-constraint route panel.
 
-This renderer is intentionally separate from the older compact ladder figure.
-It shows the actual conceptual/physical planes in the nominal scalar route:
+This renderer shows the actual conceptual/physical planes in the nominal scalar
+route:
 
 continuous V3 target -> native SLM1 pixels -> 8-bit SLM1 command ->
 SLM2 carrier -> Fourier plane before iris -> selected order after iris ->
 physical axicon -> propagated V3 intensity.
 
-Important display policy
-------------------------
+Display policy
+--------------
 * Continuous phase is wrapped to [0, 2*pi) before plotting.
 * SLM command panels are drawn on the native 8 um pixel lattice rather than
   pretending the 2048-point / 10 mm propagation grid resolves pixel borders.
@@ -124,8 +124,8 @@ def build_panel(output_dir: Path, grid_n: int) -> tuple[Path, Path]:
     route = build_system_route("V3", grid_n=int(grid_n))
 
     carrier_cpm = float(hardware_value(manifest, "carrier_frequency_cpm"))
-    phase_levels = int(hardware_value(manifest, "slm_phase_bits"))
-    levels = 2 ** phase_levels
+    phase_bits = int(hardware_value(manifest, "slm_phase_bits"))
+    levels = 2 ** phase_bits
     pixel_pitch_m = float(hardware_value(manifest, "slm_pixel_pitch_m"))
     base_angle_deg = float(hardware_value(manifest, "axicon_base_angle_deg"))
 
@@ -133,7 +133,7 @@ def build_panel(output_dir: Path, grid_n: int) -> tuple[Path, Path]:
     Xc, Yc, continuous_extent = _continuous_display_grid()
     continuous_v3 = np.mod(3.0 * np.arctan2(Yc, Xc), TWOPI)
 
-    # 2-4) Native SLM pixel visualisations.  These are deliberately rendered on
+    # 2-4) Native SLM pixel visualisations. These are deliberately rendered on
     # the physical 8 um pixel lattice, independently of the propagation grid.
     Xp, Yp, slm_extent = _native_slm_grid(panel)
     slm1_sampled = np.mod(3.0 * np.arctan2(Yp, Xp), TWOPI)
@@ -141,7 +141,7 @@ def build_panel(output_dir: Path, grid_n: int) -> tuple[Path, Path]:
     slm2_carrier = quantise_commanded_phase(np.mod(TWOPI * carrier_cpm * Xp, TWOPI), levels)
 
     # 5-6) Fourier-plane intensity before and immediately after the actual
-    # finite iris.  Keep physical coordinates and the same crop in both panels.
+    # finite iris. Keep physical coordinates and the same crop in both panels.
     fourier_before = np.abs(np.asarray(route["fourier_plane_before_iris"], dtype=np.complex128)) ** 2
     iris_mask = np.asarray(route["fourier_iris_mask"], dtype=float)
     fourier_after = fourier_before * iris_mask
@@ -156,7 +156,7 @@ def build_panel(output_dir: Path, grid_n: int) -> tuple[Path, Path]:
     selected_fraction = float(fourf_meta["iris_selected_power_fraction"])
 
     # 7) Physical axicon phase itself, using the same nominal axicon model as the
-    # route.  This prevents the diagram from implying that the 4F creates the
+    # route. This prevents the diagram from implying that the 4F creates the
     # Bessel field.
     g = route["grid"]
     axicon_t, _ = physical_axicon_on_own_plane(
@@ -176,8 +176,11 @@ def build_panel(output_dir: Path, grid_n: int) -> tuple[Path, Path]:
     final_crop, final_x = _crop(final_intensity, g, half=XY_HALF_M)
     final_extent = [final_x[0] * 1e3, final_x[-1] * 1e3, final_x[0] * 1e3, final_x[-1] * 1e3]
 
-    fig, axes = plt.subplots(2, 4, figsize=(16.6, 8.6), facecolor=style.FIG_BG)
-    fig.subplots_adjust(left=0.055, right=0.985, bottom=0.12, top=0.79, wspace=0.26, hspace=0.42)
+    # A deliberately spacious layout: one title, one route subtitle, the panel
+    # grid, and the technical/calibration notes in the footer.  Nothing is
+    # allowed to share the same vertical band as a panel title.
+    fig, axes = plt.subplots(2, 4, figsize=(16.6, 9.0), facecolor=style.FIG_BG)
+    fig.subplots_adjust(left=0.055, right=0.985, bottom=0.155, top=0.815, wspace=0.24, hspace=0.46)
     ax = axes.ravel()
 
     phase_im = _phase_panel(ax[0], continuous_v3, continuous_extent, "Continuous V3 target\nwrapped phase", native_pixels=False)
@@ -229,40 +232,47 @@ def build_panel(output_dir: Path, grid_n: int) -> tuple[Path, Path]:
     )
     _intensity_panel(ax[7], final_crop, final_extent, "Normalised V3 intensity\nz = 60 mm")
 
+    # Keep only the left-most y-axis in each row to reduce visual clutter.
+    for idx in (1, 2, 3, 5, 6, 7):
+        ax[idx].set_ylabel("")
+        ax[idx].tick_params(labelleft=False)
+
     fig.suptitle(
         "How nominal experimental constraints enter the V3 computational route",
         color=style.TEXT,
         fontsize=18.5,
         weight="bold",
-        y=0.965,
+        y=0.972,
     )
     fig.text(
         0.5,
-        0.905,
+        0.922,
         "continuous target → SLM1 sampling / 8-bit command → SLM2 carrier → physical 4F + finite +1 iris → physical axicon → propagation",
         ha="center",
         color=style.MUTED,
         fontsize=10.3,
     )
+
+    # Technical details belong in the footer, not in the panel-title band.
     fig.text(
         0.5,
-        0.855,
-        f"Native SLM display uses {pixel_pitch_m * 1e6:.0f} µm pixels; Fourier iris centre = {iris_centre_m[0] * 1e3:.3f} mm, radius = {iris_radius_m * 1e3:.3f} mm",
+        0.112,
+        f"Native SLM: {pixel_pitch_m * 1e6:.0f} µm pixels · 8-bit / {levels} phase levels · Fourier iris centre {iris_centre_m[0] * 1e3:.3f} mm · radius {iris_radius_m * 1e3:.3f} mm · selected power {100.0 * selected_fraction:.1f}%",
         ha="center",
         color=style.MUTED,
-        fontsize=9.0,
+        fontsize=8.5,
     )
     fig.text(
         0.5,
-        0.825,
-        "Nominal fixed-parameter model only — no measured LUT, static wavefront map, fringing calibration, deliberate misalignment or axicon surface map",
+        0.086,
+        "Nominal fixed-parameter model — no measured LUT, static wavefront map, fringing calibration, deliberate misalignment or axicon surface map",
         ha="center",
         color=style.MUTED,
-        fontsize=8.6,
+        fontsize=8.2,
     )
 
     # One shared cyclic phase colourbar for all phase panels.
-    cax = fig.add_axes([0.305, 0.055, 0.39, 0.018])
+    cax = fig.add_axes([0.305, 0.035, 0.39, 0.018])
     cb = fig.colorbar(phase_im, cax=cax, orientation="horizontal")
     cb.set_ticks([0.0, np.pi, TWOPI])
     cb.set_ticklabels(["0", "π", "2π"])
