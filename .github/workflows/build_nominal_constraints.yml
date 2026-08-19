@@ -8,6 +8,7 @@ on:
       - .github/workflows/build_nominal_constraints.yml
       - tools/build_phase2l_nominal_constraints.py
       - tools/build_phase2m_nominal_constraint_cross_sections.py
+      - tools/build_phase2n_constraint_route_panel.py
       - tools/audit_phase2n_ideal_vs_nominal_route.py
       - tools/presentation_phase2j_style.py
       - vbb_study/digital_twin/vortex_system_route.py
@@ -44,6 +45,10 @@ jobs:
           python tools/build_phase2l_nominal_constraints.py \
             --grid-n 2048 \
             --output-dir outputs/figures/nominal_constraints
+          # Replace the historical compact ladder with the corrected physical-stage panel.
+          python tools/build_phase2n_constraint_route_panel.py \
+            --grid-n 2048 \
+            --output-dir outputs/figures/nominal_constraints
           python tools/build_phase2m_nominal_constraint_cross_sections.py \
             --grid-n 2048 \
             --output-dir outputs/figures/nominal_constraints
@@ -53,6 +58,7 @@ jobs:
           test -f outputs/figures/nominal_constraints/01_ideal_vs_nominal_constraints_B0_V1_V3.png
           test -f outputs/figures/nominal_constraints/02_V3_propagation_ideal_vs_nominal.png
           test -f outputs/figures/nominal_constraints/03_constraint_ladder_SLM_4F.png
+          test -f outputs/figures/nominal_constraints/03_constraint_route_panel_manifest.json
           test -f outputs/figures/nominal_constraints/04_nominal_constraint_cross_sections.png
           test -f outputs/figures/nominal_constraints/04_nominal_constraint_cross_sections.csv
           test -f outputs/figures/nominal_constraints/05_ideal_vs_nominal_route_audit.json
@@ -92,3 +98,4 @@ jobs:
 # Final rebuild requested 2026-08-19: display ideal, constrained and difference as columns for each beam.
 # Cross-section rebuild requested 2026-08-19: add fixed-lab y=0 1D lineout comparison and difference curves.
 # Audit requested 2026-08-19: verify continuous ideal and nominal bench-constrained routes differ at each physical stage.
+# Route-panel correction 2026-08-19: wrap phase correctly, use native SLM pixels, draw the physical +1 iris, include the axicon, and label final output as intensity.
