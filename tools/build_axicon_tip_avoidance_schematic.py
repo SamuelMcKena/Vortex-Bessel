@@ -1,10 +1,11 @@
 """Render a slide-ready rounded-apex avoidance schematic.
 
-The axicon is drawn with the same integrated smooth rounded/blunted apex used in
-the original rounded-tip presentation schematic. No circular insert or defect
-ring is overlaid on the tip. The two panels compare ordinary B0 illumination
-with a hollow non-vortex l=0 input that clears the rounded apex while retaining
-the conical rays needed to reconstruct a bright-centred Bessel field.
+The axicon is drawn as a single conical body whose final sharp-apex region is
+replaced by a smooth rounded/blunted cap. The cap remains within the envelope of
+the corresponding ideal sharp cone: no circle, bulb, insert, or protruding tip is
+overlaid. The two panels compare ordinary B0 illumination with a hollow
+non-vortex l=0 input that clears the rounded apex while retaining the conical
+rays needed to reconstruct a bright-centred Bessel field.
 """
 from pathlib import Path
 import numpy as np
@@ -42,21 +43,43 @@ def render(output: Path):
         p.set_path_effects([pe.withStroke(linewidth=6,foreground=color,alpha=.06)])
         ax.add_patch(p)
 
-    def rounded_tip_axicon(cx,cy,h=3.35,w=1.75):
+    def rounded_tip_axicon(cx,cy,h=3.35,w=1.75,round_height=.34):
+        """Single-body axicon with a recessed smooth rounded apex.
+
+        The upper/lower tangent points lie on the original ideal-cone flanks.
+        The cubic cap replaces the final sharp region and never extends beyond
+        the x-position of the ideal sharp apex.
+        """
         x_left=cx-w/2
-        x_shoulder=cx+w/2-.35
-        x_tip=cx+w/2+.08
-        y_top=cy+h/2; y_bottom=cy-h/2
+        x_apex=cx+w/2
+        y_top=cy+h/2
+        y_bottom=cy-h/2
+
+        # Pick symmetric tangent points on the straight cone flanks.
+        y_tan=float(round_height)
+        flank_fraction=1.0-y_tan/(h/2.0)
+        x_tan=x_left+flank_fraction*(x_apex-x_left)
+
+        # One smooth rounded cap replaces the final tip.  Both Bezier control
+        # points remain just behind the ideal sharp apex, so the rounded region
+        # reads as a blunted cone rather than a protruding bulb/nipple.
+        cap_x=x_apex-0.035
         verts=[
-            (x_left,y_top),(x_shoulder,cy+.28),
-            (x_shoulder+.12,cy+.24),(x_tip-.03,cy+.13),(x_tip,cy),
-            (x_tip-.03,cy-.13),(x_shoulder+.12,cy-.24),(x_shoulder,cy-.28),
-            (x_left,y_bottom),(x_left,y_top)
+            (x_left,y_top),
+            (x_tan,cy+y_tan),
+            (cap_x,cy+0.22),
+            (cap_x,cy-0.22),
+            (x_tan,cy-y_tan),
+            (x_left,y_bottom),
+            (x_left,y_top),
         ]
-        codes=[MplPath.MOVETO,MplPath.LINETO,
-               MplPath.CURVE4,MplPath.CURVE4,MplPath.CURVE4,
-               MplPath.CURVE4,MplPath.CURVE4,MplPath.CURVE4,
-               MplPath.LINETO,MplPath.CLOSEPOLY]
+        codes=[
+            MplPath.MOVETO,
+            MplPath.LINETO,
+            MplPath.CURVE4,MplPath.CURVE4,MplPath.CURVE4,
+            MplPath.LINETO,
+            MplPath.CLOSEPOLY,
+        ]
         patch=PathPatch(MplPath(verts,codes),facecolor="#173b5d",edgecolor=BLUE,lw=1.7,alpha=.95,zorder=9)
         patch.set_path_effects([
             pe.withStroke(linewidth=12,foreground=BLUE,alpha=.035),
@@ -64,7 +87,7 @@ def render(output: Path):
             pe.withStroke(linewidth=3.2,foreground=BLUE,alpha=.13)])
         ax.add_patch(patch)
         glow_line([x_left,x_left],[y_bottom,y_top],BLUE,1.55,z=10)
-        return x_tip
+        return cap_x
 
     def beam_gradient(x0,x1,yc,sigma,color,annular=False):
         nx,ny=700,240
