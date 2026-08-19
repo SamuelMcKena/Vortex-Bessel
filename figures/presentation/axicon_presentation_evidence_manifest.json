@@ -1,5 +1,5 @@
 {
-  "outcome": "AXICON-PRESENTATION-EVIDENCE-AUDIT-V1",
+  "outcome": "AXICON-PRESENTATION-EVIDENCE-AUDIT-V2",
   "grid_n": 2048,
   "z_ref_m": 0.06,
   "figures": [
@@ -10,23 +10,34 @@
     "outputs/figures/axicon_presentation_evidence/09_tip_avoidance_three_way_audit.png",
     "outputs/figures/axicon_presentation_evidence/09b_tip_avoidance_three_way_1D_intensity.png"
   ],
+  "decentre_xy_display_halfwidth_m": 0.0002,
+  "decentre_xy_display_centres_m": [
+    -0.0005,
+    0.0,
+    0.0005
+  ],
+  "decentre_xz_fixed_lab": true,
   "decentre_1d": [
     {
       "label": "-500 \u00b5m",
-      "centroid_x_m": -0.00029059848951751294,
-      "peak_ratio": 0.7109975099377863
+      "imposed_decentre_m": -0.0005,
+      "centroid_x_m": -0.000290598489517513,
+      "peak_ratio": 0.7109975099377861
     },
     {
       "label": "aligned",
-      "centroid_x_m": 7.568870218811776e-08,
+      "imposed_decentre_m": 0.0,
+      "centroid_x_m": 7.568870218810655e-08,
       "peak_ratio": 1.0
     },
     {
       "label": "+500 \u00b5m",
+      "imposed_decentre_m": 0.0005,
       "centroid_x_m": 0.0002907451088218217,
-      "peak_ratio": 0.75358652312253
+      "peak_ratio": 0.7535865231225303
     }
   ],
+  "rounded_tip_xy_display_halfwidth_m": 0.00018,
   "rounded_tip_1d": [
     {
       "label": "ideal sharp tip",
@@ -49,7 +60,7 @@
     },
     {
       "label": "straight-through control (no axicon)",
-      "peak_ratio_to_rounded_tip": 0.002834632357772455,
+      "peak_ratio_to_rounded_tip": 0.0028346323577724567,
       "fraction_incident_power_inside_tip": 0.019836991656745805
     },
     {
