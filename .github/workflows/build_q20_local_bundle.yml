@@ -37,6 +37,7 @@ jobs:
             q20_phase_physics.py
             single_transverse_phase_forward_test.py
             rebuild_q20_presentation_from_bmg.py
+            make_q20_inverse_presentation_quad.py
             q20_hardware_calibration_template.json
             Q20_LAB_CALIBRATION_PROTOCOL.md
             Q20_PHASE_RECONSTRUCTION_PHYSICS.md
@@ -124,6 +125,11 @@ jobs:
           - angular_phase_rows_rad.npy
           - slm2_correction_phase_rad.npy (only if all hardware gates are satisfied)
           - correction_manifest.json
+
+          Presentation helper:
+          - make_q20_inverse_presentation_quad.py regenerates the clean measured / best-fit /
+            predicted-after-correction / ideal-target figure and writes quantitative
+            before -> after correlation/RMSE metrics from the same arrays.
 
           To verify the packaged code itself, double-click RUN_TESTS.bat.
           EOF
