@@ -101,3 +101,5 @@ jobs:
           git commit -m 'Record axicon decentre artifact run' || exit 0
           git pull --rebase origin main
           git push origin HEAD:main
+
+# Triggered after the workflow was added so the focused 2048-grid render runs unambiguously.
