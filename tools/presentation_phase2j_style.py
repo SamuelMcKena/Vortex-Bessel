@@ -181,3 +181,7 @@ def validate_palette_has_no_cool_segment() -> None:
         raise RuntimeError("Phase 2J thermal palette contains a blue-dominant segment")
     if np.any(samples[:, 1] > samples[:, 0] + 0.08):
         raise RuntimeError("Phase 2J thermal palette contains a green/cyan-dominant segment")
+
+
+# Presentation-only touch: forces the nominal-constraint workflow to rebuild
+# figure 03 with the corrected physical-stage renderer introduced on 2026-08-19.
