@@ -1,5 +1,5 @@
 {
-  "outcome": "AXICON-PRESENTATION-EVIDENCE-V3-ROUNDED-TIP-PHYSICS-AUDIT",
+  "outcome": "AXICON-PRESENTATION-EVIDENCE-V4-MATCHED-SHARP-ROUNDED-CONTROLS",
   "grid_n": 2048,
   "z_ref_m": 0.06,
   "figures": [
@@ -56,41 +56,40 @@
       "peak_ratio_to_sharp": 1.2933533727324136
     }
   ],
-  "tip_avoidance_audit": [
+  "tip_avoidance_matched_control_audit": [
     {
-      "label": "sharp B0",
+      "label": "B0",
       "fraction_incident_power_inside_200um_tip": 0.019836991656745805,
-      "z60_peak_ratio_to_sharp_B0": 1.0,
-      "peak_vs_z_modulation_cv_20_to_100mm": 0.1442393705781976,
-      "fixed_support_retained_power_fraction": 0.9999995039285036
+      "rounded_to_sharp_peak_ratio_z60": 1.015734576346874,
+      "rounded_to_sharp_peak_ratio_rms_deviation_20_to_100mm": 0.05014920730697102,
+      "rounded_to_sharp_peak_ratio_max_abs_deviation_20_to_100mm": 0.21379593726558,
+      "sharp_fixed_support_retained_power_fraction": 0.9999995039285036,
+      "rounded_fixed_support_retained_power_fraction": 0.9999999437889381
     },
     {
-      "label": "rounded B0",
-      "fraction_incident_power_inside_200um_tip": 0.019836991656745805,
-      "z60_peak_ratio_to_sharp_B0": 1.015734576346874,
-      "peak_vs_z_modulation_cv_20_to_100mm": 0.14279581365245503,
-      "fixed_support_retained_power_fraction": 0.9999999437889381
-    },
-    {
-      "label": "rounded V1",
+      "label": "natural V1",
       "fraction_incident_power_inside_200um_tip": 0.014657889657233341,
-      "z60_peak_ratio_to_sharp_B0": 0.3635845007054768,
-      "peak_vs_z_modulation_cv_20_to_100mm": 0.1369984919802649,
-      "fixed_support_retained_power_fraction": 0.9999999330497593
+      "rounded_to_sharp_peak_ratio_z60": 1.0149523368065037,
+      "rounded_to_sharp_peak_ratio_rms_deviation_20_to_100mm": 0.05010035158338761,
+      "rounded_to_sharp_peak_ratio_max_abs_deviation_20_to_100mm": 0.1991333843619194,
+      "sharp_fixed_support_retained_power_fraction": 0.999999929776872,
+      "rounded_fixed_support_retained_power_fraction": 0.9999999330497593
     },
     {
-      "label": "rounded wide V1",
+      "label": "wide-core V1",
       "fraction_incident_power_inside_200um_tip": 0.00011637307207233973,
-      "z60_peak_ratio_to_sharp_B0": 0.37562947280130066,
-      "peak_vs_z_modulation_cv_20_to_100mm": 0.18668039495759295,
-      "fixed_support_retained_power_fraction": 0.999999930725648
+      "rounded_to_sharp_peak_ratio_z60": 1.0138482043484485,
+      "rounded_to_sharp_peak_ratio_rms_deviation_20_to_100mm": 0.09378019008908166,
+      "rounded_to_sharp_peak_ratio_max_abs_deviation_20_to_100mm": 0.46546137664663845,
+      "sharp_fixed_support_retained_power_fraction": 0.9999999304599897,
+      "rounded_fixed_support_retained_power_fraction": 0.999999930725648
     }
   ],
   "tip_radius_m": 0.0002,
   "wide_vortex_core_m": 0.00026,
   "literature_basis": [
-    "Brzobohaty et al., Optics Express 16, 12688-12700 (2008), DOI 10.1364/OE.16.012688",
-    "Rao and Samanta, Optics Letters 43, 3029-3032 (2018), hollow-input suppression of axicon-tip modulation"
+    "Brzobohaty, Cizmar and Zemanek, Optics Express 16, 12688-12700 (2008), DOI 10.1364/OE.16.012688",
+    "Rao and Samanta, Optics Letters 43, 3029-3032 (2018), DOI 10.1364/OL.43.003029"
   ],
   "claim_boundary": "wide-core V1 is an axicon-plane complex-field planning target; calibrated phase-only SLM realisation is not claimed"
 }
