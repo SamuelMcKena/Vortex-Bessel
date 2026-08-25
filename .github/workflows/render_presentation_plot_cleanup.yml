@@ -1,0 +1,79 @@
+name: Render final presentation plot cleanup
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - tools/render_presentation_plot_cleanup.py
+      - tools/build_phase2l_nominal_constraints.py
+      - tools/build_axicon_presentation_evidence_v3.py
+      - tools/presentation_phase2j_style.py
+      - .github/workflows/render_presentation_plot_cleanup.yml
+
+permissions:
+  contents: write
+
+env:
+  MPLBACKEND: Agg
+
+concurrency:
+  group: presentation-plot-cleanup
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install numerical environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-report.txt
+          python -m pip install -e . --no-deps
+
+      - name: Render cleaned presentation figures
+        run: |
+          rm -rf outputs/figures/presentation_cleanup
+          python tools/render_presentation_plot_cleanup.py \
+            --grid-n 2048 \
+            --output-dir outputs/figures/presentation_cleanup
+          test -f outputs/figures/presentation_cleanup/02_V3_propagation_ideal_vs_nominal.png
+          test -f outputs/figures/presentation_cleanup/04_V1_axicon_decentre_fixed_lab_thermal_tight.png
+
+      - name: Upload exact rendered figures
+        uses: actions/upload-artifact@v4
+        with:
+          name: presentation_plot_cleanup
+          path: |
+            outputs/figures/presentation_cleanup/02_V3_propagation_ideal_vs_nominal.png
+            outputs/figures/presentation_cleanup/04_V1_axicon_decentre_fixed_lab_thermal_tight.png
+          if-no-files-found: error
+
+      - name: Promote cleaned figures
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p figures/presentation/nominal_constraints figures/presentation chat_presentation_cleanup
+          cp outputs/figures/presentation_cleanup/02_V3_propagation_ideal_vs_nominal.png \
+             figures/presentation/nominal_constraints/02_V3_propagation_ideal_vs_nominal.png
+          cp outputs/figures/presentation_cleanup/04_V1_axicon_decentre_fixed_lab_thermal_tight.png \
+             figures/presentation/04_V1_axicon_decentre_fixed_lab_thermal_tight.png
+          printf '%s\n' '${{ github.run_id }}' > chat_presentation_cleanup/RUN_ID.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add figures/presentation chat_presentation_cleanup/RUN_ID.txt
+          if ! git diff --cached --quiet; then
+            git commit -m 'Promote cleaned nominal difference and decentre figures'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
