@@ -20,7 +20,7 @@ from vbb_study.equations.fields import make_xy_grid
 from vbb_study.slm_model import pixelate
 
 TWOPI=2*np.pi; Z_REF_M=60e-3; Z_VALUES_M=np.linspace(5e-3,120e-3,120); PROP_COORD_M=np.linspace(-0.18e-3,0.18e-3,601)
-WINDOW_M=10e-3; XY_HALF_M=0.18e-3; CMAP=style.CMAP; TEXT=style.TEXT; MUTED=style.MUTED; BG=style.FIG_BG
+WINDOW_M=10e-3; XY_HALF_M=0.18e-3; CMAP=style.CMAP; DIFF_CMAP='cividis'; TEXT=style.TEXT; MUTED=style.MUTED; BG=style.FIG_BG
 PNORM=colors.PowerNorm(gamma=.55,vmin=0,vmax=1)
 
 def _ell(c): return {'B0':0,'V1':1,'V3':3}[c]
@@ -70,7 +70,7 @@ def ideal_vs_nominal(out,n):
             im=q.imshow(
                 crop,origin='lower',
                 extent=[x[0]*1e3,x[-1]*1e3,x[0]*1e3,x[-1]*1e3],
-                cmap=CMAP,norm=norm,
+                cmap=DIFF_CMAP if c==2 else CMAP,norm=norm,
                 interpolation=style.DISPLAY_INTERPOLATION,aspect='equal'
             )
             if r==0:
@@ -123,7 +123,7 @@ def v3_prop(out,n):
     for q in ax:style.style_ax(q)
     for q,v,t in [(ax[0],ia,'Continuous ideal'),(ax[1],ib,'Nominal bench-constrained')]:
         q.imshow(v.T,origin='lower',extent=[z[0],z[-1],x[0],x[-1]],cmap=CMAP,norm=PNORM,interpolation=style.DISPLAY_INTERPOLATION,aspect='auto');q.set_title(t,color=TEXT,fontsize=12.5,weight='bold');q.set_xlabel('z from axicon (mm)');q.axvline(60,color='white',alpha=.25,ls='--',lw=.8)
-    ax[0].set_ylabel('x at fixed y=0 (mm)'); im=ax[2].imshow(d.T,origin='lower',extent=[z[0],z[-1],x[0],x[-1]],cmap=CMAP,vmin=0,vmax=max(float(np.max(d)),1e-12),interpolation=style.DISPLAY_INTERPOLATION,aspect='auto'); ax[2].set_title('Absolute morphology difference',color=TEXT,fontsize=12.5,weight='bold'); ax[2].set_xlabel('z from axicon (mm)'); cb=fig.colorbar(im,ax=ax[2],pad=.02,shrink=.88); cb.ax.tick_params(colors=MUTED,labelsize=7); cb.set_label('|I_nominal − I_ideal|',color=MUTED,fontsize=8)
+    ax[0].set_ylabel('x at fixed y=0 (mm)'); im=ax[2].imshow(d.T,origin='lower',extent=[z[0],z[-1],x[0],x[-1]],cmap=DIFF_CMAP,vmin=0,vmax=max(float(np.max(d)),1e-12),interpolation=style.DISPLAY_INTERPOLATION,aspect='auto'); ax[2].set_title('Absolute morphology difference',color=TEXT,fontsize=12.5,weight='bold'); ax[2].set_xlabel('z from axicon (mm)'); cb=fig.colorbar(im,ax=ax[2],pad=.02,shrink=.88); cb.ax.tick_params(colors=MUTED,labelsize=7); cb.set_label('|I_nominal − I_ideal|',color=MUTED,fontsize=8)
     fig.suptitle('V3 propagation: ideal vs nominal experimental constraints',color=TEXT,fontsize=17,weight='bold',y=.95); fig.text(.5,.865,'Same physical coordinates and propagation range; main panels peak-normalised for morphology',ha='center',color=MUTED,fontsize=9.2)
     p=out/'02_V3_propagation_ideal_vs_nominal.png';fig.savefig(p,dpi=480,bbox_inches='tight',facecolor=BG,pad_inches=.06);plt.close(fig);return p
 
