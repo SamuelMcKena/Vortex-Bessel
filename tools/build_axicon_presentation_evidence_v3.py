@@ -213,7 +213,6 @@ def build_decentre(out: Path, grid_n: int):
             DECENTRE_X_HALF_M, DECENTRE_Y_HALF_M,
         )
         style.draw_xy(axes[0, col], crop, extent, c["label"], peak=ref_xy, show_y=(col == 0))
-        axes[0, col].scatter([c["dec"] * 1e3], [0], s=28, facecolors="none", edgecolors="white", linewidths=0.9)
         style.draw_xz(
             axes[1, col], c["xz"], suite.DECENTRE_COORD_M, suite.Z_VALUES_M,
             peak=ref_xz, show_y=(col == 0), z_ref_m=Z_REF_M,
