@@ -137,11 +137,11 @@ def compose(out: Path, generated: Mapping[str, Path]) -> tuple[Path, Path]:
     for eq, number, y, size in equations:
         fig.text(0.528, y, eq, color=INK, fontsize=size, va="top")
         fig.text(0.936, y, number, color=CORAL, fontsize=20, ha="right", va="top")
-    fig.text(
-        0.528, 0.704,
-        "Eqs. (1-2) describe the programmable vortex and carrier phases; Eq. (3) propagates the complex field with the angular-spectrum transfer function. Eq. (4) summarises the inverse step: a parameterised forward model is fitted across measured z-planes and the recovered residual phase is tested as a conjugate correction.",
-        color=MUTED, fontsize=16.4, va="bottom", linespacing=1.15,
+    eq_note = (
+        "Eqs. (1-3) define the programmed and propagated complex field. "
+        "Eq. (4) summarises multi-plane model fitting and conjugate phase correction."
     )
+    fig.text(0.528, 0.704, textwrap.fill(eq_note, 76), color=MUTED, fontsize=15.8, va="bottom", linespacing=1.14)
 
     # 1. Bench-matched route.
     _section(fig, 0.045, 0.672, "1  Physics-based optical route", TEAL, width=0.22)
