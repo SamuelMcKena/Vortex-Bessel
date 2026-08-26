@@ -7,6 +7,7 @@ on:
       - poster/current-progress-poster
     paths:
       - "tools/build_phd_progress_poster.py"
+      - "tools/compose_phd_progress_poster.py"
       - ".github/workflows/build_phd_progress_poster.yml"
       - "bessel_twin_core.py"
       - "publication_diagnostics.py"
@@ -36,14 +37,15 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e .
 
-      - name: Compile poster builder
-        run: python -m py_compile tools/build_phd_progress_poster.py
+      - name: Compile poster tools
+        run: |
+          python -m py_compile tools/build_phd_progress_poster.py
+          python -m py_compile tools/compose_phd_progress_poster.py
 
       - name: Build poster and poster-specific figures
         run: |
-          python tools/build_phd_progress_poster.py \
-            --out outputs/poster/current_progress \
-            --quick
+          python tools/compose_phd_progress_poster.py \
+            --out outputs/poster/current_progress
 
       - name: List poster artifact
         if: always()
