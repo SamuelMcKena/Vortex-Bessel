@@ -1,0 +1,60 @@
+name: Build PhD current progress poster
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - poster/current-progress-poster
+    paths:
+      - "tools/build_phd_progress_poster.py"
+      - ".github/workflows/build_phd_progress_poster.yml"
+      - "bessel_twin_core.py"
+      - "publication_diagnostics.py"
+      - "vbb_study/**"
+      - "figures/presentation/**"
+      - "figures/experimental/q20_aberration/**"
+
+permissions:
+  contents: read
+
+jobs:
+  build-poster:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Install current project
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+
+      - name: Compile poster builder
+        run: python -m py_compile tools/build_phd_progress_poster.py
+
+      - name: Build poster and poster-specific figures
+        run: |
+          python tools/build_phd_progress_poster.py \
+            --out outputs/poster/current_progress \
+            --quick
+
+      - name: List poster artifact
+        if: always()
+        run: |
+          find outputs/poster/current_progress -maxdepth 2 -type f -printf "%p\t%k KB\n" | sort || true
+
+      - name: Upload poster pack
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vortex-bessel-current-progress-poster
+          path: outputs/poster/current_progress
+          if-no-files-found: error
+          retention-days: 14
