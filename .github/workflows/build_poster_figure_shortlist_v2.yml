@@ -7,6 +7,7 @@ on:
       - poster/figure-curation-v2
     paths:
       - "tools/build_poster_figure_shortlist_v2.py"
+      - "tools/refine_poster_shortlist_v21.py"
       - ".github/workflows/build_poster_figure_shortlist_v2.yml"
       - "bessel_twin_core.py"
       - "publication_diagnostics.py"
@@ -36,11 +37,15 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e .
 
-      - name: Compile shortlist builder
-        run: python -m py_compile tools/build_poster_figure_shortlist_v2.py
+      - name: Compile shortlist builders
+        run: |
+          python -m py_compile tools/build_poster_figure_shortlist_v2.py
+          python -m py_compile tools/refine_poster_shortlist_v21.py
 
       - name: Build figure shortlist
-        run: python tools/build_poster_figure_shortlist_v2.py
+        run: |
+          python tools/build_poster_figure_shortlist_v2.py
+          python tools/refine_poster_shortlist_v21.py
 
       - name: List outputs
         if: always()
