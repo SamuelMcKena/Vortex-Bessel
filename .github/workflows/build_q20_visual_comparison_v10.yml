@@ -1,0 +1,67 @@
+name: Build q20 visual comparison v10
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - poster/figure-curation-v2
+    paths:
+      - "tools/build_q20_visual_comparison_v10.py"
+      - "tools/benchmark_q20_integrated_correction_v6.py"
+      - ".github/workflows/build_q20_visual_comparison_v10.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install matplotlib numpy pandas pillow scipy
+      - name: Compile
+        run: |
+          python -m py_compile tools/benchmark_q20_integrated_correction_v6.py
+          python -m py_compile tools/build_q20_visual_comparison_v10.py
+      - name: Rebuild final q20 benchmark
+        run: python tools/benchmark_q20_integrated_correction_v6.py
+      - name: Build visual comparison
+        run: python tools/build_q20_visual_comparison_v10.py
+      - name: Verify outputs
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import json
+          p=Path('outputs/poster/final_evidence_v9/09_q20_target_original_miao_complete.png')
+          j=Path('outputs/poster/final_evidence_v9/09_q20_target_original_miao_complete.json')
+          if not p.exists() or not j.exists():
+              raise SystemExit('comparison output missing')
+          im=Image.open(p)
+          print('PNG pixels:', im.size)
+          if im.width < 7000 or im.height < 4500:
+              raise SystemExit(f'poster export unexpectedly small: {im.size}')
+          meta=json.loads(j.read_text())
+          print(json.dumps(meta, indent=2))
+          complete=meta['source_summary']['complete_model']['mean_pearson_r']
+          miao=meta['source_summary']['miao_only']['mean_pearson_r']
+          if complete <= miao:
+              raise SystemExit('complete model does not improve on Miao baseline')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: q20-visual-comparison-v10
+          path: |
+            outputs/poster/final_evidence_v9/09_q20_target_original_miao_complete.png
+            outputs/poster/final_evidence_v9/09_q20_target_original_miao_complete.pdf
+            outputs/poster/final_evidence_v9/09_q20_target_original_miao_complete.json
+          retention-days: 14
