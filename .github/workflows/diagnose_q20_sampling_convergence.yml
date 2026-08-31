@@ -1,0 +1,52 @@
+name: Diagnose q20 transverse sampling convergence
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - poster/figure-curation-v2
+    paths:
+      - "tools/diagnose_q20_sampling_convergence.py"
+      - "tools/diagnose_miao_full_route_compatibility.py"
+      - "tools/benchmark_q20_miao_vs_digital_twin.py"
+      - ".github/workflows/diagnose_q20_sampling_convergence.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install numpy scipy matplotlib pandas pillow
+      - name: Run convergence study
+        run: python tools/diagnose_q20_sampling_convergence.py
+      - name: Inspect convergence
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads(Path('outputs/validation/q20_sampling_convergence/summary.json').read_text())
+          print(json.dumps(s,indent=2))
+          vals={r['N']:r for r in s['results']}
+          # Diagnostic: high-resolution result must be finite.  Do not force a
+          # desired trend; the purpose is to decide the production grid.
+          if not (0 <= vals[1024]['mean_pearson_r'] <= 1): raise SystemExit('invalid 1024 result')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: q20-sampling-convergence
+          path: outputs/validation/q20_sampling_convergence
+          if-no-files-found: warn
+          retention-days: 14
