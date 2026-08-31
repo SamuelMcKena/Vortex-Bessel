@@ -1,0 +1,73 @@
+name: Benchmark q20 full-model residual refinement v1
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - poster/figure-curation-v2
+    paths:
+      - "tools/benchmark_q20_full_model_phase_refinement_v1.py"
+      - "tools/benchmark_q20_method_physics_v4.py"
+      - "tools/benchmark_q20_method_physics_v3.py"
+      - "tools/benchmark_q20_method_physics_v2.py"
+      - "tools/benchmark_q20_miao_vs_digital_twin.py"
+      - ".github/workflows/benchmark_q20_full_model_phase_refinement_v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install matplotlib numpy pandas pillow scipy
+      - name: Compile
+        run: python -m py_compile tools/benchmark_q20_full_model_phase_refinement_v1.py
+      - name: Run full-model residual refinement
+        run: python tools/benchmark_q20_full_model_phase_refinement_v1.py
+      - name: Verify held-out physics
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads(Path('outputs/validation/q20_full_model_phase_refinement_v1/summary.json').read_text())
+          print(json.dumps({
+              'physical':s['physical_estimation']['selected'],
+              'phase_rms':s['full_model_refinement']['phase_rms_to_truth_rad'],
+              'heldout':s['full_model_refinement']['heldout'],
+              'miao':s['miao_after_physical_adjustment_metrics'],
+              'full_model':s['full_model_refinement_metrics'],
+              'oracle':s['oracle_phase_only'],
+          },indent=2))
+          if s['physical_estimation']['selected'].get('beam_radius_scale') != 0.85:
+              raise SystemExit('physical beam-radius recovery failed')
+          if s['physical_estimation']['selected'].get('axicon_lateral_decentre_x') != 0.00025:
+              raise SystemExit('physical axicon recovery failed')
+          # Training and held-out planes are deliberately separate.  A residual
+          # model that only fits its optimization planes is not accepted.
+          if s['full_model_refinement']['heldout']['mean_pearson_r'] < 0.95:
+              raise SystemExit('full-model residual estimate does not generalize to held-out z planes')
+          if s['full_model_refinement']['phase_rms_to_truth_rad'] > 0.18:
+              raise SystemExit('full-model residual phase recovery exceeds 0.18 rad RMS')
+          if s['full_model_refinement_metrics']['mean_pearson_r'] <= s['miao_after_physical_adjustment_metrics']['mean_pearson_r']:
+              raise SystemExit('full-model correction does not improve on Miao baseline')
+          if s['full_model_refinement_metrics']['mean_nrmse'] >= s['miao_after_physical_adjustment_metrics']['mean_nrmse']:
+              raise SystemExit('full-model correction does not reduce NRMSE versus Miao baseline')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: q20-full-model-phase-refinement-v1
+          path: outputs/validation/q20_full_model_phase_refinement_v1
+          if-no-files-found: warn
+          retention-days: 14
