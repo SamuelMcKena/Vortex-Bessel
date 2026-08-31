@@ -8,7 +8,7 @@ identifiable from measured or synthetic multi-plane intensity data.
 The intended workflow is:
 
     target z-stack -> candidate SystemErrorConfig values -> forward model ->
-    plane-normalised morphology loss -> best physical parameters + diagnostics
+    morphology / feature-aware loss -> best physical parameters + diagnostics
 
 Synthetic benchmarks can therefore report injected versus recovered axicon
 decentre, beam pointing angle, SLM registration offset, 4F iris offset, or small
@@ -25,6 +25,7 @@ from typing import Callable, Sequence
 import numpy as np
 
 EPS = np.finfo(float).tiny
+StackLoss = Callable[[np.ndarray, np.ndarray], float]
 
 
 @dataclass(frozen=True)
@@ -127,19 +128,23 @@ def grid_search_parameter(
     candidate_values: Sequence[float],
     target_stack: np.ndarray,
     simulate: Callable[[float], np.ndarray],
+    loss_fn: StackLoss | None = None,
 ) -> ParameterFitResult:
     """Fit one physical parameter by replaying candidates through the forward model.
 
     ``simulate(value)`` must return an intensity stack on exactly the same fixed
     laboratory coordinates and z planes as ``target_stack``.  No recentering is
-    performed because centroid walk is part of the diagnostic signal.
+    performed because centroid walk is part of the diagnostic signal.  A custom
+    ``loss_fn`` may combine image morphology with calibrated feature traces such
+    as total power or centroid motion; the default is morphology-only RMSE.
     """
 
     values = np.asarray(list(candidate_values), dtype=float)
     if values.ndim != 1 or values.size < 3:
         raise ValueError("candidate_values must contain at least three 1-D values")
     target = np.asarray(target_stack, dtype=float)
-    costs = np.asarray([morphology_rmse(simulate(float(v)), target) for v in values], dtype=float)
+    loss = morphology_rmse if loss_fn is None else loss_fn
+    costs = np.asarray([float(loss(simulate(float(v)), target)) for v in values], dtype=float)
     order = np.argsort(costs)
     best_index = int(order[0])
     best_cost = float(costs[best_index])
@@ -168,13 +173,15 @@ def grid_search_two_parameters(
     values_y: Sequence[float],
     target_stack: np.ndarray,
     simulate: Callable[[float, float], np.ndarray],
+    loss_fn: StackLoss | None = None,
 ) -> TwoParameterFitResult:
     """Fit two selected physical parameters by a full bounded grid search.
 
     The first parameter indexes columns of the returned cost array and the second
     indexes rows.  Keeping the complete landscape is useful for diagnosing broad
     valleys and parameter degeneracy instead of reporting only an optimizer's
-    point estimate.
+    point estimate.  ``loss_fn`` can be used for a feature-aware objective while
+    retaining the same bounded search and diagnostics.
     """
 
     vx = np.asarray(list(values_x), dtype=float)
@@ -182,10 +189,11 @@ def grid_search_two_parameters(
     if vx.ndim != 1 or vy.ndim != 1 or vx.size < 3 or vy.size < 3:
         raise ValueError("values_x and values_y must each contain at least three values")
     target = np.asarray(target_stack, dtype=float)
+    loss = morphology_rmse if loss_fn is None else loss_fn
     costs = np.empty((vy.size, vx.size), dtype=float)
     for iy, y in enumerate(vy):
         for ix, x in enumerate(vx):
-            costs[iy, ix] = morphology_rmse(simulate(float(x), float(y)), target)
+            costs[iy, ix] = float(loss(simulate(float(x), float(y)), target))
 
     flat_order = np.argsort(costs, axis=None)
     best_flat = int(flat_order[0])
