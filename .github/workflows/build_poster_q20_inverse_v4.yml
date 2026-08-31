@@ -1,0 +1,65 @@
+name: Build poster q20 inverse v4
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - poster/figure-curation-v2
+    paths:
+      - "tools/build_poster_q20_inverse_v4.py"
+      - "figures/experimental/q20_aberration/single_mask/**"
+      - "figures/experimental/q20_aberration/validation/**"
+      - "figures/experimental/q20_aberration/reconstruction/**"
+      - ".github/workflows/build_poster_q20_inverse_v4.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install render dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install matplotlib numpy pillow
+      - name: Compile
+        run: python -m py_compile tools/build_poster_q20_inverse_v4.py
+      - name: Build visual-first q20 figure
+        run: python tools/build_poster_q20_inverse_v4.py
+      - name: Verify poster export
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          from PIL import Image
+          root = Path('outputs/poster/q20_inverse_v4')
+          p = root/'poster_q20_correction_visual.png'
+          pdf = root/'poster_q20_correction_visual.pdf'
+          m = json.loads((root/'manifest.json').read_text())
+          if not p.exists() or not pdf.exists():
+              raise SystemExit('missing final q20 v4 export')
+          with Image.open(p) as im:
+              print('final PNG:', im.size, im.info.get('dpi'))
+              if min(im.size) < 3000:
+                  raise SystemExit(f'poster asset too small: {im.size}')
+          if m['scope']['programmed_qtheta_removed_from_residual'] is not True:
+              raise SystemExit('qθ scope regression')
+          PY
+      - name: List outputs
+        if: always()
+        run: find outputs/poster/q20_inverse_v4 -maxdepth 2 -type f -printf "%p\t%k KB\n" | sort || true
+      - name: Upload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: poster-q20-inverse-v4
+          path: outputs/poster/q20_inverse_v4
+          if-no-files-found: error
+          retention-days: 14
