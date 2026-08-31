@@ -1,0 +1,76 @@
+name: Build poster physical fit v1
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - poster/figure-curation-v2
+    paths:
+      - "vbb_study/digital_twin/hierarchical_physical_fit.py"
+      - "vbb_study/digital_twin/physical_error_inference.py"
+      - "vbb_study/digital_twin/vortex_system_error_sweeps.py"
+      - "vbb_study/digital_twin/vortex_system_route.py"
+      - "tools/build_poster_physical_fit_v1.py"
+      - "tests/test_hierarchical_physical_fit.py"
+      - ".github/workflows/build_poster_physical_fit_v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install project and render dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install pytest pillow matplotlib scipy
+      - name: Compile new fitting bridge
+        run: |
+          python -m py_compile vbb_study/digital_twin/hierarchical_physical_fit.py
+          python -m py_compile tools/build_poster_physical_fit_v1.py
+      - name: Test hierarchy and config accumulation
+        run: python -m pytest -q tests/test_hierarchical_physical_fit.py
+      - name: Build real optical synthetic benchmark
+        run: python tools/build_poster_physical_fit_v1.py
+      - name: Verify physical recovery and final resolution
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          from PIL import Image
+          root=Path('outputs/poster/physical_fit_v1')
+          m=json.loads((root/'manifest.json').read_text())
+          png=root/'physical_model_fit_to_zstack.png'
+          pdf=root/'physical_model_fit_to_zstack.pdf'
+          if not png.exists() or not pdf.exists():
+              raise SystemExit('missing physical-fit poster asset')
+          with Image.open(png) as im:
+              print('final PNG', im.size, im.info.get('dpi'))
+              if min(im.size) < 3500:
+                  raise SystemExit(f'asset too small: {im.size}')
+          if m['registry_total_families'] < 40:
+              raise SystemExit('forward error registry unexpectedly incomplete')
+          fitted=set(m['fit']['fitted_families'])
+          expected={'beam_radius_scale','axicon_lateral_decentre_x'}
+          if fitted != expected:
+              raise SystemExit(f'physical benchmark did not recover injected families: {fitted}')
+          if m['fit']['final_cost'] >= 0.25*m['fit']['initial_cost']:
+              raise SystemExit('physical fit did not reduce the stack loss enough')
+          print('recovered', fitted)
+          print('loss',m['fit']['initial_cost'],'->',m['fit']['final_cost'])
+          PY
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: poster-physical-fit-v1
+          path: outputs/poster/physical_fit_v1
+          if-no-files-found: error
+          retention-days: 14
