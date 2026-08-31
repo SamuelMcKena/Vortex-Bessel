@@ -1,0 +1,54 @@
+name: Diagnose Miao full-route compatibility
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - poster/figure-curation-v2
+    paths:
+      - "tools/diagnose_miao_full_route_compatibility.py"
+      - "tools/benchmark_q20_miao_vs_digital_twin.py"
+      - "vbb_study/digital_twin/vortex_system_route.py"
+      - "notebooks/experimental/axicon_aberration_correction/miao_full_retrieval.py"
+      - ".github/workflows/diagnose_miao_full_route_compatibility.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install numpy scipy matplotlib pandas pillow
+      - name: Run compatibility diagnostic
+        run: python tools/diagnose_miao_full_route_compatibility.py
+      - name: Inspect
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads(Path('outputs/validation/miao_full_route_compatibility/summary.json').read_text())
+          print(json.dumps(s,indent=2))
+          # Diagnostic only: do not prescribe the answer.  The output quantifies
+          # the approximation mismatch that the next model-aware correction must
+          # account for.
+          if not (0 <= s['nominal']['mean_pearson_r'] <= 1): raise SystemExit('invalid nominal correlation')
+          if not (0 <= s['known_residual_phase']['mean_pearson_r'] <= 1): raise SystemExit('invalid aberrated correlation')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: miao-full-route-compatibility
+          path: outputs/validation/miao_full_route_compatibility
+          if-no-files-found: warn
+          retention-days: 14
