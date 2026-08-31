@@ -1,0 +1,79 @@
+name: Build poster q20 inverse v3
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - poster/figure-curation-v2
+    paths:
+      - "tools/build_poster_q20_inverse_v3.py"
+      - "figures/experimental/q20_aberration/validation/**"
+      - "figures/experimental/q20_aberration/reconstruction/**"
+      - "notebooks/experimental/axicon_aberration_correction/Q20_PHASE_RECONSTRUCTION_PHYSICS.md"
+      - ".github/workflows/build_poster_q20_inverse_v3.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install render dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install matplotlib numpy pillow
+
+      - name: Compile builder
+        run: python -m py_compile tools/build_poster_q20_inverse_v3.py
+
+      - name: Build poster-ready q20 inverse story
+        run: python tools/build_poster_q20_inverse_v3.py
+
+      - name: Verify final export resolution and scope manifest
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          from PIL import Image
+
+          root = Path('outputs/poster/q20_inverse_v3')
+          png = root / 'poster_q20_inverse_correction_story.png'
+          pdf = root / 'poster_q20_inverse_correction_story.pdf'
+          manifest_path = root / 'manifest.json'
+          if not png.exists() or not pdf.exists() or not manifest_path.exists():
+              raise SystemExit('missing final q20 poster asset')
+          with Image.open(png) as im:
+              print('final PNG', im.size, im.info.get('dpi'))
+              if min(im.size) < 2500:
+                  raise SystemExit(f'final q20 figure is too small: {im.size}')
+          m = json.loads(manifest_path.read_text())
+          scope = m['scientific_scope']
+          if scope['post_slm_camera_stack_available'] is not False:
+              raise SystemExit('scope regression: post-SLM stack must not be claimed')
+          if scope['simulated_corrected_beam_labelled_experimental'] is not False:
+              raise SystemExit('scope regression: model result must not be labelled experimental')
+          if scope['programmed_vortex_in_correction'] is not False:
+              raise SystemExit('scope regression: programmed q*theta must stay out of correction')
+          PY
+
+      - name: List outputs
+        if: always()
+        run: find outputs/poster/q20_inverse_v3 -maxdepth 1 -type f -printf "%f\t%k KB\n" | sort || true
+
+      - name: Upload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: poster-q20-inverse-v3
+          path: outputs/poster/q20_inverse_v3
+          if-no-files-found: error
+          retention-days: 14
