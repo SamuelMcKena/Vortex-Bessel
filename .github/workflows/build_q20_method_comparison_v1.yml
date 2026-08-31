@@ -1,0 +1,74 @@
+name: Build q20 correction method comparison v1
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - poster/figure-curation-v2
+    paths:
+      - "tools/benchmark_q20_miao_vs_digital_twin.py"
+      - "vbb_study/digital_twin/hierarchical_physical_fit.py"
+      - "vbb_study/digital_twin/vortex_system_route.py"
+      - "vbb_study/digital_twin/vortex_system_error_sweeps.py"
+      - "notebooks/experimental/axicon_aberration_correction/miao_full_retrieval.py"
+      - "notebooks/experimental/axicon_aberration_correction/modal_vortex_bessel.py"
+      - ".github/workflows/build_q20_method_comparison_v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install project and benchmark dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install matplotlib numpy pandas pillow scipy
+      - name: Compile benchmark
+        run: |
+          python -m py_compile tools/benchmark_q20_miao_vs_digital_twin.py
+          python -m py_compile vbb_study/digital_twin/vortex_system_route.py
+          python -m py_compile vbb_study/digital_twin/hierarchical_physical_fit.py
+      - name: Run controlled q20 comparison
+        run: python tools/benchmark_q20_miao_vs_digital_twin.py
+      - name: Verify outputs and numerical sanity
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          import math
+          from PIL import Image
+          root=Path('outputs/poster/q20_method_comparison_v1')
+          summary=json.loads((root/'summary.json').read_text())
+          for name in ('q20_miao_vs_digital_twin.png','q20_miao_vs_digital_twin.pdf','comparison_metrics_vs_z.csv'):
+              if not (root/name).exists(): raise SystemExit(f'missing {name}')
+          with Image.open(root/'q20_miao_vs_digital_twin.png') as im:
+              print('figure',im.size,im.info.get('dpi'))
+              if min(im.size) < 4000: raise SystemExit(f'figure too small: {im.size}')
+          for method in ('miao_only','digital_twin_plus_miao'):
+              for key in ('mean_pearson_r','mean_nrmse'):
+                  value=float(summary[method][key])
+                  if not math.isfinite(value): raise SystemExit(f'non-finite {method} {key}')
+          if int(summary['q']) != 20: raise SystemExit('wrong vortex charge')
+          if int(summary['fit_z_planes']) < 8: raise SystemExit('insufficient z planes')
+          selected=set(summary['physical_parameter_estimation']['selected'])
+          print('selected physical parameters',selected)
+          print('Miao',summary['miao_only']['mean_pearson_r'],summary['miao_only']['mean_nrmse'])
+          print('Hybrid',summary['digital_twin_plus_miao']['mean_pearson_r'],summary['digital_twin_plus_miao']['mean_nrmse'])
+          print('Hybrid - Miao',summary['difference_hybrid_minus_miao'])
+          PY
+      - name: Upload comparison artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: q20-method-comparison-v1
+          path: outputs/poster/q20_method_comparison_v1
+          if-no-files-found: error
+          retention-days: 14
