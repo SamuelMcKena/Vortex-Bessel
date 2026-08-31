@@ -1,0 +1,31 @@
+name: Package measured q20 poster candidates
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - poster/figure-curation-v2
+    paths:
+      - ".github/workflows/package_q20_measured_poster_evidence.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Collect measured q20 candidates
+        run: |
+          mkdir -p outputs/poster/q20_measured_candidates
+          cp figures/experimental/q20_aberration/reconstruction/annular_aberration_phase.png outputs/poster/q20_measured_candidates/
+          cp figures/experimental/q20_aberration/reconstruction/polar_measured_fit_corrected.png outputs/poster/q20_measured_candidates/
+          cp figures/experimental/q20_aberration/reconstruction/realigned_cartesian_xy_measured_fit_corrected_ideal.png outputs/poster/q20_measured_candidates/
+          cp figures/experimental/q20_aberration/validation/realigned_signed_xz_yz_measured_corrected_ideal.png outputs/poster/q20_measured_candidates/
+          cp figures/experimental/q20_aberration/validation/measured_beam_axis_trajectory.png outputs/poster/q20_measured_candidates/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: q20-measured-poster-candidates
+          path: outputs/poster/q20_measured_candidates
+          retention-days: 14
