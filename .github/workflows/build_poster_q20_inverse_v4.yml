@@ -63,3 +63,5 @@ jobs:
           path: outputs/poster/q20_inverse_v4
           if-no-files-found: error
           retention-days: 14
+
+# visual-first poster figure: no status/disclaimer cards
