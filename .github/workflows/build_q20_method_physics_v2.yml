@@ -1,0 +1,68 @@
+name: Build q20 correction physics benchmark v2
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - poster/figure-curation-v2
+    paths:
+      - "tools/benchmark_q20_miao_vs_digital_twin.py"
+      - "tools/benchmark_q20_method_physics_v2.py"
+      - "vbb_study/digital_twin/hierarchical_physical_fit.py"
+      - "vbb_study/digital_twin/vortex_system_route.py"
+      - "notebooks/experimental/axicon_aberration_correction/miao_full_retrieval.py"
+      - ".github/workflows/build_q20_method_physics_v2.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install project and benchmark dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install matplotlib numpy pandas pillow scipy
+      - name: Compile benchmark
+        run: python -m py_compile tools/benchmark_q20_method_physics_v2.py
+      - name: Run physics-separated q20 comparison
+        run: python tools/benchmark_q20_method_physics_v2.py
+      - name: Verify diagnostic outputs
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          from PIL import Image
+          root=Path('outputs/poster/q20_method_comparison_v2')
+          s=json.loads((root/'summary.json').read_text())
+          print(json.dumps({
+              'selected':s['physical_parameter_estimation']['selected'],
+              'aberrated':s['aberrated'],
+              'miao':s['miao_only'],
+              'hybrid':s['digital_twin_plus_miao'],
+              'oracle':s['oracle_phase_only'],
+              'hybrid_minus_aberrated':s['hybrid_minus_aberrated'],
+          },indent=2))
+          png=root/'q20_method_physics_v2.png'
+          with Image.open(png) as im:
+              if min(im.size) < 3500: raise SystemExit(f'figure too small: {im.size}')
+          # This diagnostic must prove the correction application itself is capable
+          # of improvement.  It does not force the tested algorithms to win.
+          if s['oracle_phase_only']['mean_pearson_r'] <= s['aberrated']['mean_pearson_r']:
+              raise SystemExit('oracle phase correction failed to improve the beam: correction plane/sign is suspect')
+          PY
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: q20-method-physics-v2
+          path: outputs/poster/q20_method_comparison_v2
+          if-no-files-found: error
+          retention-days: 14
