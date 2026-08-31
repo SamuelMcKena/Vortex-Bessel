@@ -43,15 +43,19 @@ def normalised_stack_rmse(
 ) -> float:
     """Return per-plane peak-normalised RMSE across a complete z-stack.
 
-    Peak-normalising each plane makes this a morphology metric rather than an
+    The first array axis is interpreted as z.  Each z entry can be a full 2-D
+    camera image ``[y, x]`` or a fixed-laboratory line profile ``[x]``.  The
+    latter is useful for rapid diagnostic screening before a full-image fit.
+
+    Peak-normalising each z plane makes this a morphology metric rather than an
     absolute-power metric.  Absolute throughput should be fitted separately if
     it is experimentally calibrated and scientifically required.
     """
 
     c = np.asarray(candidate, dtype=float)
     t = np.asarray(target, dtype=float)
-    if c.shape != t.shape or c.ndim < 3:
-        raise ValueError("candidate and target must be matching [z, y, x] or [z, ...] stacks")
+    if c.shape != t.shape or c.ndim < 2:
+        raise ValueError("candidate and target must be matching [z, ...] intensity stacks")
     nz = int(c.shape[0])
     if plane_weights is None:
         weights = np.ones(nz, dtype=float)
