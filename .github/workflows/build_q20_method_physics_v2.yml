@@ -19,7 +19,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -34,7 +34,18 @@ jobs:
       - name: Compile benchmark
         run: python -m py_compile tools/benchmark_q20_method_physics_v2.py
       - name: Run physics-separated q20 comparison
-        run: python tools/benchmark_q20_method_physics_v2.py
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, 'tools')
+          import benchmark_q20_miao_vs_digital_twin as base
+          # The longer focal-line scan needs a larger physical window.  Keep the
+          # original ~15.6 um sampling while expanding 6 mm -> 8 mm.
+          base.GRID_N = 512
+          base.WINDOW_M = 8.0e-3
+          import benchmark_q20_method_physics_v2 as bench
+          bench.build()
+          PY
       - name: Verify diagnostic outputs
         run: |
           python - <<'PY'
