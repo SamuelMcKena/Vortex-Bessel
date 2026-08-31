@@ -1,8 +1,13 @@
-"""Integrated physical-system error route for scalar B0/V1/V3 studies.
+"""Integrated physical-system error route for scalar Bessel/vortex studies.
 
 Research route:
     Gaussian beam -> SLM1 -> SLM2/carrier -> explicit propagated 4F + fixed iris
     -> selected-order carrier removal -> physical axicon -> free space.
+
+The route supports the established B0/V1/V3 cases and arbitrary integer vortex
+charges written as ``V<ell>`` (for example ``V20``).  This lets the same physical
+beam/SLM/4F/axicon model be used by the q=20 inverse-correction benchmarks rather
+than maintaining a separate idealized propagation branch.
 
 The route is intentionally separate from accepted Phase 2A/2B/2C contracts.
 Every error is introduced at its physical plane.  Calibration-only quantities
@@ -77,10 +82,15 @@ class SystemErrorConfig:
 
 
 def _ell(case_id: str) -> int:
-    try:
-        return {"B0": 0, "V1": 1, "V3": 3}[case_id]
-    except KeyError as exc:
-        raise ValueError(f"unsupported scalar vortex case {case_id!r}") from exc
+    """Return the integer vortex charge encoded by a scalar case identifier."""
+    if case_id == "B0":
+        return 0
+    if case_id.startswith("V") and len(case_id) > 1:
+        try:
+            return int(case_id[1:])
+        except ValueError as exc:
+            raise ValueError(f"invalid scalar vortex case {case_id!r}") from exc
+    raise ValueError(f"unsupported scalar vortex case {case_id!r}")
 
 
 def axicon_sag_m(
