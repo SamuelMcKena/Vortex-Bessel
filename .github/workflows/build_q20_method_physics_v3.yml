@@ -1,0 +1,79 @@
+name: Build q20 correction physics benchmark v3
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - poster/figure-curation-v2
+    paths:
+      - "tools/benchmark_q20_method_physics_v3.py"
+      - "tools/benchmark_q20_method_physics_v2.py"
+      - "tools/benchmark_q20_miao_vs_digital_twin.py"
+      - "vbb_study/digital_twin/hierarchical_physical_fit.py"
+      - "notebooks/experimental/axicon_aberration_correction/miao_full_retrieval.py"
+      - ".github/workflows/build_q20_method_physics_v3.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install project and benchmark dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install matplotlib numpy pandas pillow scipy
+      - name: Compile
+        run: python -m py_compile tools/benchmark_q20_method_physics_v3.py
+      - name: Run physical-observable q20 benchmark
+        run: python tools/benchmark_q20_method_physics_v3.py
+      - name: Verify physics and outputs
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          from PIL import Image
+          root=Path('outputs/poster/q20_method_comparison_v3')
+          s=json.loads((root/'summary.json').read_text())
+          print(json.dumps({
+              'selected':s['physical_parameter_estimation']['selected'],
+              'beam_radius_fit':s['physical_parameter_estimation']['beam_radius_fit'],
+              'aberrated':s['aberrated'],
+              'miao':s['miao_only'],
+              'hybrid':s['digital_twin_plus_miao'],
+              'oracle':s['oracle_phase_only'],
+          },indent=2))
+          # Synthetic truth is known.  This test exists specifically to check that
+          # the observable assigned to beam radius actually identifies it.
+          br=s['physical_parameter_estimation']['selected'].get('beam_radius_scale')
+          if br != 0.85:
+              raise SystemExit(f'beam-radius observable failed to recover 0.85 truth: {br}')
+          ax=s['physical_parameter_estimation']['selected'].get('axicon_lateral_decentre_x')
+          if ax != 0.00025:
+              raise SystemExit(f'axicon trajectory fit regression: {ax}')
+          # Do not accept a hybrid method that only improves one metric.
+          if s['digital_twin_plus_miao']['mean_pearson_r'] <= s['aberrated']['mean_pearson_r']:
+              raise SystemExit('hybrid correction failed to improve mean Pearson agreement')
+          if s['digital_twin_plus_miao']['mean_nrmse'] >= s['aberrated']['mean_nrmse']:
+              raise SystemExit('hybrid correction failed to reduce mean NRMSE')
+          png=root/'q20_method_physics_v3.png'
+          pdf=root/'q20_method_physics_v3.pdf'
+          if not png.exists() or not pdf.exists(): raise SystemExit('missing v3 figures')
+          with Image.open(png) as im:
+              if min(im.size)<3500: raise SystemExit(f'figure too small: {im.size}')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: q20-method-physics-v3
+          path: outputs/poster/q20_method_comparison_v3
+          if-no-files-found: warn
+          retention-days: 14
