@@ -8,6 +8,9 @@ on:
     paths:
       - "tools/build_poster_figure_shortlist_v2.py"
       - "tools/refine_poster_shortlist_v21.py"
+      - "tools/refine_poster_core_story_v3.py"
+      - "vbb_study/digital_twin/physical_parameter_inference.py"
+      - "tests/test_physical_parameter_inference.py"
       - ".github/workflows/build_poster_figure_shortlist_v2.yml"
       - "bessel_twin_core.py"
       - "publication_diagnostics.py"
@@ -21,7 +24,7 @@ permissions:
 jobs:
   build-shortlist:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,11 +44,17 @@ jobs:
         run: |
           python -m py_compile tools/build_poster_figure_shortlist_v2.py
           python -m py_compile tools/refine_poster_shortlist_v21.py
+          python -m py_compile tools/refine_poster_core_story_v3.py
+          python -m py_compile vbb_study/digital_twin/physical_parameter_inference.py
+
+      - name: Test physical-parameter inference layer
+        run: python -m pytest -q tests/test_physical_parameter_inference.py
 
       - name: Build figure shortlist
         run: |
           python tools/build_poster_figure_shortlist_v2.py
           python tools/refine_poster_shortlist_v21.py
+          python tools/refine_poster_core_story_v3.py
 
       - name: List outputs
         if: always()
@@ -55,7 +64,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: poster-figure-shortlist-v2
+          name: poster-figure-shortlist-v3
           path: outputs/poster/figure_shortlist_v2
           if-no-files-found: error
           retention-days: 14
