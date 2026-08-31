@@ -1,0 +1,30 @@
+name: Test physical observable fitting
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - poster/figure-curation-v2
+    paths:
+      - "vbb_study/digital_twin/physical_observable_fit.py"
+      - "tests/test_physical_observable_fit.py"
+      - ".github/workflows/test_physical_observable_fit.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install pytest
+      - run: pytest -q tests/test_physical_observable_fit.py
