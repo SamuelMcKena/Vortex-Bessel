@@ -1,0 +1,99 @@
+name: Package Codex q20 integration bundle
+
+on:
+  push:
+    branches:
+      - poster/figure-curation-v2
+    paths:
+      - CODEX_Q20_JUPYTER_INTEGRATION_PROMPT.md
+      - .github/workflows/package_codex_q20_integration_bundle.yml
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build exact integration bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=76a7ae2c70aa3b8be0eb671a39f5fc2afc2987cb
+          OUT=codex_q20_integration_bundle
+          rm -rf "$OUT"
+          mkdir -p "$OUT/implementation" "$OUT/experimental_context"
+
+          # Exact unified diff and commit history for everything implemented in this pass.
+          git diff --binary "$BASE" HEAD > "$OUT/FULL_IMPLEMENTATION.diff"
+          git log --oneline --reverse "$BASE"..HEAD > "$OUT/IMPLEMENTATION_COMMITS.txt"
+          git diff --name-status "$BASE" HEAD > "$OUT/IMPLEMENTATION_FILES.txt"
+
+          # Copy every added/modified tracked file since the baseline, preserving repo paths.
+          while IFS=$'\t' read -r status path rest; do
+            case "$status" in
+              A|M)
+                if [ -f "$path" ]; then
+                  mkdir -p "$OUT/implementation/$(dirname "$path")"
+                  cp "$path" "$OUT/implementation/$path"
+                fi
+                ;;
+            esac
+          done < <(git diff --name-status "$BASE" HEAD)
+
+          # Existing local-BMG pipeline files that the new modules must integrate with.
+          EXP=notebooks/experimental/axicon_aberration_correction
+          for path in \
+            "$EXP/.gitignore" \
+            "$EXP/README.md" \
+            "$EXP/modal_vortex_bessel.py" \
+            "$EXP/miao_full_retrieval.py" \
+            "$EXP/run_q20_miao_retrieval.py" \
+            "$EXP/q20_phase_physics.py" \
+            "$EXP/rebuild_q20_presentation_from_bmg.py" \
+            "$EXP/q20_experimental_acceptance_metrics.py" \
+            "$EXP/bessel_zscan_metadata.json" \
+            "$EXP/bessel_zscan_frame_qc.csv" \
+            "$EXP/bessel_zscan_metrics.csv" \
+            "$EXP/q20_hardware_calibration_template.json"; do
+            if [ -f "$path" ]; then
+              mkdir -p "$OUT/experimental_context/$(dirname "$path")"
+              cp "$path" "$OUT/experimental_context/$path"
+            fi
+          done
+
+          cp CODEX_Q20_JUPYTER_INTEGRATION_PROMPT.md "$OUT/CODEX_PROMPT.md"
+
+          cat > "$OUT/README_FIRST.md" <<'EOF'
+          # q=20 Codex integration bundle
+
+          Start by giving Codex **CODEX_PROMPT.md** and this whole folder in the local checkout that contains the ignored BeamGage files.
+
+          `implementation/` contains every added/modified tracked file from baseline commit
+          `76a7ae2c70aa3b8be0eb671a39f5fc2afc2987cb` through the packaging commit.
+
+          `FULL_IMPLEMENTATION.diff` is the exact unified Git diff for the same work.
+
+          `experimental_context/` contains the existing q=20 BMG/Miao files that the new digital-twin code must integrate with rather than replace.
+
+          The raw `.bmg` files are not in this artifact because they are deliberately ignored by Git and should already exist in the user's local notebook working copy.
+          EOF
+
+          python - <<'PY'
+          from pathlib import Path
+          root = Path('codex_q20_integration_bundle')
+          files = [p for p in root.rglob('*') if p.is_file()]
+          print(f'Packaged {len(files)} files')
+          for p in files:
+              print(p)
+          PY
+
+      - name: Upload Codex integration bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: codex-q20-jupyter-integration-bundle
+          path: codex_q20_integration_bundle/
+          if-no-files-found: error
+          retention-days: 14
