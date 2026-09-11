@@ -38,7 +38,7 @@ jobs:
             tools/run_short_bessel_4mm_telescope_highres_verify.py
       - name: Run high-resolution telescope verification
         run: |
-          python tools/run_short_bessel_4mm_telescope_highres_verify.py \
+          PYTHONPATH=. python tools/run_short_bessel_4mm_telescope_highres_verify.py \
             --grid-n 768 \
             --physical-fwhm-um 3.0 \
             --output-dir outputs/short_bessel_4mm_telescope_highres_ci
