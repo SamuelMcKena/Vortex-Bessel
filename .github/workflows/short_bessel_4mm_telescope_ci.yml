@@ -1,0 +1,55 @@
+name: Short-Bessel 4mm telescope candidate
+
+on:
+  push:
+    branches:
+      - feature/short-bessel-programmable-axicon
+    paths:
+      - 'tools/run_short_bessel_4mm_telescope_lab_candidate.py'
+      - 'vbb_study/short_bessel.py'
+      - 'vbb_study/short_bessel_bench_candidate.py'
+      - 'vbb_study/short_bessel_selected_order_frame.py'
+      - '.github/workflows/short_bessel_4mm_telescope_ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  simulate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      - name: Install numerical environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy==2.4.1 scipy==1.17.0 matplotlib==3.10.8 pillow==12.1.0
+          python -m pip install -e . --no-deps
+      - name: Compile telescope candidate runner
+        run: |
+          python -m compileall -q \
+            tools/run_short_bessel_4mm_telescope_lab_candidate.py \
+            vbb_study/short_bessel.py \
+            vbb_study/short_bessel_bench_candidate.py \
+            vbb_study/short_bessel_selected_order_frame.py
+      - name: Run 4 mm-input telescope candidate simulation
+        run: |
+          python tools/run_short_bessel_4mm_telescope_lab_candidate.py \
+            --input-diameter-mm 4.0 \
+            --wavelength-nm 1029.0 \
+            --f1-mm -50.0 \
+            --lens-clear-radius-mm 10.0 \
+            --physical-fwhm-um 3.0 \
+            --final-grid-n 768 \
+            --output-dir outputs/short_bessel_4mm_telescope_ci
+      - name: Upload telescope candidate package
+        uses: actions/upload-artifact@v4
+        with:
+          name: short-bessel-4mm-input-telescope-candidate
+          path: outputs/short_bessel_4mm_telescope_ci/
+          if-no-files-found: error
