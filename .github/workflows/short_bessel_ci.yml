@@ -8,11 +8,14 @@ on:
       - 'vbb_study/short_bessel.py'
       - 'vbb_study/short_bessel_propagation.py'
       - 'vbb_study/short_bessel_realizability.py'
+      - 'vbb_study/short_bessel_bench_candidate.py'
       - 'tools/run_short_bessel_design.py'
       - 'tools/run_short_bessel_propagation.py'
       - 'tools/run_short_bessel_realizability.py'
+      - 'tools/run_short_bessel_bench_candidate.py'
       - 'tests/test_short_bessel_design.py'
       - 'tests/test_short_bessel_realizability.py'
+      - 'tests/test_short_bessel_bench_candidate.py'
       - 'docs/102_short_bessel_programmable_axicon_design.md'
       - '.github/workflows/short_bessel_ci.yml'
   pull_request:
@@ -21,11 +24,14 @@ on:
       - 'vbb_study/short_bessel.py'
       - 'vbb_study/short_bessel_propagation.py'
       - 'vbb_study/short_bessel_realizability.py'
+      - 'vbb_study/short_bessel_bench_candidate.py'
       - 'tools/run_short_bessel_design.py'
       - 'tools/run_short_bessel_propagation.py'
       - 'tools/run_short_bessel_realizability.py'
+      - 'tools/run_short_bessel_bench_candidate.py'
       - 'tests/test_short_bessel_design.py'
       - 'tests/test_short_bessel_realizability.py'
+      - 'tests/test_short_bessel_bench_candidate.py'
       - 'docs/102_short_bessel_programmable_axicon_design.md'
       - '.github/workflows/short_bessel_ci.yml'
   workflow_dispatch:
@@ -36,7 +42,7 @@ permissions:
 jobs:
   short-bessel:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -57,17 +63,21 @@ jobs:
             vbb_study/short_bessel.py \
             vbb_study/short_bessel_propagation.py \
             vbb_study/short_bessel_realizability.py \
+            vbb_study/short_bessel_bench_candidate.py \
             tools/run_short_bessel_design.py \
             tools/run_short_bessel_propagation.py \
             tools/run_short_bessel_realizability.py \
+            tools/run_short_bessel_bench_candidate.py \
             tests/test_short_bessel_design.py \
-            tests/test_short_bessel_realizability.py
+            tests/test_short_bessel_realizability.py \
+            tests/test_short_bessel_bench_candidate.py
 
       - name: Run short-Bessel regression tests
         run: |
           python -m pytest \
             tests/test_short_bessel_design.py \
             tests/test_short_bessel_realizability.py \
+            tests/test_short_bessel_bench_candidate.py \
             -q
 
       - name: Generate 5 um x 500 um design package
@@ -95,6 +105,13 @@ jobs:
             --l50-um 500 \
             --output-dir outputs/short_bessel_realizability_ci
 
+      - name: Screen rectangular SLM + 4F + axicon + B0 V1 V3 candidate
+        run: |
+          python tools/run_short_bessel_bench_candidate.py \
+            --highres-grid-n 768 \
+            --physical-fwhm-um 3.0 \
+            --output-dir outputs/short_bessel_bench_candidate_ci
+
       - name: Upload design package
         uses: actions/upload-artifact@v4
         with:
@@ -114,4 +131,11 @@ jobs:
         with:
           name: short-bessel-5um-500um-realizability-vortex
           path: outputs/short_bessel_realizability_ci/
+          if-no-files-found: error
+
+      - name: Upload hardware-aware bench candidate package
+        uses: actions/upload-artifact@v4
+        with:
+          name: short-bessel-5um-500um-hardware-aware-candidate
+          path: outputs/short_bessel_bench_candidate_ci/
           if-no-files-found: error
