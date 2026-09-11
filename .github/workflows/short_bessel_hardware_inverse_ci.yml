@@ -1,0 +1,51 @@
+name: Short-Bessel hardware inverse optimization
+
+on:
+  push:
+    branches:
+      - feature/short-bessel-programmable-axicon
+    paths:
+      - 'vbb_study/short_bessel.py'
+      - 'vbb_study/short_bessel_bench_candidate.py'
+      - 'vbb_study/short_bessel_selected_order_frame.py'
+      - 'tools/run_short_bessel_hardware_inverse_optimization.py'
+      - '.github/workflows/short_bessel_hardware_inverse_ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      - name: Install numerical environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy==2.4.1 scipy==1.17.0 matplotlib==3.10.8 pillow==12.1.0
+          python -m pip install -e . --no-deps
+      - name: Compile hardware inverse runner
+        run: |
+          python -m compileall -q \
+            vbb_study/short_bessel.py \
+            vbb_study/short_bessel_bench_candidate.py \
+            vbb_study/short_bessel_selected_order_frame.py \
+            tools/run_short_bessel_hardware_inverse_optimization.py
+      - name: Optimize hardware-aware 5 um x 500 um candidate
+        run: |
+          python tools/run_short_bessel_hardware_inverse_optimization.py \
+            --physical-fwhm-um 3.0 \
+            --final-grid-n 768 \
+            --output-dir outputs/short_bessel_hardware_inverse_ci
+      - name: Upload hardware inverse package
+        uses: actions/upload-artifact@v4
+        with:
+          name: short-bessel-5um-500um-hardware-inverse
+          path: outputs/short_bessel_hardware_inverse_ci/
+          if-no-files-found: error
