@@ -9,10 +9,12 @@ on:
       - 'vbb_study/short_bessel_propagation.py'
       - 'vbb_study/short_bessel_realizability.py'
       - 'vbb_study/short_bessel_bench_candidate.py'
+      - 'vbb_study/short_bessel_selected_order_frame.py'
       - 'tools/run_short_bessel_design.py'
       - 'tools/run_short_bessel_propagation.py'
       - 'tools/run_short_bessel_realizability.py'
       - 'tools/run_short_bessel_bench_candidate.py'
+      - 'tools/run_short_bessel_selected_order_frame.py'
       - 'tests/test_short_bessel_design.py'
       - 'tests/test_short_bessel_realizability.py'
       - 'tests/test_short_bessel_bench_candidate.py'
@@ -25,10 +27,12 @@ on:
       - 'vbb_study/short_bessel_propagation.py'
       - 'vbb_study/short_bessel_realizability.py'
       - 'vbb_study/short_bessel_bench_candidate.py'
+      - 'vbb_study/short_bessel_selected_order_frame.py'
       - 'tools/run_short_bessel_design.py'
       - 'tools/run_short_bessel_propagation.py'
       - 'tools/run_short_bessel_realizability.py'
       - 'tools/run_short_bessel_bench_candidate.py'
+      - 'tools/run_short_bessel_selected_order_frame.py'
       - 'tests/test_short_bessel_design.py'
       - 'tests/test_short_bessel_realizability.py'
       - 'tests/test_short_bessel_bench_candidate.py'
@@ -64,10 +68,12 @@ jobs:
             vbb_study/short_bessel_propagation.py \
             vbb_study/short_bessel_realizability.py \
             vbb_study/short_bessel_bench_candidate.py \
+            vbb_study/short_bessel_selected_order_frame.py \
             tools/run_short_bessel_design.py \
             tools/run_short_bessel_propagation.py \
             tools/run_short_bessel_realizability.py \
             tools/run_short_bessel_bench_candidate.py \
+            tools/run_short_bessel_selected_order_frame.py \
             tests/test_short_bessel_design.py \
             tests/test_short_bessel_realizability.py \
             tests/test_short_bessel_bench_candidate.py
@@ -105,12 +111,12 @@ jobs:
             --l50-um 500 \
             --output-dir outputs/short_bessel_realizability_ci
 
-      - name: Screen rectangular SLM + 4F + axicon + B0 V1 V3 candidate
+      - name: Screen selected-order-frame rectangular SLM + 4F + axicon route
         run: |
-          python tools/run_short_bessel_bench_candidate.py \
-            --highres-grid-n 768 \
+          python tools/run_short_bessel_selected_order_frame.py \
+            --final-grid-n 768 \
             --physical-fwhm-um 3.0 \
-            --output-dir outputs/short_bessel_bench_candidate_ci
+            --output-dir outputs/short_bessel_selected_order_frame_ci
 
       - name: Upload design package
         uses: actions/upload-artifact@v4
@@ -133,9 +139,9 @@ jobs:
           path: outputs/short_bessel_realizability_ci/
           if-no-files-found: error
 
-      - name: Upload hardware-aware bench candidate package
+      - name: Upload selected-order-frame hardware candidate package
         uses: actions/upload-artifact@v4
         with:
-          name: short-bessel-5um-500um-hardware-aware-candidate
-          path: outputs/short_bessel_bench_candidate_ci/
+          name: short-bessel-5um-500um-selected-order-frame
+          path: outputs/short_bessel_selected_order_frame_ci/
           if-no-files-found: error
