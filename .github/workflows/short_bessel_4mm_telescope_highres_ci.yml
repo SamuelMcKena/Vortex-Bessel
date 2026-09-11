@@ -1,0 +1,50 @@
+name: Short-Bessel 4mm telescope highres verification
+
+on:
+  push:
+    branches:
+      - feature/short-bessel-programmable-axicon
+    paths:
+      - 'tools/run_short_bessel_4mm_telescope_highres_verify.py'
+      - 'tools/run_short_bessel_4mm_telescope_lab_candidate.py'
+      - 'vbb_study/short_bessel.py'
+      - 'vbb_study/short_bessel_bench_candidate.py'
+      - 'vbb_study/short_bessel_selected_order_frame.py'
+      - '.github/workflows/short_bessel_4mm_telescope_highres_ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      - name: Install numerical environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy==2.4.1 scipy==1.17.0 matplotlib==3.10.8 pillow==12.1.0
+          python -m pip install -e . --no-deps
+      - name: Compile high-resolution telescope runner
+        run: |
+          python -m compileall -q \
+            tools/run_short_bessel_4mm_telescope_lab_candidate.py \
+            tools/run_short_bessel_4mm_telescope_highres_verify.py
+      - name: Run high-resolution telescope verification
+        run: |
+          PYTHONPATH=. python tools/run_short_bessel_4mm_telescope_highres_verify.py \
+            --grid-n 768 \
+            --physical-fwhm-um 3.0 \
+            --output-dir outputs/short_bessel_4mm_telescope_highres_ci
+      - name: Upload high-resolution telescope package
+        uses: actions/upload-artifact@v4
+        with:
+          name: short-bessel-4mm-input-telescope-highres
+          path: outputs/short_bessel_4mm_telescope_highres_ci/
+          if-no-files-found: error
