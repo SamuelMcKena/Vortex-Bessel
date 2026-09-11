@@ -47,12 +47,12 @@ def test_3um_physical_core_requires_cancelling_slm_radial_phase() -> None:
     assert 0.0 <= run.metrics.pinhole_transmitted_fraction <= 1.0
 
 
-def test_vortex_charge_magnitude_survives_candidate_route_at_generous_filter_radius() -> None:
-    """The nominal route may reverse the reported winding sign by convention.
+def test_vortex_charge_magnitude_survives_candidate_route_with_wide_filter() -> None:
+    """Use a deliberately wide stop to test whether filtering caused charge loss.
 
-    Until relay/camera orientation is bench-calibrated, the robust topological
-    invariant here is |winding|=|ell|, not the sign reported by this numerical
-    coordinate convention.
+    The nominal route can reverse the reported winding sign by coordinate
+    convention, so until relay/camera orientation is bench-calibrated the
+    robust invariant checked here is |winding|=|ell|.
     """
     design = _design()
     for ell in (1, 3):
@@ -62,7 +62,7 @@ def test_vortex_charge_magnitude_survives_candidate_route_at_generous_filter_rad
             config=BenchCandidateConfig(
                 grid_n=257,
                 z_points=41,
-                pinhole_radius_mm=0.50,
+                pinhole_radius_mm=1.00,
                 lens_clear_radius_mm=7.0,
                 measured_physical_only_fwhm_um=3.0,
             ),
