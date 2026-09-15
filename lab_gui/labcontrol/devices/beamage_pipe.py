@@ -334,6 +334,44 @@ class BeamagePipeClient:
         )
 
 
+def focus_pc_beamage_window() -> bool:
+    """Bring the running PC-Beamage window forward without automating its controls."""
+
+    if os.name != "nt":
+        return False
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        user32 = ctypes.windll.user32
+        matches: list[int] = []
+        callback_type = ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)
+
+        @callback_type
+        def collect(hwnd, _lparam):
+            if not user32.IsWindowVisible(hwnd):
+                return True
+            length = user32.GetWindowTextLengthW(hwnd)
+            if length <= 0:
+                return True
+            buffer = ctypes.create_unicode_buffer(length + 1)
+            user32.GetWindowTextW(hwnd, buffer, length + 1)
+            title = buffer.value.lower()
+            if "beamage" in title:
+                matches.append(int(hwnd))
+            return True
+
+        user32.EnumWindows(collect, 0)
+        if not matches:
+            return False
+        hwnd = matches[0]
+        user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+        user32.SetForegroundWindow(hwnd)
+        return True
+    except Exception:
+        return False
+
+
 def _parse_fields(names: tuple[str, ...], values: list[str]) -> dict[str, float | str]:
     result: dict[str, float | str] = {}
     for index, name in enumerate(names):

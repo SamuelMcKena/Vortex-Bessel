@@ -170,3 +170,71 @@ def test_propagation_plot_renders_fitted_camera_relative_data() -> None:
     qt.processEvents()
     assert not plot.grab().isNull()
     plot.close()
+
+
+def test_beamage_preview_keeps_every_acquired_pixel_and_can_fit_signal() -> None:
+    qt = app()
+    from labcontrol.devices.camera import CameraFrame
+    from labcontrol.state import utc_now
+    from labcontrol.ui.image_view import QuantitativeImageView
+
+    raw = np.zeros((900, 1301), dtype=np.float64)
+    raw[410:490, 610:690] = 1000.0
+    frame = CameraFrame(
+        data=raw,
+        frame_id="full-resolution-test",
+        timestamp_utc=utc_now(),
+        provider="beamage",
+        exposure_us=2500.0,
+        gain=0.0,
+        full_scale=4095.0,
+        z_mm=None,
+        data_kind="EXPERIMENT",
+        metadata={"quantitative_valid": False},
+    )
+    view = QuantitativeImageView()
+    try:
+        view.set_quantitative_frame(
+            frame,
+            None,
+            colour="inferno",
+            scale="percentile",
+            gamma=1.0,
+        )
+        assert view._pixmap_item.pixmap().width() == 1301
+        assert view._pixmap_item.pixmap().height() == 900
+        rect = view.signal_rect()
+        assert rect is not None
+        assert rect.width() < 1301
+        assert rect.height() < 900
+        view.fit_signal()
+        qt.processEvents()
+    finally:
+        view.close()
+
+
+def test_scientific_colour_maps_are_distinct_and_preserve_shape() -> None:
+    raw = np.linspace(0.0, 4095.0, 400).reshape(20, 20)
+    previews = {
+        name: render_preview(raw, colour=name, scale="sensor range", gamma=1.0, full_scale=4095.0)
+        for name in ("inferno", "gentec-like", "turbo", "viridis")
+    }
+    assert all(preview.shape == (20, 20, 3) for preview in previews.values())
+    assert len({preview.tobytes() for preview in previews.values()}) == len(previews)
+
+
+def test_camera_ui_offers_full_frame_beam_fit_and_beamage_control_route() -> None:
+    qt = app()
+    window = AdvancedLabWindow()
+    try:
+        assert window.home_auto_fit.isChecked()
+        assert window.auto_fit.isChecked()
+        assert "inferno" in [window.home_colour_mode.itemText(i) for i in range(window.home_colour_mode.count())]
+        assert "sensor range" in [window.display_scale.itemText(i) for i in range(window.display_scale.count())]
+        window._select_camera_provider("beamage")
+        qt.processEvents()
+        assert not window.pc_beamage_controls.isHidden()
+        assert "official Pipeline" in window.camera_control_note.text()
+    finally:
+        window.close()
+        qt.processEvents()
