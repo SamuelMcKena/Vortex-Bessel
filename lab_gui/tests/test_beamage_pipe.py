@@ -75,6 +75,8 @@ def test_connect_identity_start_stop_and_measurement_parsing() -> None:
     transport = FakePipe(responses())
     client = BeamagePipeClient(transport=transport)
     client.connect()
+    assert transport.payloads == []
+    client.probe_identity()
     assert transport.path == PIPE_PATH
     assert client.identity is not None
     assert client.identity.serial == "BEAMAGE-4M-TEST"
@@ -93,6 +95,8 @@ def test_named_pipe_bmp_is_preview_only_until_hardware_validation(tmp_path: Path
     image_path = tmp_path / "beamage.bmp"
     Image.fromarray(np.arange(64, dtype=np.uint8).reshape(8, 8)).save(image_path)
     client = BeamagePipeClient(transport=FakePipe(responses(), image_path=image_path))
+    client.connect()
+    client.probe_identity()
     provider = BeamageCameraProvider(client)
     status = provider.connect()
     assert status.connection.value == "CONNECTED"
@@ -115,6 +119,6 @@ def test_timeout_and_malformed_error_are_recoverable() -> None:
 
     bad = FakePipe({"*MEASNM": "ERROR pipeline disabled"})
     client = BeamagePipeClient(transport=bad)
+    client.connect()
     with pytest.raises(ProviderError, match="pipeline disabled"):
-        client.connect()
-    assert bad.closed
+        client.probe_identity()

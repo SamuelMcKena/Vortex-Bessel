@@ -28,6 +28,17 @@ reported to the GUI. The device name/serial, image dimensions, vendor beam
 measurements, position measurements and exposure readback are retained in frame
 metadata.
 
+The normal **Connect** action only opens the pipe. It deliberately does not fire
+optional identity/dimension commands during the handshake because installed
+PC-Beamage builds may differ. The explicit pipe diagnostic performs those probes.
+Live BMP preview is capped at 3 fps, metadata is polled separately, preview-only
+frames are downsampled for display, and only the visible camera page renders.
+These limits avoid large duplicate 2048×2048 allocations and pipe command bursts.
+
+The launcher appends uncaught Python/native-fault information to
+`lab_gui_crash.log` in the package folder. If the GUI still closes, preserve that
+file before reopening it.
+
 PC-Beamage must be running with the camera connected and **Pipeline enabled**.
 Exposure and gain remain controlled in PC-Beamage because the supplied example
 contains no commands for setting them.

@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import faulthandler
 import sys
+import traceback
 from pathlib import Path
 from typing import Any
 
@@ -67,6 +69,7 @@ from .slm_views import SlmDetailView, SlmQuickCard
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+_FAULT_LOG_HANDLE = None
 
 
 ADVANCED_QSS = """
@@ -730,6 +733,7 @@ class AdvancedLabWindow(QMainWindow):
         self.page_title.setText(labels[index])
         for position, button in enumerate(self.nav_buttons):
             button.setChecked(position == index)
+        self._rerender()
 
     def _on_state_change(self, event, state: ExperimentState) -> None:
         refresh_slms: set[str] = set()
@@ -917,7 +921,11 @@ class AdvancedLabWindow(QMainWindow):
         try:
             self._configure_camera()
             thread = QThread(self)
-            worker = CameraAcquisitionWorker(self.controller, target_fps=15.0)
+            # PC-Beamage writes and reloads a full 2048×2048 BMP.  A modest
+            # preview rate is much more stable than treating it like an in-memory
+            # camera SDK, while dummy/replay remain responsive at 15 fps.
+            target_fps = 3.0 if isinstance(self.controller.camera_provider, BeamageCameraProvider) else 15.0
+            worker = CameraAcquisitionWorker(self.controller, target_fps=target_fps)
             worker.moveToThread(thread)
             thread.started.connect(worker.run)
             worker.frame_ready.connect(self._on_frame)
@@ -1021,26 +1029,29 @@ class AdvancedLabWindow(QMainWindow):
     def _rerender(self, *_args) -> None:
         if self.current_frame is None:
             return
-        self.image_view.set_quantitative_frame(
-            self.current_frame,
-            self.current_metrics,
-            colour=self.colour_mode.currentText(),
-            scale=self.display_scale.currentText(),
-            gamma=self.display_gamma.value(),
-            show_centre=self.overlay_centre.isChecked(),
-            show_ring=self.overlay_ring.isChecked(),
-            show_roi=self.overlay_roi.isChecked(),
-        )
-        self.home_camera_view.set_quantitative_frame(
-            self.current_frame,
-            self.current_metrics,
-            colour=self.home_colour_mode.currentText(),
-            scale=self.home_display_scale.currentText(),
-            gamma=self.home_display_gamma.value(),
-            show_centre=True,
-            show_ring=True,
-            show_roi=True,
-        )
+        current_page = self.pages.currentIndex()
+        if current_page == self.PAGE_MEASURE:
+            self.image_view.set_quantitative_frame(
+                self.current_frame,
+                self.current_metrics,
+                colour=self.colour_mode.currentText(),
+                scale=self.display_scale.currentText(),
+                gamma=self.display_gamma.value(),
+                show_centre=self.overlay_centre.isChecked(),
+                show_ring=self.overlay_ring.isChecked(),
+                show_roi=self.overlay_roi.isChecked(),
+            )
+        elif current_page == self.PAGE_HOME:
+            self.home_camera_view.set_quantitative_frame(
+                self.current_frame,
+                self.current_metrics,
+                colour=self.home_colour_mode.currentText(),
+                scale=self.home_display_scale.currentText(),
+                gamma=self.home_display_gamma.value(),
+                show_centre=True,
+                show_ring=True,
+                show_roi=True,
+            )
 
     # ---------------------------------------------------------- SLM operations
 
@@ -1379,6 +1390,17 @@ class AdvancedLabWindow(QMainWindow):
 
 
 def main() -> int:
+    global _FAULT_LOG_HANDLE
+    crash_path = Path.cwd() / "lab_gui_crash.log"
+    _FAULT_LOG_HANDLE = crash_path.open("a", encoding="utf-8", buffering=1)
+    faulthandler.enable(_FAULT_LOG_HANDLE, all_threads=True)
+
+    def log_uncaught(error_type, error, error_traceback) -> None:
+        print("\n--- uncaught GUI exception ---", file=_FAULT_LOG_HANDLE)
+        traceback.print_exception(error_type, error, error_traceback, file=_FAULT_LOG_HANDLE)
+        sys.__excepthook__(error_type, error, error_traceback)
+
+    sys.excepthook = log_uncaught
     application = QApplication.instance() or QApplication(sys.argv)
     application.setStyleSheet(APP_QSS + ADVANCED_QSS)
     window = AdvancedLabWindow()

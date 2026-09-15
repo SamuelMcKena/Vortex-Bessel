@@ -71,9 +71,15 @@ class QuantitativeImageView(QGraphicsView):
         show_roi: bool = True,
     ) -> None:
         self.frame = frame
-        self.raw_frame = np.array(frame.data, copy=True)
+        # CameraFrame owns a stable contiguous matrix.  Retaining that reference
+        # avoids another 32 MB copy for every 2048×2048 Beamage frame and view.
+        self.raw_frame = frame.data
         self.metrics = metrics
-        preview = render_preview(frame.data, colour=colour, scale=scale, gamma=gamma)
+        source = frame.data
+        if not frame.metadata.get("quantitative_valid", True):
+            stride = max(1, int(np.ceil(max(source.shape) / 1200.0)))
+            source = source[::stride, ::stride]
+        preview = render_preview(source, colour=colour, scale=scale, gamma=gamma)
         self.set_preview_array(
             preview,
             metrics=metrics,

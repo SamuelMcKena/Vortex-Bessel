@@ -32,7 +32,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         print(f"Connecting to PC-Beamage at {client.pipe_path} ...")
         client.connect()
-        print(f"Identity: {client.identity}")
+        print(f"Identity: {client.probe_identity()}")
         print("Capture state:", client.get_capture_state())
         print("Measurements:", json.dumps(client.measurements(), indent=2, sort_keys=True))
         print("Positions:", json.dumps(client.positions(), indent=2, sort_keys=True))

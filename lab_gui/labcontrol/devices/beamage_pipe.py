@@ -165,6 +165,9 @@ class BeamagePipeClient:
         self.identity: BeamageIdentity | None = None
         self._connected = False
         self._running = False
+        self._last_metadata_poll = 0.0
+        self._cached_measurements: dict[str, float | str] = {}
+        self._cached_positions: dict[str, float | str] = {}
         self._lock = threading.RLock()
 
     @property
@@ -203,14 +206,21 @@ class BeamagePipeClient:
                 return
             self.transport.open(self.pipe_path, self.timeout_s)
             self._connected = True
-            try:
-                serial = self.command("*MEASNM")
-                width = self._query_optional_int("*GETIMGWID")
-                height = self._query_optional_int("*GETIMGHGT")
-                self.identity = BeamageIdentity(serial=serial, width_px=width, height_px=height)
-            except Exception:
-                self.disconnect()
-                raise
+
+    def probe_identity(self) -> BeamageIdentity:
+        """Query optional device details after a safe pipe-only connection.
+
+        Opening the vendor pipe is deliberately the entire normal connection
+        handshake.  Some installed PC-Beamage builds are unstable when clients
+        fire optional queries immediately after opening the handle, so probing
+        is reserved for the explicit diagnostic path.
+        """
+
+        serial = self.command("*MEASNM")
+        width = self._query_optional_int("*GETIMGWID")
+        height = self._query_optional_int("*GETIMGHGT")
+        self.identity = BeamageIdentity(serial=serial, width_px=width, height_px=height)
+        return self.identity
 
     def disconnect(self) -> None:
         with self._lock:
@@ -292,14 +302,16 @@ class BeamagePipeClient:
         if array.ndim != 2:
             raise ProviderError(f"Unsupported PC-Beamage BMP shape {array.shape!r}.")
         maximum = float(np.iinfo(array.dtype).max) if np.issubdtype(array.dtype, np.integer) else float(np.max(array) or 1.0)
-        try:
-            measured = self.measurements()
-        except Exception:
-            measured = {}
-        try:
-            positions = self.positions()
-        except Exception:
-            positions = {}
+        # The official example polls image saves at 20 Hz but the two metadata
+        # blocks only at about 3 Hz.  Match that separation instead of issuing
+        # three synchronous pipe transactions for every displayed frame.
+        now = time.monotonic()
+        if now - self._last_metadata_poll >= 0.75:
+            self._cached_measurements = self.measurements()
+            self._cached_positions = self.positions()
+            self._last_metadata_poll = now
+        measured = dict(self._cached_measurements)
+        positions = dict(self._cached_positions)
         return np.asarray(array, dtype=np.float64), {
             "source_path": str(path),
             "source_format": "PC-Beamage named-pipe BMP",
