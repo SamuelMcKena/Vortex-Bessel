@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import copy
 import sys
 from pathlib import Path
 from typing import Dict, Iterable, List
 
 import numpy as np
-from PySide6.QtCore import Qt, QUrl, Signal
+from PySide6.QtCore import QObject, Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QImage, QPixmap
 from PySide6.QtWidgets import (
     QAbstractSpinBox,
@@ -39,12 +40,14 @@ from PySide6.QtWidgets import (
 )
 
 from .config import AppConfig, SlmPhaseConfig, TermSwitches
-from .hardware import BackendError, make_backend
+from .hardware import BackendError
 from .hardware_profiles import profile_for
-from .logging_utils import create_cast_folder, save_cast_bundle, timestamp
-from .phase import PhaseResult, compose_phase
+from .logging_utils import timestamp
+from .phase import PhaseResult
 from .presets import load_preset, save_preset
 from .ui.style import APP_QSS
+from labcontrol.controller import LabController
+from labcontrol.state import ExperimentState, ExperimentStore
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -175,6 +178,10 @@ class ComponentGroup(QGroupBox):
         _enable_children(self, self.isChecked())
 
 
+class StoreSignalBridge(QObject):
+    changed = Signal(object, object)
+
+
 # -----------------------------------------------------------------------------
 # Per-SLM editor
 # -----------------------------------------------------------------------------
@@ -236,14 +243,30 @@ class SLMControlPanel(QWidget):
         form.addRow("Phase-term rotation / deg", self.rotation_deg)
         root.addWidget(beam)
 
-        self.grp_pupil = ComponentGroup("Circular pupil gate — BLANKS outside pupil", False)
+        # This is a coordinate/reference setting, not a phase-term switch.  Older
+        # GUI revisions made this group checkable and used it to replace the
+        # complete phase outside the circle with the background.  That made an
+        # innocent radius edit capable of deleting the carrier, wavefront and
+        # correction terms from most of the panel.  Keep the familiar attribute
+        # name for integrations which inspect the panel, but make the semantics
+        # unambiguously non-gating.
+        self.grp_pupil = QGroupBox("Reference pupil for local corrections — never masks the SLM")
+        self.grp_pupil.setObjectName("ComponentGroup")
         form = QFormLayout(self.grp_pupil)
         self.pupil_mm = _spin(0.1, 50.0, 9.0, 0.1, 3)
-        form.addRow("Pupil diameter / mm", self.pupil_mm)
-        pupil_note = QLabel("Leave OFF for normal additive phase composition. When ON, everything outside this pupil is deliberately replaced by the background.")
-        pupil_note.setObjectName("TinyMuted")
-        pupil_note.setWordWrap(True)
-        form.addRow("", pupil_note)
+        self.pupil_mm.setToolTip(
+            "Normalisation diameter for pupil-local Zernike, sample-interface and N-fold terms. "
+            "It never crops, blanks or replaces the complete SLM phase."
+        )
+        form.addRow("Reference diameter / mm", self.pupil_mm)
+        self.pupil_note = QLabel(
+            "Used only to normalise and bound the additive Zernike, sample-interface and N-fold terms. "
+            "Changing this value never blanks pixels: the carrier, wavefront map, vortex, digital axicon, "
+            "focus, retrieved correction and custom overlay remain intact across the full panel."
+        )
+        self.pupil_note.setObjectName("TinyMuted")
+        self.pupil_note.setWordWrap(True)
+        form.addRow("", self.pupil_note)
         root.addWidget(self.grp_pupil)
 
         root.addWidget(
@@ -257,6 +280,27 @@ class SLMControlPanel(QWidget):
         self.vortex_charge = _ispin(-250, 250, 0)
         form.addRow("Topological charge ℓ", self.vortex_charge)
         root.addWidget(self.grp_vortex)
+
+        self.grp_steering = ComponentGroup("Beam steering / tip-tilt", False)
+        form = QFormLayout(self.grp_steering)
+        self.steering_x_mrad = _spin(-100.0, 100.0, 0.0, 0.01, 4)
+        self.steering_y_mrad = _spin(-100.0, 100.0, 0.0, 0.01, 4)
+        self.steering_x_mrad.setToolTip(
+            "Commanded small-angle phase-gradient steering in x. This does not modify the locked carrier."
+        )
+        self.steering_y_mrad.setToolTip(
+            "Commanded small-angle phase-gradient steering in y. This does not modify the locked carrier."
+        )
+        form.addRow("Steering x / mrad", self.steering_x_mrad)
+        form.addRow("Steering y / mrad", self.steering_y_mrad)
+        steering_note = QLabel(
+            "Dedicated first-order steering term. Keep this separate from the fixed 20 px order-selection carrier; "
+            "do not use coma as a steering substitute."
+        )
+        steering_note.setObjectName("TinyMuted")
+        steering_note.setWordWrap(True)
+        form.addRow("", steering_note)
+        root.addWidget(self.grp_steering)
 
         self.grp_axicon = ComponentGroup("Digital axicon / Bessel phase", False)
         form = QFormLayout(self.grp_axicon)
@@ -413,8 +457,8 @@ class SLMControlPanel(QWidget):
 
     def _term_groups(self) -> List[ComponentGroup]:
         return [
-            self.grp_pupil,
             self.grp_vortex,
+            self.grp_steering,
             self.grp_axicon,
             self.grp_focus,
             self.grp_wavefront,
@@ -434,6 +478,9 @@ class SLMControlPanel(QWidget):
             self.pupil_mm,
             self.grp_vortex,
             self.vortex_charge,
+            self.grp_steering,
+            self.steering_x_mrad,
+            self.steering_y_mrad,
             self.grp_axicon,
             self.axicon_period,
             self.axicon_sign,
@@ -517,8 +564,8 @@ class SLMControlPanel(QWidget):
             w.blockSignals(True)
         try:
             sw = config.switches
-            self.grp_pupil.setChecked(sw.circular_pupil)
             self.grp_vortex.setChecked(sw.vortex)
+            self.grp_steering.setChecked(getattr(sw, "steering", False))
             self.grp_axicon.setChecked(sw.axicon)
             self.grp_focus.setChecked(sw.focus)
             self.grp_wavefront.setChecked(sw.wavefront)
@@ -533,6 +580,8 @@ class SLMControlPanel(QWidget):
             self.rotation_deg.setValue(config.term_rotation_deg)
             self.pupil_mm.setValue(config.pupil_diameter_mm)
             self.vortex_charge.setValue(config.vortex_charge)
+            self.steering_x_mrad.setValue(getattr(config, "steering_x_mrad", 0.0))
+            self.steering_y_mrad.setValue(getattr(config, "steering_y_mrad", 0.0))
             self.axicon_period.setValue(config.axicon_period_px)
             self.axicon_sign.setValue(config.axicon_sign)
             self.focus_mm.setValue(config.focus_focal_length_mm)
@@ -566,7 +615,9 @@ class SLMControlPanel(QWidget):
 
     def to_config(self, name: str) -> SlmPhaseConfig:
         # Begin from the existing config so unknown/new fields survive round trips.
-        cfg = self._config
+        # The authoritative ExperimentStore returns defensive snapshots.  Never
+        # mutate the panel's previous snapshot while reading the controls.
+        cfg = copy.deepcopy(self._config)
         cfg.name = name
         cfg.switches = TermSwitches(
             wavefront=self.grp_wavefront.isChecked(),
@@ -574,10 +625,13 @@ class SLMControlPanel(QWidget):
             focus=self.grp_focus.isChecked(),
             axicon=self.grp_axicon.isChecked(),
             vortex=self.grp_vortex.isChecked(),
+            steering=self.grp_steering.isChecked(),
             spherical_interface=self.grp_spherical.isChecked(),
             zernike_z40=self.grp_zernike.isChecked(),
             n_fold=self.grp_nfold.isChecked(),
-            circular_pupil=self.grp_pupil.isChecked(),
+            # Legacy field retained in the serialised model so old presets load,
+            # but the removed hard gate must never be written back as active.
+            circular_pupil=False,
             retrieved_correction=self.grp_retrieved.isChecked(),
             custom_phase=self.grp_custom.isChecked(),
         )
@@ -587,6 +641,8 @@ class SLMControlPanel(QWidget):
         cfg.term_rotation_deg = self.rotation_deg.value()
         cfg.pupil_diameter_mm = self.pupil_mm.value()
         cfg.vortex_charge = int(self.vortex_charge.value())
+        cfg.steering_x_mrad = self.steering_x_mrad.value()
+        cfg.steering_y_mrad = self.steering_y_mrad.value()
         cfg.axicon_period_px = self.axicon_period.value()
         cfg.axicon_sign = self.axicon_sign.value()
         cfg.focus_focal_length_mm = self.focus_mm.value()
@@ -622,6 +678,10 @@ class SLMControlPanel(QWidget):
             labels.append("wavefront")
         if self.grp_vortex.isChecked():
             labels.append(f"vortex ℓ={self.vortex_charge.value()}")
+        if self.grp_steering.isChecked():
+            labels.append(
+                f"steering ({self.steering_x_mrad.value():g}, {self.steering_y_mrad.value():g}) mrad"
+            )
         if self.grp_axicon.isChecked():
             labels.append("digital axicon")
         if self.grp_focus.isChecked():
@@ -632,12 +692,12 @@ class SLMControlPanel(QWidget):
             labels.append("interface correction")
         if self.grp_retrieved.isChecked():
             labels.append(f"retrieved correction ×{self.retrieved_correction_gain.value():g}")
-        if self.grp_pupil.isChecked():
-            labels.append("pupil gate")
         if self.grp_custom.isChecked():
             labels.append("custom overlay")
         if self.grp_nfold.isChecked():
             labels.append(f"{self.nfold_order.value()}-fold perturbation")
+        if self.grp_zernike.isChecked() or self.grp_spherical.isChecked() or self.grp_nfold.isChecked():
+            labels.append(f"reference pupil ⌀{self.pupil_mm.value():g} mm")
         return labels
 
 
@@ -784,17 +844,54 @@ class MainWindow(QMainWindow):
     PAGE_SLM2 = 2
     PAGE_PRESETS = 3
 
-    def __init__(self):
+    def __init__(
+        self,
+        store: ExperimentStore | None = None,
+        controller: LabController | None = None,
+    ):
         super().__init__()
-        self.setWindowTitle("Dual-SLM Lab Control Cockpit v0.6 — measurement sessions")
+        self.setWindowTitle("Dual-SLM Control — compact operator view")
         self.resize(1760, 1040)
-        self.app_config = self._default_config()
-        self.backend = None
+        if controller is not None:
+            self._owns_controller = False
+            self.controller = controller
+            self.store = controller.store
+        else:
+            self._owns_controller = True
+            self.store = store or ExperimentStore(
+                ExperimentState.from_app_config(self._default_config())
+            )
+            self.controller = LabController(self.store, PROJECT_ROOT)
         self.results: Dict[str, PhaseResult] = {}
         self._build()
         self._sync_panels_from_config()
         self.refresh_preset_library()
         self.regenerate()
+        self._store_bridge = StoreSignalBridge(self)
+        self._store_bridge.changed.connect(self._on_authoritative_state_change)
+        self._unsubscribe_store = self.store.subscribe(
+            lambda event, state: self._store_bridge.changed.emit(event, state)
+        )
+
+    @property
+    def app_config(self) -> AppConfig:
+        """Compatibility snapshot backed by the one authoritative store."""
+
+        return self.controller.app_config()
+
+    @app_config.setter
+    def app_config(self, config: AppConfig) -> None:
+        self.controller.replace_app_config(
+            config,
+            source="compact_gui",
+            reason="Loaded compact-GUI configuration",
+        )
+
+    @property
+    def backend(self):
+        """Expose the provider's backend to the legacy session workbench."""
+
+        return self.controller.backend
 
     def _default_config(self) -> AppConfig:
         cfg = AppConfig()
@@ -1113,28 +1210,46 @@ class MainWindow(QMainWindow):
         self.status.style().polish(self.status)
 
     def _sync_panels_from_config(self) -> None:
-        self.app_config.apply_locked_hardware()
+        config = self.app_config
+        config.apply_locked_hardware()
         self.backend_kind.blockSignals(True)
         self.transfer_mode.blockSignals(True)
         self.auto_regen.blockSignals(True)
         try:
-            self.backend_kind.setCurrentText(self.app_config.backend)
-            self.transfer_mode.setCurrentText(getattr(self.app_config, "transfer_mode", "png_file"))
-            self.auto_regen.setChecked(self.app_config.auto_regenerate)
+            self.backend_kind.setCurrentText(config.backend)
+            self.transfer_mode.setCurrentText(getattr(config, "transfer_mode", "png_file"))
+            self.auto_regen.setChecked(config.auto_regenerate)
         finally:
             self.backend_kind.blockSignals(False)
             self.transfer_mode.blockSignals(False)
             self.auto_regen.blockSignals(False)
-        self.slm1_panel.set_config(self.app_config.slm1)
-        self.slm2_panel.set_config(self.app_config.slm2)
+        self.slm1_panel.set_config(config.slm1)
+        self.slm2_panel.set_config(config.slm2)
+
+    def _on_authoritative_state_change(self, event, _state) -> None:
+        """Keep this client current when another client or recipe changes phase."""
+
+        if event.source == "compact_gui":
+            return
+        if not any(
+            path.startswith("application")
+            or path.startswith("slm1.phase")
+            or path.startswith("slm2.phase")
+            for path in event.changed_paths
+        ):
+            return
+        self._sync_panels_from_config()
+        self.regenerate()
 
     def _update_config_from_controls(self) -> None:
-        self.app_config.backend = self.backend_kind.currentText()
-        self.app_config.transfer_mode = self.transfer_mode.currentText()
-        self.app_config.auto_regenerate = self.auto_regen.isChecked()
-        self.app_config.slm1 = self.slm1_panel.to_config("SLM1")
-        self.app_config.slm2 = self.slm2_panel.to_config("SLM2")
-        self.app_config.apply_locked_hardware()
+        config = self.app_config
+        config.backend = self.backend_kind.currentText()
+        config.transfer_mode = self.transfer_mode.currentText()
+        config.auto_regenerate = self.auto_regen.isChecked()
+        config.slm1 = self.slm1_panel.to_config("SLM1")
+        config.slm2 = self.slm2_panel.to_config("SLM2")
+        config.apply_locked_hardware()
+        self.controller.replace_app_config(config, source="compact_gui")
 
     def _maybe_regenerate(self) -> None:
         self._update_config_from_controls()
@@ -1148,16 +1263,18 @@ class MainWindow(QMainWindow):
     def regenerate(self) -> None:
         try:
             self._update_config_from_controls()
-            r1 = compose_phase(self.app_config.slm1)
-            r2 = compose_phase(self.app_config.slm2)
+            bundle = self.controller.generate()
+            r1 = bundle.results["SLM1"]
+            r2 = bundle.results["SLM2"]
             self.results = {"SLM1": r1, "SLM2": r2}
+            config = self.app_config
             self.editor_preview1.set_result(r1)
             self.editor_preview2.set_result(r2)
             self.overview1.set_state(
-                self.app_config.slm1, r1, self.slm1_panel.active_term_names()
+                config.slm1, r1, self.slm1_panel.active_term_names()
             )
             self.overview2.set_state(
-                self.app_config.slm2, r2, self.slm2_panel.active_term_names()
+                config.slm2, r2, self.slm2_panel.active_term_names()
             )
             warnings = r1.warnings + r2.warnings
             if warnings:
@@ -1179,16 +1296,8 @@ class MainWindow(QMainWindow):
     def connect_backend(self) -> None:
         try:
             self._update_config_from_controls()
-            self.backend = make_backend(
-                self.app_config.backend,
-                self.output_root(),
-                sdk_major=self.app_config.sdk_major,
-                sdk_minor=self.app_config.sdk_minor,
-            )
-            msg = self.backend.init_sdk()
-            self._append_log(msg)
-            self._append_log(self.backend.connect("SLM1", self.app_config.slm1.serial, self.app_config.slm1.geometry.wavelength_nm))
-            self._append_log(self.backend.connect("SLM2", self.app_config.slm2.serial, self.app_config.slm2.geometry.wavelength_nm))
+            for message in self.controller.connect_slms():
+                self._append_log(message)
             self._set_status(f"Connected via {self.app_config.backend}")
         except Exception as exc:
             self._set_status("Connection failed", warning=True)
@@ -1206,44 +1315,11 @@ class MainWindow(QMainWindow):
         try:
             if not self.regenerate():
                 raise BackendError("Phase generation failed; no stale phase will be cast.")
-            backend = self._ensure_backend()
-            folder = create_cast_folder(self.output_root(), "slm_cast")
-            selected = {name: self.results[name] for name in names}
-            written = save_cast_bundle(folder, self.app_config, selected)
-            transfer = self.app_config.transfer_mode
-            for name in names:
-                if transfer == "png_file":
-                    # Legacy image-data path retained unchanged for backwards compatibility.
-                    msg = backend.show_png(name, Path(written[name]))
-                elif transfer == "phase_file":
-                    # HEDS interprets 8-bit file values as phase over a 2*pi unit.
-                    msg = backend.show_phase_file(name, Path(written[name]))
-                elif transfer == "direct_gray_array":
-                    msg = backend.show_gray_array(
-                        name,
-                        self.results[name].gray_uint8,
-                        Path(written[name]),
-                        allow_png_fallback=False,
-                    )
-                elif transfer == "direct_phase_array":
-                    msg = backend.show_phase_array(
-                        name,
-                        self.results[name].phase_rad,
-                        self.results[name].gray_uint8,
-                        Path(written[name]),
-                        allow_png_fallback=False,
-                    )
-                else:
-                    msg = backend.show_phase_array(
-                        name,
-                        self.results[name].phase_rad,
-                        self.results[name].gray_uint8,
-                        Path(written[name]),
-                        allow_png_fallback=True,
-                    )
-                self._append_log(msg)
-            self._append_log(f"Metadata: {written['metadata']}")
-            self._set_status(f"Cast complete ({transfer})")
+            receipt = self.controller.cast(names)
+            for message in receipt.messages:
+                self._append_log(message)
+            self._append_log(f"Cast bundle: {receipt.folder}")
+            self._set_status(f"Cast complete ({receipt.transfer_mode})")
         except Exception as exc:
             self._set_status("Cast failed", warning=True)
             self._append_log(f"Cast error: {exc}")
@@ -1251,32 +1327,8 @@ class MainWindow(QMainWindow):
 
     def blank_both(self) -> None:
         try:
-            backend = self._ensure_backend()
-            folder = create_cast_folder(self.output_root(), "blank")
-            s1 = self.app_config.slm1.geometry
-            s2 = self.app_config.slm2.geometry
-            transfer = self.app_config.transfer_mode
-            allow_fallback = transfer not in ("direct_gray_array", "direct_phase_array")
-            self._append_log(
-                backend.blank(
-                    "SLM1",
-                    folder / "slm1_blank.png",
-                    shape=(s1.height_px, s1.width_px),
-                    gray=0,
-                    use_direct=(transfer != "png_file"),
-                    allow_png_fallback=allow_fallback,
-                )
-            )
-            self._append_log(
-                backend.blank(
-                    "SLM2",
-                    folder / "slm2_blank.png",
-                    shape=(s2.height_px, s2.width_px),
-                    gray=0,
-                    use_direct=(transfer != "png_file"),
-                    allow_png_fallback=allow_fallback,
-                )
-            )
+            for message in self.controller.blank(("SLM1", "SLM2")):
+                self._append_log(message)
             self._set_status("Both SLMs blanked")
         except Exception as exc:
             self._set_status("Blank failed", warning=True)
@@ -1285,9 +1337,7 @@ class MainWindow(QMainWindow):
 
     def close_backend(self) -> None:
         try:
-            if self.backend is not None:
-                self._append_log(self.backend.close())
-                self.backend = None
+            self._append_log(self.controller.close_slms())
             self._set_status("Backend closed")
         except Exception as exc:
             self._set_status("Close failed", warning=True)
@@ -1382,6 +1432,15 @@ class MainWindow(QMainWindow):
 
     def open_preset_folder(self) -> None:
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.preset_root().resolve())))
+
+    def closeEvent(self, event):  # noqa: N802 - Qt API
+        self._unsubscribe_store()
+        if self._owns_controller:
+            try:
+                self.controller.close()
+            except Exception:
+                pass
+        event.accept()
 
 
 def main() -> int:

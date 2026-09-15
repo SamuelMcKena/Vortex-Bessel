@@ -43,9 +43,13 @@ class TermSwitches:
     focus: bool = False
     axicon: bool = False
     vortex: bool = False
+    steering: bool = False
     spherical_interface: bool = False
     zernike_z40: bool = False  # kept for preset compatibility; now enables low-order Zernikes
     n_fold: bool = False
+    # Legacy preset key only.  v0.6 briefly used this as a destructive hard
+    # phase gate.  It is now intentionally inert: ``pupil_diameter_mm`` is a
+    # reference for pupil-local additive terms and never blanks the full panel.
     circular_pupil: bool = False
     retrieved_correction: bool = False
     custom_phase: bool = False
@@ -92,6 +96,12 @@ class SlmPhaseConfig:
     # Vortex
     vortex_charge: int = 0
 
+    # First-order beam steering, physically separate from the locked carrier.
+    # Small-angle commands are expressed in milliradians; the exact phase
+    # gradient is derived from wavelength and pixel pitch by the phase engine.
+    steering_x_mrad: float = 0.0
+    steering_y_mrad: float = 0.0
+
     # Spherical interface correction
     interface_NA: float = 0.4
     interface_depth_um: float = 0.0
@@ -137,6 +147,11 @@ class SlmPhaseConfig:
             data["geometry"] = SlmGeometry(**data["geometry"])
         if isinstance(data.get("switches"), dict):
             switch_data = dict(data["switches"])
+            # Migrate presets created by the short-lived hard-pupil GUI safely.
+            # Retaining the dataclass field lets those presets load without an
+            # unknown-key failure; forcing it off prevents an old checked state
+            # from being propagated or saved again.
+            switch_data["circular_pupil"] = False
             # Forward compatibility with v0.2 preset files.
             allowed = TermSwitches.__dataclass_fields__.keys()
             data["switches"] = TermSwitches(**{k: v for k, v in switch_data.items() if k in allowed})

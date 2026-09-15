@@ -48,3 +48,16 @@ def test_preset_round_trip_preserves_experiment_values(tmp_path):
     assert loaded.slm1.switches.vortex is True
     assert loaded.slm1.vortex_charge == 10
     assert loaded.slm1.z22_cos_amp_waves == 0.13
+
+
+def test_legacy_checked_circular_pupil_is_migrated_off(tmp_path):
+    path = tmp_path / "legacy-pupil-gate.json"
+    data = AppConfig().as_dict()
+    data["slm1"]["switches"]["circular_pupil"] = True
+    data["slm2"]["switches"]["circular_pupil"] = True
+    path.write_text(json.dumps(data), encoding="utf-8")
+
+    loaded = load_preset(path)
+
+    assert loaded.slm1.switches.circular_pupil is False
+    assert loaded.slm2.switches.circular_pupil is False

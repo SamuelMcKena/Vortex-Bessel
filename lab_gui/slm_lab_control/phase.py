@@ -194,6 +194,23 @@ def vortex_phase(config: SlmPhaseConfig) -> np.ndarray:
     return charge * theta
 
 
+def steering_phase(config: SlmPhaseConfig) -> np.ndarray:
+    """Return first-order tip/tilt phase from small-angle steering commands.
+
+    ``steering_*_mrad`` describes the commanded transverse wave-vector angle.
+    This term is intentionally independent of the locked order-selection blaze:
+    changing beam steering never changes the carrier convention.
+    """
+
+    tx = float(config.steering_x_mrad) * 1e-3
+    ty = float(config.steering_y_mrad) * 1e-3
+    if abs(tx) < 1e-15 and abs(ty) < 1e-15:
+        return np.zeros((config.geometry.height_px, config.geometry.width_px), dtype=np.float64)
+    _, _, x_m, y_m = _mesh(config)
+    k = TWOPI / config.geometry.wavelength_m
+    return k * (tx * x_m + ty * y_m)
+
+
 def low_order_zernike_phase(config: SlmPhaseConfig) -> np.ndarray:
     """Return a compact low-order aberration correction basis.
 
@@ -269,8 +286,8 @@ def spherical_interface_phase(config: SlmPhaseConfig, warnings: List[str]) -> np
 
     Outside the configured computational pupil this function returns zero phase,
     which means the already composed blaze/wavefront/other terms remain untouched.
-    It never gates or blanks the SLM. The separate ``circular_pupil`` switch is
-    the only intentional outside-pupil blanking operation.
+    It never gates or blanks the SLM. ``pupil_diameter_mm`` only defines this
+    additive term's local normalisation/support.
     """
     g = config.geometry
     NA = float(config.interface_NA)
@@ -361,6 +378,11 @@ def compose_phase(config: SlmPhaseConfig) -> PhaseResult:
         phase += comp
         components["vortex"] = comp
 
+    if config.switches.steering:
+        comp = steering_phase(config)
+        phase += comp
+        components["steering"] = comp
+
     if config.switches.spherical_interface:
         comp = spherical_interface_phase(config, warnings)
         phase += comp
@@ -389,14 +411,13 @@ def compose_phase(config: SlmPhaseConfig) -> PhaseResult:
     phase *= config.global_phase_gain
 
     if config.switches.circular_pupil:
+        # Backward compatibility for configs constructed outside the GUI.  The
+        # old switch is deliberately ignored rather than allowed to erase
+        # already-composed full-panel terms.  Preset loading migrates it to False.
         warnings.append(
-            f"{config.name}: CIRCULAR PUPIL GATE IS ON — phase outside the configured pupil is intentionally replaced by the background. "
-            "Turn this OFF if you want blaze/wavefront/corrections across the full panel."
+            f"{config.name}: legacy circular_pupil gate request ignored; "
+            "the reference pupil never blanks the composed SLM phase."
         )
-        mask = pupil_mask(config)
-        outside = background_phase(config)
-        phase = np.where(mask, phase, outside)
-        components["circular_pupil_gate"] = mask.astype(np.float64)
 
     gray_float, gray_uint8 = phase_to_gray(phase, config.output_bit_depth)
     stats = {
@@ -407,6 +428,8 @@ def compose_phase(config: SlmPhaseConfig) -> PhaseResult:
         "wrapped_phase_min": float(np.min(np.mod(phase, TWOPI))),
         "wrapped_phase_max": float(np.max(np.mod(phase, TWOPI))),
         "component_count": float(len(components)),
+        "reference_pupil_diameter_mm": float(config.pupil_diameter_mm),
+        "reference_pupil_radius_px": float(pupil_radius_px(config)),
     }
     return PhaseResult(phase, gray_float, gray_uint8, components, warnings, stats)
 

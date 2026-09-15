@@ -4,6 +4,8 @@ on:
     paths:
       - 'vbb_study/lab/**'
       - 'lab_gui/**'
+      - 'docs/lab_control/**'
+      - 'tools/analyze_beam_walk.py'
       - 'tests/test_lab_workflow.py'
       - 'run_lab_*.py'
       - 'requirements-lab.txt'
@@ -31,5 +33,11 @@ jobs:
           sudo apt-get install -y libegl1 libopengl0
       - run: python -m pip install -r requirements-lab.txt pytest
       - run: python -m pytest tests/test_lab_workflow.py lab_gui/tests -q
-      - run: python -m compileall -q vbb_study/lab lab_gui run_lab_gui.py run_lab_session.py
+      - run: python -m compileall -q vbb_study/lab lab_gui tools/analyze_beam_walk.py run_lab_gui.py run_lab_session.py
       - run: python run_lab_session.py demo lab_sessions/ci_demo
+      - name: Unified lab-control replay smoke test
+        run: |
+          python lab_gui/run_labcontrol_cli.py status > /dev/null
+          python lab_gui/run_labcontrol_cli.py run recover-q20 \
+            --camera replay \
+            --output "$RUNNER_TEMP/labcontrol-demo"

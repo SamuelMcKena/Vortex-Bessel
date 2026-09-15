@@ -24,83 +24,21 @@ import argparse
 import csv
 import json
 import re
+import sys
 from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
 
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "lab_gui"))
+
+from labcontrol.beam_walk import PlaneObservation, fit_beam_walk
+from labcontrol.metrics import gradient_symmetry_center
 from vbb_study.lab.beamage import read_bmg
 
 
-def _preprocess(image: np.ndarray) -> np.ndarray:
-    a = np.asarray(image, dtype=np.float64)
-    # BMG exports may contain signed background-corrected values. Estimate the
-    # offset before clipping; never reinterpret negative values as unsigned.
-    bg = float(np.percentile(a, 35.0))
-    a = a - bg
-    a[a < 0.0] = 0.0
-    return a
-
-
-def _gradient_symmetry_center(image: np.ndarray, half_width: int = 70) -> tuple[float, float]:
-    """Return (y,x) centre using weighted radial-gradient line intersections."""
-    a = _preprocess(image)
-    if not np.any(a > 0):
-        raise ValueError("No positive signal after background subtraction.")
-
-    # The brightest q=20 principal-ring pixel is only a few pixels from the ring
-    # centre, so it is a safe seed for a local crop.  q=0 works as well.
-    seed_y, seed_x = np.unravel_index(int(np.argmax(a)), a.shape)
-    y0 = max(1, int(seed_y) - half_width)
-    y1 = min(a.shape[0] - 1, int(seed_y) + half_width + 1)
-    x0 = max(1, int(seed_x) - half_width)
-    x1 = min(a.shape[1] - 1, int(seed_x) + half_width + 1)
-    crop = a[y0:y1, x0:x1]
-    if min(crop.shape) < 25:
-        raise ValueError("Signal is too close to the sensor edge for centre estimation.")
-
-    # Mild dependency-free smoothing suppresses isolated pixel noise.
-    p = np.pad(crop, 1, mode="edge")
-    smooth = (
-        p[:-2, :-2] + p[:-2, 1:-1] + p[:-2, 2:]
-        + p[1:-1, :-2] + p[1:-1, 1:-1] + p[1:-1, 2:]
-        + p[2:, :-2] + p[2:, 1:-1] + p[2:, 2:]
-    ) / 9.0
-
-    gy, gx = np.gradient(smooth)
-    mag = np.hypot(gx, gy)
-    yy, xx = np.indices(smooth.shape, dtype=np.float64)
-
-    # Use meaningful radial structure only.  The percentile gate adapts between
-    # a q=0 central spot and a q=20 annulus without a hard-coded ring radius.
-    signal_gate = smooth >= np.percentile(smooth, 65.0)
-    grad_gate = mag >= np.percentile(mag, 70.0)
-    use = signal_gate & grad_gate
-    if np.count_nonzero(use) < 50:
-        use = mag >= np.percentile(mag, 60.0)
-    if np.count_nonzero(use) < 20:
-        raise ValueError("Insufficient structured signal for a stable centre fit.")
-
-    gxv = gx[use]
-    gyv = gy[use]
-    xv = xx[use]
-    yv = yy[use]
-    w = np.maximum(mag[use], 1e-12)
-
-    # For a rotationally symmetric pattern the local gradient is radial, so
-    # (x-cx, y-cy) is parallel to (gx, gy):
-    #       gy*cx - gx*cy = gy*x - gx*y
-    A = np.column_stack((gyv, -gxv))
-    b = gyv * xv - gxv * yv
-    sw = np.sqrt(w / np.max(w))
-    sol, *_ = np.linalg.lstsq(A * sw[:, None], b * sw, rcond=None)
-    cx_local, cy_local = map(float, sol)
-
-    if not (-half_width <= cx_local <= crop.shape[1] + half_width and
-            -half_width <= cy_local <= crop.shape[0] + half_width):
-        raise ValueError("Centre fit escaped the local signal region.")
-
-    return y0 + cy_local, x0 + cx_local
+_gradient_symmetry_center = gradient_symmetry_center
 
 
 def _first_number(name: str) -> float:
@@ -148,42 +86,37 @@ def analyse(folder: Path, pixel_um: float, z_map: dict[str, float]) -> dict:
             "std_x_px": float(np.std(a[:, 1], ddof=1)) if len(a) > 1 else 0.0,
         })
 
-    z = np.asarray([r["z_mm"] for r in means], dtype=float)
-    x = np.asarray([r["mean_x_px"] for r in means], dtype=float)
-    y = np.asarray([r["mean_y_px"] for r in means], dtype=float)
-    fx = np.polyfit(z, x, 1)
-    fy = np.polyfit(z, y, 1)
-
-    def r2(v, fit):
-        pred = np.polyval(fit, z)
-        den = float(np.sum((v - np.mean(v)) ** 2))
-        return 1.0 if den == 0 else float(1.0 - np.sum((v - pred) ** 2) / den)
-
-    # px/mm * um/px = um/mm, numerically identical to mrad for small angles.
-    sx = float(fx[0] * pixel_um)
-    sy = float(fy[0] * pixel_um)
-    mag = float(np.hypot(sx, sy))
+    fitted = fit_beam_walk(
+        (
+            PlaneObservation(
+                frame_id=row["file"],
+                z_mm=row["z_mm"],
+                centre_y_px=row["center_y_px"],
+                centre_x_px=row["center_x_px"],
+            )
+            for row in rows
+        ),
+        pixel_size_um=pixel_um,
+        camera_axis_calibrated=False,
+    )
     result = {
         "folder": str(folder),
         "camera_pixel_um": float(pixel_um),
         "per_frame": rows,
         "per_z_mean": means,
         "fit": {
-            "x_px_per_mm": float(fx[0]),
-            "y_px_per_mm": float(fy[0]),
-            "x_um_per_mm": sx,
-            "y_um_per_mm": sy,
-            "relative_axis_x_mrad": sx,
-            "relative_axis_y_mrad": sy,
-            "relative_axis_total_mrad": mag,
-            "relative_axis_total_deg_small_angle": float(np.degrees(mag / 1000.0)),
-            "r2_x": r2(x, fx),
-            "r2_y": r2(y, fy),
+            **fitted.fit,
+            # Compatibility aliases retained for existing notebooks/reports.
+            "x_um_per_mm": fitted.fit["x_mrad"],
+            "y_um_per_mm": fitted.fit["y_mrad"],
+            "relative_axis_x_mrad": fitted.fit["x_mrad"],
+            "relative_axis_y_mrad": fitted.fit["y_mrad"],
+            "relative_axis_total_mrad": fitted.fit["total_mrad"],
+            "relative_axis_total_deg_small_angle": float(
+                np.degrees(float(fitted.fit["total_mrad"]) / 1000.0)
+            ),
         },
-        "interpretation": (
-            "Relative beam axis versus camera translation direction. Do not call this an absolute optical "
-            "beam angle until camera-stage runout has been measured independently."
-        ),
+        "interpretation": fitted.interpretation,
     }
     return result
 
