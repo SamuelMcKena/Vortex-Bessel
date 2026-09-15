@@ -11,3 +11,11 @@ __pycache__/
 /*.zip
 /vbb_study - Copy/
 vbb_study.egg-info/
+
+# Local lab data, driver files and cast records
+/lab_sessions/
+/lab_gui/outputs/
+/lab_gui/presets/
+/HEDS/
+/hedslib/
+/.venv-lab/

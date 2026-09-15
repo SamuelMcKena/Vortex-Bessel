@@ -6,6 +6,13 @@ This repository is intended to be the **day-to-day source of truth**: one curren
 
 It is built from the Phase 2K mathematical/physics-audited codebase and includes the current measured q=20 axicon-aberration correction work.
 
+## Lab measurements and correction
+
+The September 15 lab workflow includes your updated HEDS GUI, a **Lab measurements** panel,
+BMG capture checks, signed native-SLM Zernike trials, fresh multi-plane validation and rollback.
+Start with [the lab run guide](docs/lab/START_HERE.md). Launch with `python run_lab_gui.py`;
+practice offline with `python run_lab_session.py demo lab_sessions/practice`.
+
 ## Start here
 
 Install the audited numerical environment and editable command-line entry point:
