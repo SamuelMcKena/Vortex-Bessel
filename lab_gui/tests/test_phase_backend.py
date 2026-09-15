@@ -48,6 +48,21 @@ def test_vortex_and_axicon_can_compose():
     assert "vortex" in result.components
 
 
+def test_tip_tilt_is_a_dedicated_additive_term_and_does_not_change_carrier():
+    cfg = tiny_config()
+    cfg.switches.blaze = True
+    carrier = compose_phase(cfg).components["blaze"].copy()
+
+    cfg.switches.steering = True
+    cfg.steering_x_mrad = 1.25
+    cfg.steering_y_mrad = -0.75
+    result = compose_phase(cfg)
+
+    assert "steering" in result.components
+    assert np.array_equal(result.components["blaze"], carrier)
+    assert not np.allclose(result.components["steering"], 0.0)
+
+
 def test_low_order_zernike_changes_output():
     cfg = tiny_config()
     cfg.switches.blaze = False
@@ -94,9 +109,48 @@ def test_retrieved_npy_correction_adds_to_existing_blaze_before_final_wrap(tmp_p
     assert np.allclose(corrected.phase_rad - base.phase_rad, 0.1)
 
 
-def test_circular_pupil_gate_is_the_only_explicit_blanking_operation():
+def test_legacy_circular_pupil_switch_is_safe_and_never_blanks_phase():
     cfg = tiny_config()
     cfg.switches.blaze = True
+    baseline = compose_phase(cfg)
+
     cfg.switches.circular_pupil = True
     result = compose_phase(cfg)
-    assert any("CIRCULAR PUPIL GATE IS ON" in w for w in result.warnings)
+
+    assert np.array_equal(result.phase_rad, baseline.phase_rad)
+    assert np.array_equal(result.gray_uint8, baseline.gray_uint8)
+    assert "circular_pupil_gate" not in result.components
+    assert any("legacy circular_pupil gate request ignored" in w for w in result.warnings)
+
+
+def test_changing_reference_pupil_does_not_change_panel_wide_terms():
+    cfg = tiny_config()
+    cfg.switches.blaze = True
+    cfg.switches.vortex = True
+    cfg.switches.axicon = True
+    cfg.switches.focus = True
+    cfg.vortex_charge = 7
+    cfg.axicon_period_px = 31.0
+    cfg.focus_focal_length_mm = 250.0
+
+    cfg.pupil_diameter_mm = 0.25
+    small = compose_phase(cfg)
+    cfg.pupil_diameter_mm = 0.80
+    large = compose_phase(cfg)
+
+    assert np.array_equal(small.phase_rad, large.phase_rad)
+    assert np.array_equal(small.gray_uint8, large.gray_uint8)
+
+
+def test_pupil_local_zernike_leaves_existing_phase_untouched_outside_reference():
+    cfg = tiny_config()
+    cfg.switches.blaze = True
+    baseline = compose_phase(cfg)
+
+    cfg.switches.zernike_z40 = True
+    cfg.z22_cos_amp_waves = 0.2
+    corrected = compose_phase(cfg)
+    mask = pupil_mask(cfg)
+
+    assert np.allclose(corrected.phase_rad[~mask], baseline.phase_rad[~mask])
+    assert np.any(np.abs(corrected.phase_rad[mask] - baseline.phase_rad[mask]) > 1e-9)

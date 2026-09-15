@@ -31,12 +31,17 @@ def save_cast_bundle(folder: Path, app_config: AppConfig, results: Mapping[str, 
     for name, result in results.items():
         png_path = folder / f"{name.lower()}_phase_mask.png"
         phase_path = folder / f"{name.lower()}_phase_rad.npy"
+        command_path = folder / f"{name.lower()}_phase_wrapped_command_rad.npy"
         save_phase_png(png_path, result.gray_uint8)
         np.save(phase_path, np.asarray(result.phase_rad, dtype=np.float32))
+        wrapped = np.ascontiguousarray(np.mod(result.phase_rad, 2.0 * np.pi), dtype=np.float32)
+        wrapped[wrapped >= np.float32(2.0 * np.pi)] = 0.0
+        np.save(command_path, wrapped)
         written[name] = str(png_path)
         metadata["results"][name] = {
             "png": str(png_path),
             "phase_rad_npy": str(phase_path),
+            "phase_wrapped_command_rad_npy": str(command_path),
             "stats": result.stats,
             "warnings": result.warnings,
             "components": list(result.components.keys()),
