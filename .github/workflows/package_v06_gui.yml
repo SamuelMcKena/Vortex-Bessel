@@ -1,0 +1,33 @@
+name: Package v0.6 standalone GUI
+on:
+  push:
+    branches:
+      - 'lab/commissioning-and-rapid-recovery'
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build standalone v0.6 GUI zip
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="slm_lab_gui_v0_6_measurement_sessions"
+          mkdir -p "$ROOT/lab_gui" "$ROOT/vbb_study" "$ROOT/docs/lab"
+          cp -R lab_gui/* "$ROOT/lab_gui/"
+          cp -R vbb_study/lab "$ROOT/vbb_study/lab"
+          cp vbb_study/__init__.py "$ROOT/vbb_study/__init__.py"
+          cp run_lab_gui.py run_lab_session.py requirements-lab.txt "$ROOT/"
+          cp docs/lab/START_HERE.md "$ROOT/docs/lab/START_HERE.md"
+          if [ -f docs/lab/2026-09-15_COMMISSIONING_AND_RAPID_RECOVERY.md ]; then
+            cp docs/lab/2026-09-15_COMMISSIONING_AND_RAPID_RECOVERY.md "$ROOT/docs/lab/"
+          fi
+          echo "SLM GUI v0.6 standalone measurement-session bundle" > "$ROOT/BUNDLE_VERSION.txt"
+          zip -r slm_lab_gui_v0_6_measurement_sessions.zip "$ROOT" >/dev/null
+      - uses: actions/upload-artifact@v4
+        with:
+          name: slm_lab_gui_v0_6_measurement_sessions
+          path: slm_lab_gui_v0_6_measurement_sessions.zip
+          if-no-files-found: error
