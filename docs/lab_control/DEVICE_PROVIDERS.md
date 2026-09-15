@@ -25,10 +25,15 @@ Rendered screenshots and RGB/palette images are rejected as quantitative data.
 |---|---|---|
 | `DummyCameraProvider` | SOFTWARE-TESTED | `SYNTHETIC`; deterministic camera-like development frames, not optical propagation |
 | `ReplayCameraProvider` | REPLAY-VALIDATED | Caller declares `REPLAY`, `EXPERIMENT`, or `SYNTHETIC`; original source path is retained |
-| `BeamageCameraProvider` | HARDWARE-UNVERIFIED | `EXPERIMENT`; requires an injected official-protocol bridge and refuses connection without it |
+| `BeamageCameraProvider` | SOFTWARE-TESTED / HARDWARE-UNVERIFIED | Official PC-Beamage pipe client; vendor BMP is `LIVE_PREVIEW_ONLY` and blocked from formal evidence |
 
 Replay accepts strict BMG plus numeric NPY/TXT/CSV and unscaled grayscale
 BMP/PNG/TIFF. It does not turn a colour screenshot into data.
+
+The PC-Beamage client uses the supplied C++ command set over
+`\\.\pipe\pipe_beamage`. It keeps timeouts and cleanup explicit and reports
+vendor measurements/positions. Exposure and gain are read/controlled in
+PC-Beamage because setter commands are absent from the supplied example.
 
 ## Stage
 

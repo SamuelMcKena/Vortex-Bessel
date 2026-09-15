@@ -214,6 +214,10 @@ class FormalCaptureService:
         try:
             for index in range(1, repeats + 1):
                 acquired = self.controller.acquire_frame(fresh=True)
+                if not acquired.metadata.get("quantitative_valid", True):
+                    raise CaptureError(
+                        "Formal capture refused: this camera route is marked live-preview-only, not quantitatively validated."
+                    )
                 raw_path = camera_root / f"frame_{index:03d}.npy"
                 np.save(raw_path, acquired.data, allow_pickle=False)
                 analysed = self.metric_engine.analyse(acquired, state)
