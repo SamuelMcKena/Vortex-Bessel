@@ -331,6 +331,8 @@ class LabController:
                 setattr(state.camera, "last_frame_utc", frame.timestamp_utc),
                 setattr(state.camera, "shape_yx", frame.shape_yx),
                 setattr(state.camera, "full_scale", frame.full_scale),
+                setattr(state.camera, "exposure_us", frame.exposure_us),
+                setattr(state.camera, "gain", frame.gain),
                 setattr(state.camera, "current_z_mm", frame.z_mm),
                 setattr(
                     state.camera,
