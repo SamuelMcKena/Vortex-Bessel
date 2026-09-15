@@ -347,6 +347,8 @@ class AdvancedLabWindow(QMainWindow):
         self.home_provider_choice.currentTextChanged.connect(self._select_camera_provider)
         connect = QPushButton("Connect")
         connect.clicked.connect(self._connect_camera)
+        self.home_pc_beamage_controls = QPushButton("PC-Beamage controls")
+        self.home_pc_beamage_controls.clicked.connect(self._focus_beamage_controls)
         start = QPushButton("Start live")
         start.setObjectName("Accent")
         start.clicked.connect(self.start_live)
@@ -357,6 +359,7 @@ class AdvancedLabWindow(QMainWindow):
         camera_row.addWidget(QLabel("Provider"))
         camera_row.addWidget(self.home_provider_choice)
         camera_row.addWidget(connect)
+        camera_row.addWidget(self.home_pc_beamage_controls)
         camera_row.addWidget(start)
         camera_row.addWidget(stop)
         camera_row.addWidget(capture)
@@ -847,6 +850,7 @@ class AdvancedLabWindow(QMainWindow):
             self.gain.setEnabled(state.camera.gain_control == "SUPPORTED")
             is_beamage = state.camera.provider == "beamage"
             self.pc_beamage_controls.setVisible(is_beamage)
+            self.home_pc_beamage_controls.setVisible(is_beamage)
             if is_beamage:
                 self.camera_control_note.setText(
                     "Live exposure is read back here. The official Pipeline does not provide an exposure-write command; "
@@ -1023,13 +1027,18 @@ class AdvancedLabWindow(QMainWindow):
         if not frame.metadata.get("quantitative_valid", True):
             self.current_metrics = None
             measured = frame.metadata.get("measurements", {})
+            height, width = frame.shape_yx
             self.live_metrics.setPlainText(
                 "LIVE PREVIEW ONLY — named-pipe BMP is not yet validated as raw quantitative data.\n"
+                f"Displayed at full acquired resolution: {width} × {height} px\n"
+                f"Exposure readback: {frame.exposure_us / 1000.0:.4g} ms\n"
                 + "\n".join(f"PC-Beamage {key}: {value}" for key, value in measured.items())
             )
             self.saturation_warning.setText("Preview route hardware-unverified • formal capture disabled")
             self.saturation_warning.setObjectName("WarnChip")
-            self.home_metric_summary.setText("LIVE PREVIEW ONLY • use PC-Beamage values until BMP validation")
+            self.home_metric_summary.setText(
+                f"LIVE PREVIEW ONLY • {width} × {height} px • exposure {frame.exposure_us / 1000.0:.4g} ms"
+            )
         elif self.current_metrics is None or self._frame_counter % 4 == 0:
             try:
                 self.current_metrics = self.metric_engine.analyse(frame, self.store.snapshot())
