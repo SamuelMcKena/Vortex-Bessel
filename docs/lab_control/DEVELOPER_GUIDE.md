@@ -11,7 +11,7 @@ Set `PYTHONPATH=lab_gui:.` when running modules from the repository checkout.
 PYTHONPATH=lab_gui:. QT_QPA_PLATFORM=offscreen \
   python -m pytest tests/test_lab_workflow.py lab_gui/tests -q
 
-python -m compileall -q vbb_study/lab lab_gui tools/analyze_beam_walk.py
+python -m compileall -q vbb_study/lab lab_gui tools/analyze_beam_walk.py tools/test_beamage_pipe.py
 
 PYTHONPATH=lab_gui:. python lab_gui/run_labcontrol_cli.py \
   run recover-q20 --camera replay --output /tmp/labcontrol-demo
@@ -36,12 +36,12 @@ honest `data_kind`, settings and source metadata. Do not return a rendered scree
 capture. Make start/stop/disconnect recoverable and test the provider through
 `LabController` and `FormalCaptureService`.
 
-## Completing Beamage
+## Validating Beamage
 
-Implement `BeamageBridge` in a Windows-only adapter built against the current
-official .NET example. Keep vendor command names out of the general provider.
-Add opt-in hardware tests that skip with a clear reason unless PC-Beamage, the
-camera and configuration are present.
+`BeamagePipeClient` is the Windows-only adapter built from the supplied official
+Unicode C++ example. Keep vendor command names isolated in that module. Run
+`tools/test_beamage_pipe.py` with PC-Beamage Pipeline enabled, then validate the
+BMP against a numeric export before changing its live-preview-only status.
 
 ## Adding a stage
 

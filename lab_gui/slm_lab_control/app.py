@@ -9,7 +9,6 @@ import numpy as np
 from PySide6.QtCore import QObject, Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QImage, QPixmap
 from PySide6.QtWidgets import (
-    QAbstractSpinBox,
     QApplication,
     QButtonGroup,
     QCheckBox,
@@ -48,6 +47,7 @@ from .presets import load_preset, save_preset
 from .ui.style import APP_QSS
 from labcontrol.controller import LabController
 from labcontrol.state import ExperimentState, ExperimentStore
+from labcontrol.ui.controls import NoWheelComboBox, NoWheelDoubleSpinBox, NoWheelSpinBox
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -57,47 +57,22 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 # -----------------------------------------------------------------------------
 
 
-class ManualDoubleSpinBox(QDoubleSpinBox):
-    """Numeric field that changes only when the user types a value.
-
-    Mouse wheel, arrow buttons and keyboard stepping are deliberately disabled so
-    scrolling the SLM editor cannot silently change an experimental parameter.
-    """
+class ManualDoubleSpinBox(NoWheelDoubleSpinBox):
+    """Compatibility name for a stable, normally editable double spin box."""
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
-        self.setButtonSymbols(QAbstractSpinBox.NoButtons)
         self.setKeyboardTracking(False)
         self.setFocusPolicy(Qt.StrongFocus)
 
-    def wheelEvent(self, event):  # noqa: N802 - Qt API
-        event.ignore()
 
-    def stepBy(self, steps: int) -> None:  # noqa: N802 - Qt API
-        return
-
-
-class ManualSpinBox(QSpinBox):
-    """Integer equivalent of :class:`ManualDoubleSpinBox`."""
+class ManualSpinBox(NoWheelSpinBox):
+    """Compatibility name for a stable, normally editable integer spin box."""
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
-        self.setButtonSymbols(QAbstractSpinBox.NoButtons)
         self.setKeyboardTracking(False)
         self.setFocusPolicy(Qt.StrongFocus)
-
-    def wheelEvent(self, event):  # noqa: N802 - Qt API
-        event.ignore()
-
-    def stepBy(self, steps: int) -> None:  # noqa: N802 - Qt API
-        return
-
-
-class NoWheelComboBox(QComboBox):
-    """Combo box that does not accidentally cycle while the editor is scrolled."""
-
-    def wheelEvent(self, event):  # noqa: N802 - Qt API
-        event.ignore()
 
 
 def _spin(

@@ -43,6 +43,8 @@ python lab_gui\run_labcontrol_cli.py --help
 
 The unified framework uses the same v0.6 phase composer and HEDS backend as the
 compact GUI. See [lab-control quick start](../docs/lab_control/LAB_QUICK_START.md)
-and [architecture](../docs/lab_control/ARCHITECTURE.md). Physical Beamage live
-integration remains explicitly hardware-unverified until the official Gentec
-named-pipe bridge is bound and validated on the Windows lab PC.
+and [architecture](../docs/lab_control/ARCHITECTURE.md). The physical Beamage
+provider now implements the supplied official PC-Beamage Unicode C++ named-pipe
+protocol. Its vendor BMP is deliberately labelled live preview only and remains
+blocked from formal capture until physically compared with a documented numeric
+export on the Windows lab PC.

@@ -61,8 +61,8 @@ def test_replay_camera_reads_quantitative_npy_without_rendering(tmp_path: Path) 
     assert actual.metadata["source_path"] == str(source)
 
 
-def test_beamage_refuses_to_fabricate_connection_without_vendor_bridge() -> None:
-    with pytest.raises(ProviderUnavailable, match="screen capture is not supported"):
+def test_beamage_refuses_to_fabricate_connection_without_live_windows_pipe() -> None:
+    with pytest.raises(ProviderUnavailable, match="named pipe is available only on Windows"):
         BeamageCameraProvider().connect()
 
 
