@@ -50,5 +50,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Vortex_Bessel_Lab_GUI_v2_1_Anaconda_Spyder
-          path: ${{ runner.temp }}/lab-pc-bundle/Vortex_Bessel_Lab_GUI_v2_1.zip
+          path: ${{ runner.temp }}/lab-pc-bundle/Vortex_Bessel_Lab_GUI_v2_1
           if-no-files-found: error
