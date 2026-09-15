@@ -58,6 +58,7 @@ from ..devices.camera import (
     DummyCameraProvider,
     ReplayCameraProvider,
 )
+from ..devices.beamage_pipe import focus_pc_beamage_window
 from ..metrics import BeamMetrics, MetricEngine
 from ..recipes import RecipeEngine, RecipeRun, builtin_recipes
 from ..state import AcquisitionState, ConnectionState, ExperimentState, ExperimentStore, PhysicalAxiconState
@@ -362,9 +363,9 @@ class AdvancedLabWindow(QMainWindow):
         camera_box.addLayout(camera_row)
         display_row = QHBoxLayout()
         self.home_colour_mode = NoWheelComboBox()
-        self.home_colour_mode.addItems(["false colour", "grayscale"])
+        self.home_colour_mode.addItems(["inferno", "gentec-like", "turbo", "viridis", "grayscale"])
         self.home_display_scale = NoWheelComboBox()
-        self.home_display_scale.addItems(["percentile", "log", "full range"])
+        self.home_display_scale.addItems(["percentile", "log", "sensor range", "full range"])
         self.home_display_gamma = NoWheelDoubleSpinBox()
         self.home_display_gamma.setRange(0.1, 5.0)
         self.home_display_gamma.setValue(1.0)
@@ -374,8 +375,19 @@ class AdvancedLabWindow(QMainWindow):
                 widget.currentTextChanged.connect(self._rerender)
             else:
                 widget.valueChanged.connect(self._rerender)
-        reset = QPushButton("Reset zoom")
-        reset.clicked.connect(self.home_camera_view.reset_zoom)
+        fit_beam = QPushButton("Fit beam")
+        fit_beam.setToolTip("Zoom to the signal without cropping or resampling the camera frame.")
+        fit_beam.clicked.connect(self.home_camera_view.fit_signal)
+        reset = QPushButton("Full frame")
+        reset.clicked.connect(self.home_camera_view.fit_full_frame)
+        zoom_in = QPushButton("+")
+        zoom_in.setFixedWidth(32)
+        zoom_in.clicked.connect(self.home_camera_view.zoom_in)
+        zoom_out = QPushButton("−")
+        zoom_out.setFixedWidth(32)
+        zoom_out.clicked.connect(self.home_camera_view.zoom_out)
+        self.home_auto_fit = QCheckBox("Auto-fit beam")
+        self.home_auto_fit.setChecked(True)
         display_row.addWidget(QLabel("Colour"))
         display_row.addWidget(self.home_colour_mode)
         display_row.addWidget(QLabel("Scale"))
@@ -383,7 +395,11 @@ class AdvancedLabWindow(QMainWindow):
         display_row.addWidget(QLabel("Gamma"))
         display_row.addWidget(self.home_display_gamma)
         display_row.addStretch(1)
+        display_row.addWidget(self.home_auto_fit)
+        display_row.addWidget(fit_beam)
         display_row.addWidget(reset)
+        display_row.addWidget(zoom_out)
+        display_row.addWidget(zoom_in)
         camera_box.addLayout(display_row)
         self.home_camera_status = QLabel("Camera disconnected")
         self.home_camera_status.setObjectName("Muted")
@@ -494,15 +510,26 @@ class AdvancedLabWindow(QMainWindow):
         image_layout.addWidget(self.image_view, 1)
         view_row = QHBoxLayout()
         self.colour_mode = NoWheelComboBox()
-        self.colour_mode.addItems(["false colour", "grayscale"])
+        self.colour_mode.addItems(["inferno", "gentec-like", "turbo", "viridis", "grayscale"])
         self.display_scale = NoWheelComboBox()
-        self.display_scale.addItems(["percentile", "log", "full range"])
+        self.display_scale.addItems(["percentile", "log", "sensor range", "full range"])
         self.display_gamma = NoWheelDoubleSpinBox()
         self.display_gamma.setRange(0.1, 5.0)
         self.display_gamma.setValue(1.0)
         self.display_gamma.setSingleStep(0.1)
-        reset = QPushButton("Reset zoom")
-        reset.clicked.connect(self.image_view.reset_zoom)
+        fit_beam = QPushButton("Fit beam")
+        fit_beam.setToolTip("Zoom to the signal without cropping or resampling the camera frame.")
+        fit_beam.clicked.connect(self.image_view.fit_signal)
+        reset = QPushButton("Full frame")
+        reset.clicked.connect(self.image_view.fit_full_frame)
+        zoom_in = QPushButton("+")
+        zoom_in.setFixedWidth(32)
+        zoom_in.clicked.connect(self.image_view.zoom_in)
+        zoom_out = QPushButton("−")
+        zoom_out.setFixedWidth(32)
+        zoom_out.clicked.connect(self.image_view.zoom_out)
+        self.auto_fit = QCheckBox("Auto-fit beam")
+        self.auto_fit.setChecked(True)
         for widget in (self.colour_mode, self.display_scale, self.display_gamma):
             if isinstance(widget, QComboBox):
                 widget.currentTextChanged.connect(self._rerender)
@@ -515,7 +542,11 @@ class AdvancedLabWindow(QMainWindow):
         view_row.addWidget(QLabel("Gamma"))
         view_row.addWidget(self.display_gamma)
         view_row.addStretch(1)
+        view_row.addWidget(self.auto_fit)
+        view_row.addWidget(fit_beam)
         view_row.addWidget(reset)
+        view_row.addWidget(zoom_out)
+        view_row.addWidget(zoom_in)
         image_layout.addLayout(view_row)
         overlay_row = QHBoxLayout()
         self.overlay_centre = QCheckBox("Detected centre")
@@ -551,16 +582,23 @@ class AdvancedLabWindow(QMainWindow):
         self.gain.setValue(0.0)
         form.addRow("Provider", self.camera_provider_choice)
         form.addRow("Status", self.camera_status)
-        form.addRow("Exposure", self.exposure)
+        form.addRow("Exposure readback", self.exposure)
         form.addRow("Gain", self.gain)
         camera_box.addLayout(form)
+        self.camera_control_note = QLabel("")
+        self.camera_control_note.setObjectName("Muted")
+        self.camera_control_note.setWordWrap(True)
+        camera_box.addWidget(self.camera_control_note)
         provider_row = QHBoxLayout()
         browse = QPushButton("Choose replay…")
         browse.clicked.connect(self._browse_replay)
         connect = QPushButton("Connect")
         connect.clicked.connect(self._connect_camera)
+        self.pc_beamage_controls = QPushButton("PC-Beamage controls")
+        self.pc_beamage_controls.clicked.connect(self._focus_beamage_controls)
         provider_row.addWidget(browse)
         provider_row.addWidget(connect)
+        provider_row.addWidget(self.pc_beamage_controls)
         camera_box.addLayout(provider_row)
         live_row = QHBoxLayout()
         self.start_live_button = QPushButton("Start live")
@@ -807,6 +845,15 @@ class AdvancedLabWindow(QMainWindow):
             configurable = state.camera.exposure_control == "SUPPORTED"
             self.exposure.setEnabled(configurable)
             self.gain.setEnabled(state.camera.gain_control == "SUPPORTED")
+            is_beamage = state.camera.provider == "beamage"
+            self.pc_beamage_controls.setVisible(is_beamage)
+            if is_beamage:
+                self.camera_control_note.setText(
+                    "Live exposure is read back here. The official Pipeline does not provide an exposure-write command; "
+                    "use PC-Beamage controls (the button brings its window forward)."
+                )
+            else:
+                self.camera_control_note.setText("Exposure and gain are editable for this provider.")
             camera_text = (
                 f"{state.camera.provider.upper()} • {state.camera.connection.value} • {state.camera.acquisition.value}"
                 f" • {state.camera.implementation_status}"
@@ -915,6 +962,12 @@ class AdvancedLabWindow(QMainWindow):
         except Exception as exc:
             self._show_error("Camera connection failed", exc)
 
+    def _focus_beamage_controls(self) -> None:
+        if focus_pc_beamage_window():
+            self.camera_status.setText("PC-Beamage brought to front; adjust exposure there and the readback will update here.")
+        else:
+            self.camera_status.setText("PC-Beamage window was not found. Start it and connect the camera first.")
+
     def start_live(self) -> None:
         if self._camera_thread is not None and self._camera_thread.isRunning():
             return
@@ -985,6 +1038,10 @@ class AdvancedLabWindow(QMainWindow):
                 self.live_metrics.setPlainText(f"Analysis unavailable: {exc}")
                 self.current_metrics = None
         self._rerender()
+        if self.pages.currentIndex() == self.PAGE_MEASURE and self.auto_fit.isChecked():
+            self.image_view.fit_signal()
+        elif self.pages.currentIndex() == self.PAGE_HOME and self.home_auto_fit.isChecked():
+            self.home_camera_view.fit_signal()
 
     def _show_metrics(self, metrics: BeamMetrics) -> None:
         keys = (
