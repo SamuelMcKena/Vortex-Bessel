@@ -62,9 +62,10 @@ freshness, exposure, saturation and repeated start/stop behavior.
 ## Lab-PC check
 
 From the portable folder, run `RUN_DIAGNOSTICS.bat`, then
-`TEST_BEAMAGE_PIPE.bat`. A successful pipe check establishes communication and
-prints identity/dimensions/measurements. It does **not** by itself validate the
-BMP as quantitative evidence.
+`TEST_BEAMAGE_PIPE.bat`. Its default check only opens and closes the Pipeline
+handle. Optional commands can be exercised deliberately with
+`python tools\\test_beamage_pipe.py --probe` and one BMP with `--preview`.
+None of these checks by itself validates the BMP as quantitative evidence.
 
 Common failures:
 
