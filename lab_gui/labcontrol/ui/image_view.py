@@ -51,18 +51,32 @@ _COLOUR_ANCHORS: dict[str, tuple[tuple[float, tuple[int, int, int]], ...]] = {
 }
 
 
+_LUT_CACHE: dict[str, np.ndarray] = {}
+
+
+def _colour_lut(name: str) -> np.ndarray:
+    cached = _LUT_CACHE.get(name)
+    if cached is not None:
+        return cached
+    anchors = _COLOUR_ANCHORS.get(name, _COLOUR_ANCHORS["inferno"])
+    positions = np.asarray([item[0] for item in anchors], dtype=np.float64) * 255.0
+    colours = np.asarray([item[1] for item in anchors], dtype=np.float64)
+    x = np.arange(256, dtype=np.float64)
+    lut = np.stack([np.interp(x, positions, colours[:, i]) for i in range(3)], axis=1)
+    lut = np.asarray(np.rint(lut), dtype=np.uint8)
+    _LUT_CACHE[name] = lut
+    return lut
+
+
 def _apply_colour_map(unit: np.ndarray, colour: str) -> np.ndarray:
     name = colour.strip().lower()
+    indices = np.asarray(np.rint(unit * 255.0), dtype=np.uint8)
     if name == "grayscale":
-        return np.asarray(np.rint(unit * 255.0), dtype=np.uint8)
+        return indices
     # Keep old presets/tests meaningful while replacing the old ad-hoc map.
     if name == "false colour":
         name = "inferno"
-    anchors = _COLOUR_ANCHORS.get(name, _COLOUR_ANCHORS["inferno"])
-    positions = np.asarray([item[0] for item in anchors], dtype=np.float64)
-    colours = np.asarray([item[1] for item in anchors], dtype=np.float64)
-    channels = [np.interp(unit.ravel(), positions, colours[:, i]).reshape(unit.shape) for i in range(3)]
-    return np.asarray(np.rint(np.stack(channels, axis=-1)), dtype=np.uint8)
+    return _colour_lut(name)[indices]
 
 
 def render_preview(
@@ -80,13 +94,16 @@ def render_preview(
         raise ValueError("Preview requires a finite 2-D matrix.")
 
     mode = scale.strip().lower()
+    # Estimate display levels on a sparse view for large sensor frames.  Every
+    # source pixel is still mapped into the final full-resolution preview.
+    level_sample = source[::4, ::4] if source.size > 1_000_000 else source
     if mode in {"sensor range", "sensor"} and full_scale is not None and full_scale > 0:
         low, high = 0.0, float(full_scale)
     elif mode in {"full range", "min/max"}:
-        low, high = float(np.min(source)), float(np.max(source))
+        low, high = float(np.min(level_sample)), float(np.max(level_sample))
     else:
         # Use nearly the complete histogram while rejecting a few hot/dead pixels.
-        low, high = (float(v) for v in np.percentile(source, (0.1, 99.95)))
+        low, high = (float(v) for v in np.percentile(level_sample, (0.1, 99.95)))
     unit = np.clip((source - low) / max(high - low, 1e-12), 0.0, 1.0)
     if mode == "log":
         unit = np.log1p(300.0 * unit) / np.log(301.0)
