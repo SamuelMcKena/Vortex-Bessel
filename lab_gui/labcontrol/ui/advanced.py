@@ -14,6 +14,7 @@ from PySide6.QtCore import QObject, Qt, QThread, Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QApplication,
+    QAbstractSpinBox,
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
@@ -846,7 +847,14 @@ class AdvancedLabWindow(QMainWindow):
                 self.current_z.setValue(state.camera.current_z_mm or 0.0)
                 self.z_reference.setText(state.camera.z_reference)
             configurable = state.camera.exposure_control == "SUPPORTED"
-            self.exposure.setEnabled(configurable)
+            self.exposure.setEnabled(True)
+            self.exposure.setReadOnly(not configurable)
+            self.exposure.setButtonSymbols(
+                QAbstractSpinBox.UpDownArrows if configurable else QAbstractSpinBox.NoButtons
+            )
+            self.exposure.setToolTip(
+                "Editable acquisition setting" if configurable else "Live readback; change exposure in PC-Beamage"
+            )
             self.gain.setEnabled(state.camera.gain_control == "SUPPORTED")
             is_beamage = state.camera.provider == "beamage"
             self.pc_beamage_controls.setVisible(is_beamage)
