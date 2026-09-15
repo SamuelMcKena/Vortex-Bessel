@@ -6,6 +6,7 @@ on:
       - 'lab_gui/**'
       - 'docs/lab_control/**'
       - 'tools/analyze_beam_walk.py'
+      - 'tools/build_lab_pc_bundle.py'
       - 'tests/test_lab_workflow.py'
       - 'run_lab_*.py'
       - 'requirements-lab.txt'
@@ -41,3 +42,13 @@ jobs:
           python lab_gui/run_labcontrol_cli.py run recover-q20 \
             --camera replay \
             --output "$RUNNER_TEMP/labcontrol-demo"
+      - name: Build Anaconda / Spyder lab-PC bundle
+        if: matrix.python-version == '3.12'
+        run: python tools/build_lab_pc_bundle.py --output "$RUNNER_TEMP/lab-pc-bundle"
+      - name: Upload lab-PC bundle
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vortex_Bessel_Lab_GUI_v2_1_Anaconda_Spyder
+          path: ${{ runner.temp }}/lab-pc-bundle/Vortex_Bessel_Lab_GUI_v2_1.zip
+          if-no-files-found: error
