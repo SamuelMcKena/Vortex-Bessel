@@ -233,7 +233,7 @@ def test_camera_ui_offers_full_frame_beam_fit_and_beamage_control_route() -> Non
         assert "sensor range" in [window.display_scale.itemText(i) for i in range(window.display_scale.count())]
         window._select_camera_provider("beamage")
         qt.processEvents()
-        assert window.pc_beamage_controls.isVisible() is False or window.pc_beamage_controls.isEnabled()
+        assert not window.pc_beamage_controls.isHidden()
         assert "official Pipeline" in window.camera_control_note.text()
     finally:
         window.close()
