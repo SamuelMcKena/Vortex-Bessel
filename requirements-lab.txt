@@ -1,6 +1,7 @@
 # Minimal isolated lab environment plus Virtual Lab digital-twin dependency.
 numpy>=1.24,<3
 scipy>=1.10,<2
+pandas>=2.2,<4
 matplotlib>=3.8,<4
 Pillow>=10,<13
 PySide6>=6.7,<7
