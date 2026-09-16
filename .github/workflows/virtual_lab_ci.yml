@@ -41,8 +41,11 @@ jobs:
         run: |
           python -m compileall -q \
             lab_gui/labcontrol/virtual_lab.py \
+            lab_gui/labcontrol/virtual_lab_experiments.py \
             lab_gui/labcontrol/mode_controller.py \
             lab_gui/labcontrol/ui/virtual_advanced.py \
+            lab_gui/labcontrol/ui/virtual_advanced_v2.py \
+            lab_gui/run_lab_control.py \
             tools/run_virtual_lab_demo.py
 
       - name: Run unified GUI and Virtual Lab regression tests
