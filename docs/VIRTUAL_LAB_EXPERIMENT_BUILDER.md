@@ -28,6 +28,17 @@ The operator can define an explicit comma-separated z plan as before, or build a
 
 The GUI reports the expected numerical-camera frame count before a correction run and enforces a maximum frame budget for auto-convergence.
 
+## Virtual camera resolution
+
+The Virtual Lab has explicit output/propagation choices rather than silently resizing images:
+
+- **MODEL NATIVE** — uses the currently selected preview/validation/native model grid.
+- **BEAMAGE 4M — 2048×2048** — propagates and returns a 2048×2048 numerical frame, matching the current Beamage frame pixel count used by the lab GUI.
+- **MAXIMUM MODEL — 4096×4096** — propagates and returns a 4096×4096 numerical frame. This is intentionally expensive and should be used for selected validation captures rather than every exploratory optimisation.
+- **MAX MODEL → BEAMAGE 4M — 4096→2048** — propagates on the same 4096×4096 grid as Maximum Model, then integrates each 2×2 model-sample block into one 2048×2048 detector sample. This is the preferred controlled comparison when asking how much structure/metric performance is lost by Beamage-sized sampling relative to the maximum numerical model.
+
+The 2048×2048 setting is currently a **pixel-count equivalent**, not a claim that the virtual camera has the real Beamage field of view or calibrated physical pixel pitch. Those remain unbound until the physical camera geometry is measured. The frame metadata records propagation grid, output frame shape and sensor-sampling method so outputs cannot be confused.
+
 ## SLM correction authority
 
 The SLM-only correction basis is operator-selectable. The default set is:
@@ -74,6 +85,7 @@ Mechanical Alignment Assist is never enabled automatically by this workflow.
 10. Inspect the objective history and accepted coefficients.
 11. Only after the SLM-only plateau, optionally run **Alignment Assist** to quantify the residual benefit of a physical axicon move.
 12. Reveal truth only for post-run validation.
+13. For a sampling study, repeat the same accepted optical state using **MAXIMUM MODEL** and **MAX MODEL → BEAMAGE 4M** and compare the resulting metrics/images.
 
 ## Claim boundary
 
