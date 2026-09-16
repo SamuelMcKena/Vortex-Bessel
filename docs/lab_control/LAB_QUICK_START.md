@@ -23,10 +23,21 @@ reference pupil diameter does not crop or blank the panel.
 python lab_gui\run_lab_control.py
 ```
 
-Start in dummy mode to inspect the live quantitative view. The large central
-image is the numerical camera frame. Use the State page for q/axicon/z context,
-System for readiness and physical-change events, Measure for live/formal capture,
-Optimise / recover for recipes, and Sessions for raw-frame comparison.
+It opens on **Home**: SLM1 and SLM2 quick cards are stacked on the left and the
+camera is the dominant view on the right. Each card exposes connection, complete
+phase preview, vortex charge, retrieved correction, active layers, cast-state
+warning, cast/blank, presets and a Details route. The SLM1 and SLM2 pages contain
+the complete phase editors; they edit the same state and use the same hardware
+controller as Home and the compact GUI.
+
+Start in dummy mode to inspect the live quantitative path. Use Measure for
+camera controls and formal capture, Optimise / recover for recipes, Sessions for
+raw-frame comparison, Calibration for dependency readiness, and System for
+hardware routes and physical context.
+
+Numeric fields ignore the mouse wheel so scrolling cannot silently change a lab
+parameter. Arrow buttons, keyboard stepping and typed entry continue to work.
+Unrelated camera/state refreshes do not replace text while it is being edited.
 
 ## Headless status and demo
 
@@ -66,8 +77,10 @@ On PowerShell use `$env:PYTHONPATH='lab_gui;.'` and
 6. Test small dedicated ±x/±y steering commands and record the measured sign/scale.
 7. Run the advanced GUI in replay mode with archived BMGs. Check orientation,
    dimensions, centre/ring overlays and stored hashes.
-8. Bind the official Beamage bridge on the Windows PC. Validate full numeric
-   frames against a simultaneous vendor numeric export before enabling formal use.
+8. Start PC-Beamage with Pipeline enabled and select `beamage`. The official
+   pipe route supplies vendor measurements and a BMP live preview. Validate that
+   route against a simultaneous numeric export before allowing formal use; the
+   GUI deliberately blocks the BMP from formal capture until then.
 9. Capture a fixed-camera-settings q=0 three-plane stack, then q20 at identical
    z positions. Treat slopes as camera-relative until rail calibration is valid.
 10. Run one deliberately conservative signed correction sweep. Confirm candidate

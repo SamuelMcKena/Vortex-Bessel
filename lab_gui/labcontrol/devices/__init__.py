@@ -7,6 +7,7 @@ from .camera import (
     DummyCameraProvider,
     ReplayCameraProvider,
 )
+from .beamage_pipe import BeamageIdentity, BeamagePipeClient, PIPE_PATH
 from .slm import (
     BackendSlmProvider,
     DummySlmProvider,

@@ -1,9 +1,9 @@
-"""Zoomable quantitative-image display with state-aware overlays."""
+"""Zoomable full-resolution camera-image display with state-aware overlays."""
 
 from __future__ import annotations
 
 import numpy as np
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QColor, QImage, QPen, QPixmap
 from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsScene, QGraphicsView
 
@@ -11,33 +11,104 @@ from ..devices.camera import CameraFrame
 from ..metrics import BeamMetrics
 
 
+_COLOUR_ANCHORS: dict[str, tuple[tuple[float, tuple[int, int, int]], ...]] = {
+    # Smooth scientific display maps.  They affect preview pixels only.
+    "inferno": (
+        (0.00, (0, 0, 4)),
+        (0.18, (40, 11, 84)),
+        (0.38, (101, 21, 110)),
+        (0.58, (159, 42, 99)),
+        (0.76, (219, 92, 50)),
+        (0.90, (249, 164, 36)),
+        (1.00, (252, 255, 164)),
+    ),
+    "turbo": (
+        (0.00, (48, 18, 59)),
+        (0.15, (42, 111, 219)),
+        (0.34, (30, 194, 177)),
+        (0.52, (103, 248, 87)),
+        (0.70, (236, 211, 52)),
+        (0.86, (244, 94, 31)),
+        (1.00, (122, 4, 3)),
+    ),
+    "viridis": (
+        (0.00, (68, 1, 84)),
+        (0.25, (59, 82, 139)),
+        (0.50, (33, 145, 140)),
+        (0.75, (94, 201, 98)),
+        (1.00, (253, 231, 37)),
+    ),
+    "gentec-like": (
+        (0.00, (0, 0, 0)),
+        (0.15, (0, 0, 125)),
+        (0.32, (0, 126, 255)),
+        (0.48, (0, 235, 181)),
+        (0.64, (92, 255, 45)),
+        (0.78, (255, 239, 0)),
+        (0.90, (255, 95, 0)),
+        (1.00, (255, 255, 255)),
+    ),
+}
+
+
+_LUT_CACHE: dict[str, np.ndarray] = {}
+
+
+def _colour_lut(name: str) -> np.ndarray:
+    cached = _LUT_CACHE.get(name)
+    if cached is not None:
+        return cached
+    anchors = _COLOUR_ANCHORS.get(name, _COLOUR_ANCHORS["inferno"])
+    positions = np.asarray([item[0] for item in anchors], dtype=np.float64) * 255.0
+    colours = np.asarray([item[1] for item in anchors], dtype=np.float64)
+    x = np.arange(256, dtype=np.float64)
+    lut = np.stack([np.interp(x, positions, colours[:, i]) for i in range(3)], axis=1)
+    lut = np.asarray(np.rint(lut), dtype=np.uint8)
+    _LUT_CACHE[name] = lut
+    return lut
+
+
+def _apply_colour_map(unit: np.ndarray, colour: str) -> np.ndarray:
+    name = colour.strip().lower()
+    indices = np.asarray(np.rint(unit * 255.0), dtype=np.uint8)
+    if name == "grayscale":
+        return indices
+    # Keep old presets/tests meaningful while replacing the old ad-hoc map.
+    if name == "false colour":
+        name = "inferno"
+    return _colour_lut(name)[indices]
+
+
 def render_preview(
     raw: np.ndarray,
     *,
-    colour: str = "false colour",
+    colour: str = "inferno",
     scale: str = "percentile",
     gamma: float = 1.0,
+    full_scale: float | None = None,
 ) -> np.ndarray:
-    """Create display pixels without modifying or returning analysis data."""
+    """Create display pixels without cropping, resampling or mutating camera data."""
 
     source = np.asarray(raw, dtype=np.float64)
     if source.ndim != 2 or not np.isfinite(source).all():
         raise ValueError("Preview requires a finite 2-D matrix.")
-    if scale == "full range":
-        low, high = float(np.min(source)), float(np.max(source))
+
+    mode = scale.strip().lower()
+    # Estimate display levels on a sparse view for large sensor frames.  Every
+    # source pixel is still mapped into the final full-resolution preview.
+    level_sample = source[::4, ::4] if source.size > 1_000_000 else source
+    if mode in {"sensor range", "sensor"} and full_scale is not None and full_scale > 0:
+        low, high = 0.0, float(full_scale)
+    elif mode in {"full range", "min/max"}:
+        low, high = float(np.min(level_sample)), float(np.max(level_sample))
     else:
-        low, high = (float(v) for v in np.percentile(source, (1.0, 99.8)))
+        # Use nearly the complete histogram while rejecting a few hot/dead pixels.
+        low, high = (float(v) for v in np.percentile(level_sample, (0.1, 99.95)))
     unit = np.clip((source - low) / max(high - low, 1e-12), 0.0, 1.0)
-    if scale == "log":
-        unit = np.log1p(100.0 * unit) / np.log(101.0)
+    if mode == "log":
+        unit = np.log1p(300.0 * unit) / np.log(301.0)
     unit = np.power(unit, 1.0 / max(float(gamma), 0.05))
-    if colour == "grayscale":
-        return np.asarray(np.rint(unit * 255.0), dtype=np.uint8)
-    # Compact perceptual-ish blue/cyan/yellow/red map; display only.
-    red = np.clip(1.8 * unit - 0.45, 0.0, 1.0)
-    green = np.clip(1.8 - np.abs(4.0 * unit - 2.0), 0.0, 1.0)
-    blue = np.clip(1.35 - 1.8 * unit, 0.0, 1.0)
-    return np.asarray(np.rint(np.stack((red, green, blue), axis=-1) * 255.0), dtype=np.uint8)
+    return _apply_colour_map(unit, colour)
 
 
 class QuantitativeImageView(QGraphicsView):
@@ -46,7 +117,6 @@ class QuantitativeImageView(QGraphicsView):
         self.setScene(QGraphicsScene(self))
         self._pixmap_item = QGraphicsPixmapItem()
         self.scene().addItem(self._pixmap_item)
-        self.setRenderHints(self.renderHints())
         self.setDragMode(QGraphicsView.ScrollHandDrag)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.setResizeAnchor(QGraphicsView.AnchorViewCenter)
@@ -71,9 +141,17 @@ class QuantitativeImageView(QGraphicsView):
         show_roi: bool = True,
     ) -> None:
         self.frame = frame
-        self.raw_frame = np.array(frame.data, copy=True)
+        self.raw_frame = frame.data
         self.metrics = metrics
-        preview = render_preview(frame.data, colour=colour, scale=scale, gamma=gamma)
+        # Do not decimate Beamage's 2048x2048 frame.  Zoom is a view transform,
+        # so every acquired pixel remains available when inspecting the beam.
+        preview = render_preview(
+            frame.data,
+            colour=colour,
+            scale=scale,
+            gamma=gamma,
+            full_scale=frame.full_scale,
+        )
         self.set_preview_array(
             preview,
             metrics=metrics,
@@ -155,14 +233,53 @@ class QuantitativeImageView(QGraphicsView):
                 self.scene().addRect(1, 1, width - 2, height - 2, QPen(QColor("#ff5d73"), 4.0))
             )
         if self._first_image:
-            self.fitInView(self.scene().sceneRect(), Qt.KeepAspectRatio)
+            self.fit_full_frame()
             self._first_image = False
+
+    def signal_rect(self, *, padding: float = 0.35) -> QRectF | None:
+        """Estimate a display-only beam box; never changes the stored/analyzed frame."""
+
+        if self.raw_frame is None:
+            return None
+        source = np.asarray(self.raw_frame, dtype=np.float64)
+        low, high = (float(v) for v in np.percentile(source, (50.0, 99.95)))
+        threshold = low + 0.16 * max(high - low, 0.0)
+        ys, xs = np.nonzero(source >= threshold)
+        if xs.size < 4:
+            return None
+        x0, x1 = float(xs.min()), float(xs.max())
+        y0, y1 = float(ys.min()), float(ys.max())
+        width = max(8.0, x1 - x0 + 1.0)
+        height = max(8.0, y1 - y0 + 1.0)
+        extra_x = max(12.0, width * float(padding))
+        extra_y = max(12.0, height * float(padding))
+        rect = QRectF(x0 - extra_x, y0 - extra_y, width + 2 * extra_x, height + 2 * extra_y)
+        return rect.intersected(self.scene().sceneRect())
+
+    def fit_signal(self) -> None:
+        rect = self.signal_rect()
+        if rect is not None and not rect.isEmpty():
+            self.resetTransform()
+            self.fitInView(rect, Qt.KeepAspectRatio)
+
+    def fit_full_frame(self) -> None:
+        self.resetTransform()
+        if not self.scene().sceneRect().isEmpty():
+            self.fitInView(self.scene().sceneRect(), Qt.KeepAspectRatio)
+
+    def zoom_in(self) -> None:
+        self.scale(1.35, 1.35)
+
+    def zoom_out(self) -> None:
+        self.scale(1.0 / 1.35, 1.0 / 1.35)
 
     def wheelEvent(self, event):  # noqa: N802 - Qt API
         factor = 1.18 if event.angleDelta().y() > 0 else 1.0 / 1.18
         self.scale(factor, factor)
 
+    def mouseDoubleClickEvent(self, event):  # noqa: N802 - Qt API
+        self.fit_signal()
+        event.accept()
+
     def reset_zoom(self) -> None:
-        self.resetTransform()
-        if not self.scene().sceneRect().isEmpty():
-            self.fitInView(self.scene().sceneRect(), Qt.KeepAspectRatio)
+        self.fit_full_frame()

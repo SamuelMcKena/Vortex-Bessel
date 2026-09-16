@@ -242,12 +242,17 @@ class LabController:
 
     def _publish_camera_selection(self, provider: CameraProvider, provider_name: str) -> None:
         declared = DataKind(getattr(provider, "declared_data_kind", "EXPERIMENT"))
+        configurable = bool(getattr(provider, "supports_configuration", True))
         self.store.update(
             lambda state: (
                 setattr(state.camera, "provider", provider_name),
                 setattr(state.camera, "implementation_status", provider.implementation_status),
                 setattr(state.camera, "connection", ConnectionState.DISCONNECTED),
                 setattr(state.camera, "acquisition", AcquisitionState.STOPPED),
+                setattr(state.camera, "device_id", None),
+                setattr(state.camera, "exposure_control", "SUPPORTED" if configurable else "CONTROLLED_IN_PC_BEAMAGE"),
+                setattr(state.camera, "gain_control", "SUPPORTED" if configurable else "CONTROLLED_IN_PC_BEAMAGE"),
+                setattr(state.camera, "frame_quality", "QUANTITATIVE" if provider_name != "beamage" else "LIVE_PREVIEW_UNVERIFIED"),
                 setattr(state.system, "data_kind", declared),
             ),
             source="camera_provider",
@@ -267,14 +272,16 @@ class LabController:
         try:
             status = self.camera_provider.connect()
             snapshot = self.store.snapshot()
-            self.camera_provider.configure(
-                exposure_us=snapshot.camera.exposure_us,
-                gain=snapshot.camera.gain,
-            )
+            if getattr(self.camera_provider, "supports_configuration", True):
+                self.camera_provider.configure(
+                    exposure_us=snapshot.camera.exposure_us,
+                    gain=snapshot.camera.gain,
+                )
             self.store.update(
                 lambda state: (
                     setattr(state.camera, "connection", status.connection),
                     setattr(state.camera, "implementation_status", status.implementation_status),
+                    setattr(state.camera, "device_id", getattr(self.camera_provider, "device_serial", None)),
                     setattr(state.camera, "last_error", None),
                 ),
                 source="camera_provider",
@@ -323,7 +330,15 @@ class LabController:
                 setattr(state.camera, "last_frame_id", frame.frame_id),
                 setattr(state.camera, "last_frame_utc", frame.timestamp_utc),
                 setattr(state.camera, "shape_yx", frame.shape_yx),
+                setattr(state.camera, "full_scale", frame.full_scale),
+                setattr(state.camera, "exposure_us", frame.exposure_us),
+                setattr(state.camera, "gain", frame.gain),
                 setattr(state.camera, "current_z_mm", frame.z_mm),
+                setattr(
+                    state.camera,
+                    "frame_quality",
+                    "QUANTITATIVE" if frame.metadata.get("quantitative_valid", True) else "LIVE_PREVIEW_UNVERIFIED",
+                ),
                 setattr(state.camera, "last_error", None),
                 setattr(state.system, "data_kind", DataKind(frame.data_kind)),
             ),
