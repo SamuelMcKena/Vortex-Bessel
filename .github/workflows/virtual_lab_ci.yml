@@ -1,0 +1,45 @@
+name: Virtual Lab GUI CI
+
+on:
+  push:
+    branches: [feature/virtual-lab-blind-correction]
+  pull_request:
+    branches: [feature/unified-lab-control]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  virtual-lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      PYTHONPATH: .:lab_gui
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install numerical and lab GUI dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install -r lab_gui/requirements.txt
+          python -m pip install -e . --no-deps
+
+      - name: Compile Virtual Lab source
+        run: |
+          python -m compileall -q \
+            lab_gui/labcontrol/virtual_lab.py \
+            lab_gui/labcontrol/mode_controller.py \
+            lab_gui/labcontrol/ui/virtual_advanced.py \
+            tools/run_virtual_lab_demo.py
+
+      - name: Run unified GUI and Virtual Lab regression tests
+        run: |
+          python -m pytest lab_gui/tests -q
