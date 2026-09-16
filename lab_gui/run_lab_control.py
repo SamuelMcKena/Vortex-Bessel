@@ -13,10 +13,10 @@ for path in (REPO_ROOT, HERE):
     if text not in sys.path:
         sys.path.insert(0, text)
 
-# The experiment-builder window is a strict extension of the existing unified
-# cockpit: Home/live/recorded behaviour stays intact, while Virtual Lab gains
-# explicit multi-fault perturbations, measurement budgets and auto-convergence.
-from labcontrol.ui.virtual_advanced_v2 import main
+# This remains the same unified cockpit.  The v3 window adds explicit multi-fault
+# perturbations, measurement budgets, auto-converging SLM-only recovery and
+# Beamage/max-resolution virtual camera choices.
+from labcontrol.ui.virtual_advanced_v3 import main
 
 
 if __name__ == "__main__":
