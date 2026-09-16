@@ -59,7 +59,7 @@ def test_recorded_mode_is_visibly_read_only() -> None:
         for _ in range(4):
             qt.processEvents()
         assert window.mode_controller.operating_mode is OperatingMode.RECORDED_LAB
-        assert "READ" in window.mode_badge.text().upper()
+        assert "SLM COMMANDS DISABLED" in window.mode_badge.text().upper()
         assert window.slm_quick_cards["SLM1"].connection.text() == "READ ONLY"
         assert window.slm_quick_cards["SLM2"].connection.text() == "READ ONLY"
     finally:
