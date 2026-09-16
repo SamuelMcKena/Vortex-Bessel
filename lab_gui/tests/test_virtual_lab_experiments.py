@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 
+import pytest
 from PySide6.QtWidgets import QApplication
 
 from labcontrol.ui.virtual_advanced_v2 import VirtualLabExperimentWindow
@@ -40,16 +41,16 @@ def test_manual_perturbations_can_combine_beam_wavefront_and_alignment_faults() 
     truth = engine.reveal_truth()["hidden_truth"]
 
     assert handle.kind == "MANUAL"
-    assert truth["radius_x_scale"] == 1.08
-    assert truth["radius_y_scale"] == 0.94
-    assert truth["beam_decentre_m"] == [75e-6, -40e-6]
-    assert truth["beam_pointing_rad"] == [0.11e-3, -0.07e-3]
-    assert truth["axicon_decentre_m"] == [35e-6, -20e-6]
-    assert truth["input_zernike_waves_rms"]["defocus"] == 0.12
-    assert truth["input_zernike_waves_rms"]["astigmatism_x"] == -0.08
-    assert truth["input_zernike_waves_rms"]["coma_y"] == 0.09
-    assert truth["curvature_radius_x_m"] == 4.5
-    assert truth["curvature_radius_y_m"] == -6.0
+    assert truth["radius_x_scale"] == pytest.approx(1.08)
+    assert truth["radius_y_scale"] == pytest.approx(0.94)
+    assert truth["beam_decentre_m"] == pytest.approx([75e-6, -40e-6])
+    assert truth["beam_pointing_rad"] == pytest.approx([0.11e-3, -0.07e-3])
+    assert truth["axicon_decentre_m"] == pytest.approx([35e-6, -20e-6])
+    assert truth["input_zernike_waves_rms"]["defocus"] == pytest.approx(0.12)
+    assert truth["input_zernike_waves_rms"]["astigmatism_x"] == pytest.approx(-0.08)
+    assert truth["input_zernike_waves_rms"]["coma_y"] == pytest.approx(0.09)
+    assert truth["curvature_radius_x_m"] == pytest.approx(4.5)
+    assert truth["curvature_radius_y_m"] == pytest.approx(-6.0)
 
 
 def test_zero_curvature_is_collimated() -> None:
