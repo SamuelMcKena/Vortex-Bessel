@@ -2,11 +2,19 @@ from __future__ import annotations
 
 import math
 
+import numpy as np
 import pytest
 from PySide6.QtWidgets import QApplication
 
+from slm_lab_control.config import AppConfig
+
+from labcontrol.devices.camera import DummyCameraProvider
+from labcontrol.mode_controller import ModeAwareLabController
+from labcontrol.state import ExperimentState, ExperimentStore
 from labcontrol.ui.virtual_advanced_v2 import VirtualLabExperimentWindow
+from labcontrol.virtual_lab import OperatingMode, VirtualLabGeometry
 from labcontrol.virtual_lab_experiments import (
+    AutoConvergeRunner,
     DEFAULT_SLM_CORRECTION_PARAMETERS,
     ExperimentalVirtualBenchEngine,
     ManualPerturbationSpec,
@@ -82,6 +90,46 @@ def test_slm_correction_authority_includes_alignment_like_tip_tilt() -> None:
     assert DEFAULT_SLM_CORRECTION_PARAMETERS[:2] == ("tip_x", "tip_y")
     assert "defocus" in DEFAULT_SLM_CORRECTION_PARAMETERS
     assert "coma_x" in DEFAULT_SLM_CORRECTION_PARAMETERS
+
+
+def test_auto_converge_executes_verified_slm_only_cycle_on_small_virtual_bench(tmp_path) -> None:
+    state = ExperimentState.from_app_config(AppConfig())
+    store = ExperimentStore(state)
+    camera = DummyCameraProvider(store.snapshot, shape_yx=(48, 48))
+    engine = ExperimentalVirtualBenchEngine(
+        VirtualLabGeometry(preview_grid_n=48, validation_grid_n=64),
+        quality="preview",
+    )
+    controller = ModeAwareLabController(
+        store,
+        tmp_path,
+        camera_provider=camera,
+        virtual_engine=engine,
+    )
+    controller.set_operating_mode(OperatingMode.VIRTUAL_LAB)
+    engine.apply_manual_perturbations(
+        ManualPerturbationSpec(defocus_waves=0.12, beam_pointing_x_mrad=0.03),
+        seed=7,
+    )
+    result = AutoConvergeRunner(controller).run(
+        (1.0, 2.0),
+        targets=("SLM2",),
+        parameters=("defocus",),
+        initial_probe_amplitude_waves=0.10,
+        max_cycles=1,
+        convergence_fraction=0.0,
+        patience=1,
+        max_frames=100,
+        seed=7,
+    )
+    assert len(result.cycles) == 1
+    assert result.total_frames == estimated_blind_cycle_frames(2, 1, 1, 1)
+    assert np.isfinite(result.initial_objective)
+    assert np.isfinite(result.final_objective)
+    # This run never enables mechanical Alignment Assist; all accepted changes
+    # come through the virtual SLM provider.
+    assert controller.virtual_engine.alignment_command.axicon_x_um == 0.0
+    assert controller.virtual_engine.alignment_command.axicon_y_um == 0.0
 
 
 def test_extended_gui_exposes_fault_builder_measurement_budget_and_autoconverge() -> None:
