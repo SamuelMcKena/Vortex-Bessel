@@ -200,8 +200,10 @@ class MainWindow(QtWidgets.QMainWindow):
         panel = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout(panel)
         layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(6)
+
         bar = QtWidgets.QHBoxLayout()
-        bar.addWidget(self._section("3D DIGITAL TWIN"))
+        bar.addWidget(self._section("DIGITAL TWIN + PATH MAP"))
         bar.addStretch(1)
         self.cad_status = QtWidgets.QLabel("CAD-derived rig")
         bar.addWidget(self.cad_status)
@@ -209,13 +211,50 @@ class MainWindow(QtWidgets.QMainWindow):
         load_cad.clicked.connect(self._load_step_dialog)
         bar.addWidget(load_cad)
         clear = QtWidgets.QPushButton("Clear traces")
-        clear.clicked.connect(lambda: self.viewer.clear_traces())
+        clear.clicked.connect(self._clear_visual_traces)
         bar.addWidget(clear)
         layout.addLayout(bar)
+
         self.viewer = Hexapod3DViewer(panel, self.profile)
         self.viewer.set_status_callback(self._cad_message)
-        layout.addWidget(self.viewer, 1)
+
+        map_container = QtWidgets.QWidget(panel)
+        map_layout = QtWidgets.QVBoxLayout(map_container)
+        map_layout.setContentsMargins(0, 0, 0, 0)
+        map_layout.setSpacing(3)
+
+        map_bar = QtWidgets.QHBoxLayout()
+        map_bar.addWidget(self._section("2D MOVEMENT MAP"))
+        map_bar.addStretch(1)
+        self.map_mode = QtWidgets.QComboBox()
+        self.map_mode.addItems(["Laser path on sample", "HXP XY carriage path"])
+        self.map_span = QtWidgets.QDoubleSpinBox()
+        self.map_span.setRange(2.0, 500.0)
+        self.map_span.setValue(40.0)
+        self.map_span.setSuffix(" mm span")
+        map_bar.addWidget(self.map_mode)
+        map_bar.addWidget(self.map_span)
+        map_layout.addLayout(map_bar)
+
+        self.movement_map = MovementMap2D(map_container)
+        self.map_mode.currentIndexChanged.connect(
+            lambda i: self.movement_map.set_mode("sample" if i == 0 else "hxp")
+        )
+        self.map_span.valueChanged.connect(self.movement_map.set_span_mm)
+        map_layout.addWidget(self.movement_map, 1)
+
+        splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
+        splitter.addWidget(self.viewer)
+        splitter.addWidget(map_container)
+        splitter.setStretchFactor(0, 4)
+        splitter.setStretchFactor(1, 2)
+        splitter.setSizes([620, 250])
+        layout.addWidget(splitter, 1)
         return panel
+
+    def _clear_visual_traces(self) -> None:
+        self.viewer.clear_traces()
+        self.movement_map.clear()
 
     def _build_state_panel(self) -> QtWidgets.QWidget:
         panel = QtWidgets.QWidget()
