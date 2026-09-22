@@ -1,0 +1,4 @@
+# Minimal isolated lab environment; full simulation pins are unchanged.
+numpy>=1.24,<3
+Pillow>=10,<13
+PySide6>=6.7,<7

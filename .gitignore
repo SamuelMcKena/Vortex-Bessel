@@ -5,9 +5,19 @@
 .pytest-tmp-*/
 outputs/pytest_cache/
 outputs/pytest_runtime/
+/.pytest_fu_local/
+/outputs/figures/digital_twin/fu_oscillating_vector_bessel/
 __pycache__/
 *.pyc
 /*.ipynb
 /*.zip
 /vbb_study - Copy/
 vbb_study.egg-info/
+
+# Local lab data, driver files and cast records
+/lab_sessions/
+/lab_gui/outputs/
+/lab_gui/presets/
+/HEDS/
+/hedslib/
+/.venv-lab/
