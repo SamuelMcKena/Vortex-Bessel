@@ -1438,6 +1438,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # ------------------------------------------------------ Pockels / laser
     def _laser_mode_changed(self, _index: int) -> None:
+        # Mode changes must never leave a previously-selected real Pockels
+        # command OPEN and then hide that provider from the operator.
+        self._close_all_pockels()
         self.manual_beam_arm.setChecked(False)
         self.real_script_arm.setChecked(False)
         if self.laser_mode.currentIndex() == 0:
@@ -1533,7 +1536,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 "Pockels command failed",
                 str(exc),
             )
-            raise
+            if script:
+                raise
 
     def _close_all_pockels(self) -> None:
         # Request closure on every provider we may have touched. This prevents
@@ -1654,10 +1658,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _refresh_recipe_list(self) -> None:
         self.recipe_list.clear()
-        for index, step in enumerate(self.recipe.steps, start=1):
-            item = QtWidgets.QListWidgetItem(
-                f"{index:02d}   {step.describe()}"
-            )
+        for step in self.recipe.steps:
+            item = QtWidgets.QListWidgetItem(step.describe())
             item.setData(
                 QtCore.Qt.ItemDataRole.UserRole,
                 step.to_dict(),
@@ -1731,6 +1733,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.recipe_list.setCurrentRow(row + 1)
 
     def _recipe_clear(self) -> None:
+        self._sync_recipe_from_list()
         if not self.recipe.steps and self.recipe_list.count() == 0:
             return
         answer = QtWidgets.QMessageBox.question(
@@ -2304,11 +2307,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.viewer.beam_hit_sample_xy,
         )
 
+        operator_free = not self._recipe_running
         stage_ready = snap.connected
-        self.move_abs_btn.setEnabled(stage_ready)
-        self.home_btn.setEnabled(stage_ready)
+        motion_ready = stage_ready and operator_free
+        self.move_abs_btn.setEnabled(motion_ready)
+        self.home_btn.setEnabled(motion_ready)
         for button in self.jog_buttons:
-            button.setEnabled(stage_ready)
+            button.setEnabled(motion_ready)
 
         laser_ready = laser.connected
         real_manual_ok = (
@@ -2316,12 +2321,27 @@ class MainWindow(QtWidgets.QMainWindow):
             or self.manual_beam_arm.isChecked()
         )
         self.laser_on_btn.setEnabled(
-            laser_ready and real_manual_ok
+            laser_ready and real_manual_ok and operator_free
         )
+        # Closing the process beam remains available even while a script runs.
         self.laser_off_btn.setEnabled(laser_ready)
 
         att_ready = attenuator.connected
-        self.set_attenuator_btn.setEnabled(att_ready)
+        self.set_attenuator_btn.setEnabled(
+            att_ready and operator_free
+        )
+
+        # Do not allow provider switching while motion or a script is active.
+        provider_switch_safe = (
+            not self._recipe_running
+            and snap.state != MotionState.MOVING
+        )
+        self.stage_mode.setEnabled(provider_switch_safe)
+        self.laser_mode.setEnabled(not self._recipe_running)
+        self.attenuator_mode.setEnabled(not self._recipe_running)
+        self.connect_stage_btn.setEnabled(not self._recipe_running)
+        self.disconnect_stage_btn.setEnabled(not self._recipe_running)
+        self.real_script_arm.setEnabled(not self._recipe_running)
 
     def _tick(self) -> None:
         now = time.monotonic()
