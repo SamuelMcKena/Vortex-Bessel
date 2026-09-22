@@ -100,8 +100,8 @@ class Hexapod3DViewer(QtInteractor):
     def clear_traces(self) -> None:
         self._travel_points.clear(); self._process_points.clear()
         self._last_travel_point = None; self._last_process_point = None
-        self._sync_trace_mesh(self._travel_mesh, self._travel_points)
-        self._sync_trace_mesh(self._process_mesh, self._process_points)
+        self._sync_trace_mesh(self._travel_mesh, self._travel_points, self._travel_actor)
+        self._sync_trace_mesh(self._process_mesh, self._process_points, self._process_actor)
         self.render()
 
     @staticmethod
@@ -138,8 +138,8 @@ class Hexapod3DViewer(QtInteractor):
             self._beam_hit_mesh.points = pv.Sphere(radius=5.0, center=hit).points
             self._append_trace(self._travel_points, hit, threshold_mm=0.20, process=False)
             if laser_on: self._append_trace(self._process_points, hit, threshold_mm=0.08, process=True)
-        self._sync_trace_mesh(self._travel_mesh, self._travel_points)
-        self._sync_trace_mesh(self._process_mesh, self._process_points)
+        self._sync_trace_mesh(self._travel_mesh, self._travel_points, self._travel_actor)
+        self._sync_trace_mesh(self._process_mesh, self._process_points, self._process_actor)
         if self._exact_cad: self._update_exact_cad(pose)
         self.render()
 
