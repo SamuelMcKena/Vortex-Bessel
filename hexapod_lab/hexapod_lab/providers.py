@@ -1,0 +1,306 @@
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+import math
+import threading
+import time
+from typing import Callable
+
+from .hxp_client import HXPClient
+from .types import HexapodSnapshot, LaserSnapshot, MotionState, Pose6D
+
+
+class HexapodProvider(ABC):
+    name: str = "provider"
+
+    @abstractmethod
+    def connect(self) -> None: ...
+
+    @abstractmethod
+    def disconnect(self) -> None: ...
+
+    @abstractmethod
+    def snapshot(self) -> HexapodSnapshot: ...
+
+    @abstractmethod
+    def move_absolute(self, pose: Pose6D) -> None: ...
+
+    @abstractmethod
+    def move_incremental(self, delta: Pose6D) -> None: ...
+
+    @abstractmethod
+    def abort(self) -> None: ...
+
+    def initialize(self) -> None:
+        raise NotImplementedError
+
+    def home(self) -> None:
+        raise NotImplementedError
+
+    def tick(self, dt_s: float) -> None:
+        """Advance providers that need a host-side simulation clock."""
+
+
+class VirtualHexapodProvider(HexapodProvider):
+    name = "virtual"
+
+    def __init__(self, *, linear_speed_mm_s: float = 8.0, angular_speed_deg_s: float = 8.0) -> None:
+        self.linear_speed_mm_s = float(linear_speed_mm_s)
+        self.angular_speed_deg_s = float(angular_speed_deg_s)
+        self._connected = False
+        self._actual = Pose6D()
+        self._start = Pose6D()
+        self._target = Pose6D()
+        self._elapsed = 0.0
+        self._duration = 0.0
+        self._state = MotionState.DISCONNECTED
+        self._lock = threading.RLock()
+
+    def connect(self) -> None:
+        with self._lock:
+            self._connected = True
+            self._state = MotionState.IDLE
+
+    def disconnect(self) -> None:
+        with self._lock:
+            self._connected = False
+            self._state = MotionState.DISCONNECTED
+
+    def _plan_to(self, target: Pose6D) -> None:
+        if not self._connected:
+            raise ConnectionError("virtual hexapod is not connected")
+        linear = max(abs(a - b) for a, b in zip(self._actual.as_tuple()[:3], target.as_tuple()[:3]))
+        angular = max(abs(a - b) for a, b in zip(self._actual.as_tuple()[3:], target.as_tuple()[3:]))
+        t_linear = linear / max(self.linear_speed_mm_s, 1e-9)
+        t_angular = angular / max(self.angular_speed_deg_s, 1e-9)
+        self._start = self._actual
+        self._target = target
+        self._elapsed = 0.0
+        self._duration = max(t_linear, t_angular, 0.05)
+        self._state = MotionState.MOVING
+
+    def move_absolute(self, pose: Pose6D) -> None:
+        with self._lock:
+            self._plan_to(pose)
+
+    def move_incremental(self, delta: Pose6D) -> None:
+        with self._lock:
+            self._plan_to(self._target.plus(delta) if self._state == MotionState.MOVING else self._actual.plus(delta))
+
+    def abort(self) -> None:
+        with self._lock:
+            self._target = self._actual
+            self._state = MotionState.ABORTED if self._connected else MotionState.DISCONNECTED
+
+    def initialize(self) -> None:
+        if not self._connected:
+            raise ConnectionError("virtual hexapod is not connected")
+
+    def home(self) -> None:
+        self.move_absolute(Pose6D())
+
+    def tick(self, dt_s: float) -> None:
+        with self._lock:
+            if not self._connected or self._state != MotionState.MOVING:
+                return
+            self._elapsed += max(0.0, float(dt_s))
+            f = min(1.0, self._elapsed / max(self._duration, 1e-9))
+            eased = f * f * (3.0 - 2.0 * f)
+            self._actual = self._start.lerp(self._target, eased)
+            if f >= 1.0:
+                self._actual = self._target
+                self._state = MotionState.IDLE
+
+    def snapshot(self) -> HexapodSnapshot:
+        with self._lock:
+            return HexapodSnapshot(
+                timestamp_s=time.time(),
+                actual=self._actual,
+                setpoint=self._actual,
+                target=self._target,
+                state=self._state,
+                connected=self._connected,
+                provider=self.name,
+                status_text="VIRTUAL" if self._connected else "DISCONNECTED",
+            )
+
+
+@dataclass(frozen=True, slots=True)
+class HXPProviderConfig:
+    host: str
+    port: int = 5001
+    group: str = "HEXAPOD"
+    coordinate_system: str = "Work"
+    timeout_s: float = 2.0
+
+
+class HXPProvider(HexapodProvider):
+    name = "hxp-real"
+
+    def __init__(self, config: HXPProviderConfig) -> None:
+        self.config = config
+        self.client = HXPClient(config.host, config.port, config.timeout_s)
+        self._connected = False
+        self._move_thread: threading.Thread | None = None
+        self._move_error: BaseException | None = None
+        self._last_snapshot: HexapodSnapshot | None = None
+        self._lock = threading.RLock()
+
+    def connect(self) -> None:
+        self.client.connect()
+        self._connected = True
+        self._last_snapshot = self.snapshot()
+
+    def disconnect(self) -> None:
+        self._connected = False
+        self.client.close()
+
+    def _start_blocking_call(self, fn: Callable[[], None]) -> None:
+        with self._lock:
+            if not self._connected:
+                raise ConnectionError("HXP is not connected")
+            if self._move_thread is not None and self._move_thread.is_alive():
+                raise RuntimeError("a blocking HXP motion command is already in progress")
+            self._move_error = None
+
+            def worker() -> None:
+                try:
+                    fn()
+                except BaseException as exc:
+                    self._move_error = exc
+
+            self._move_thread = threading.Thread(target=worker, name="hxp-motion", daemon=True)
+            self._move_thread.start()
+
+    def move_absolute(self, pose: Pose6D) -> None:
+        self._start_blocking_call(lambda: self.client.move_absolute(pose, self.config.group, self.config.coordinate_system))
+
+    def move_incremental(self, delta: Pose6D) -> None:
+        self._start_blocking_call(lambda: self.client.move_incremental(delta, self.config.group, self.config.coordinate_system))
+
+    def abort(self) -> None:
+        self.client.abort(self.config.group)
+
+    def initialize(self) -> None:
+        self._start_blocking_call(lambda: self.client.initialize(self.config.group))
+
+    def home(self) -> None:
+        self._start_blocking_call(lambda: self.client.home(self.config.group))
+
+    def snapshot(self) -> HexapodSnapshot:
+        if not self._connected:
+            return HexapodSnapshot(timestamp_s=time.time(), actual=Pose6D(), state=MotionState.DISCONNECTED, connected=False, provider=self.name)
+        if self._move_error is not None:
+            exc, self._move_error = self._move_error, None
+            raise RuntimeError("HXP motion worker failed") from exc
+        actual = self.client.current_pose(self.config.group)
+        setpoint = self.client.setpoint_pose(self.config.group)
+        target = self.client.target_pose(self.config.group)
+        status = self.client.group_status(self.config.group)
+        try:
+            status_text = self.client.group_status_text(status)
+        except Exception:
+            status_text = f"status {status}"
+        moving = self._move_thread is not None and self._move_thread.is_alive()
+        state = MotionState.MOVING if moving else MotionState.IDLE
+        snap = HexapodSnapshot(timestamp_s=time.time(), actual=actual, setpoint=setpoint, target=target, state=state, status_code=status, status_text=status_text, connected=True, provider=self.name)
+        self._last_snapshot = snap
+        return snap
+
+
+class LaserGateProvider(ABC):
+    name: str = "laser"
+
+    @abstractmethod
+    def connect(self) -> None: ...
+
+    @abstractmethod
+    def disconnect(self) -> None: ...
+
+    @abstractmethod
+    def set_gate(self, enabled: bool) -> None: ...
+
+    @abstractmethod
+    def snapshot(self) -> LaserSnapshot: ...
+
+    def safe_off(self) -> None:
+        try:
+            self.set_gate(False)
+        except Exception:
+            pass
+
+
+class VirtualLaserGate(LaserGateProvider):
+    name = "virtual-lx13"
+
+    def __init__(self) -> None:
+        self._connected = False
+        self._enabled = False
+
+    def connect(self) -> None:
+        self._connected = True
+        self._enabled = False
+
+    def disconnect(self) -> None:
+        self._enabled = False
+        self._connected = False
+
+    def set_gate(self, enabled: bool) -> None:
+        if not self._connected:
+            raise ConnectionError("virtual laser gate is not connected")
+        self._enabled = bool(enabled)
+
+    def snapshot(self) -> LaserSnapshot:
+        return LaserSnapshot(timestamp_s=time.time(), gate_enabled=self._enabled, connected=self._connected, provider=self.name, connector_name="LX13 (simulated)", readback_known=True)
+
+
+@dataclass(frozen=True, slots=True)
+class HXPDigitalLaserConfig:
+    gpio_name: str
+    mask: int
+    enabled_value: int
+    disabled_value: int
+    connector_name: str = "PHAROS LX13"
+    wiring_verified: bool = False
+
+
+class HXPDigitalLaserGate(LaserGateProvider):
+    """HXP digital-output gate for the external PHAROS LX13 interface.
+
+    No pinout, active level, or electrical compatibility is assumed. Construction
+    requires an explicit, user-supplied verified mapping. This class controls a
+    digital output only; it does not bypass the laser's physical safety chain.
+    """
+
+    name = "hxp-lx13-real"
+
+    def __init__(self, client: HXPClient, config: HXPDigitalLaserConfig) -> None:
+        self.client = client
+        self.config = config
+        self._connected = False
+        self._enabled = False
+
+    def connect(self) -> None:
+        if not self.config.wiring_verified:
+            raise RuntimeError("LX13/HXP wiring is not marked verified in hardware configuration")
+        if not self.config.gpio_name or self.config.mask <= 0:
+            raise ValueError("real LX13 gating requires a GPIO name and non-zero mask")
+        if not self.client.connected:
+            raise ConnectionError("HXP must be connected before real LX13 gating can be enabled")
+        self._connected = True
+        self.set_gate(False)
+
+    def disconnect(self) -> None:
+        self.safe_off()
+        self._connected = False
+
+    def set_gate(self, enabled: bool) -> None:
+        if not self._connected:
+            raise ConnectionError("real LX13 gate is not connected/armed")
+        value = self.config.enabled_value if enabled else self.config.disabled_value
+        self.client.digital_set(self.config.gpio_name, self.config.mask, value)
+        self._enabled = bool(enabled)
+
+    def snapshot(self) -> LaserSnapshot:
+        return LaserSnapshot(timestamp_s=time.time(), gate_enabled=self._enabled, connected=self._connected, provider=self.name, connector_name=self.config.connector_name, readback_known=False, metadata={"gpio_name": self.config.gpio_name, "mask": self.config.mask})
