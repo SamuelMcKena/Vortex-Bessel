@@ -5,12 +5,18 @@
     "group": "HEXAPOD",
     "coordinate_system": "Work"
   },
-  "laser": {
+  "pockels": {
     "connector": "PHAROS LX13",
+    "provider": "virtual",
     "gpio_name": "",
     "mask": 0,
-    "enabled_value": 0,
-    "disabled_value": 0,
+    "open_value": 0,
+    "closed_value": 0,
     "wiring_verified": false
+  },
+  "attenuator": {
+    "provider": "virtual",
+    "model": "",
+    "transmission_percent": 0.0
   }
 }
