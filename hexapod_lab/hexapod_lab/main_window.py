@@ -214,7 +214,7 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addLayout(bar)
         self.viewer = Hexapod3DViewer(panel, self.profile)
         self.viewer.set_status_callback(self._cad_message)
-        layout.addWidget(self.viewer.interactor, 1)
+        layout.addWidget(self.viewer, 1)
         return panel
 
     def _build_state_panel(self) -> QtWidgets.QWidget:
