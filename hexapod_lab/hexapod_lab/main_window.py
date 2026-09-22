@@ -41,6 +41,8 @@ DEFAULT_CONFIG = APP_ROOT / "hardware_config.example.json"
 
 
 class RecipeList(QtWidgets.QListWidget):
+    orderChanged = QtCore.Signal()
+
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.InternalMove)
@@ -50,6 +52,10 @@ class RecipeList(QtWidgets.QListWidget):
         )
         self.setAlternatingRowColors(True)
         self.setSpacing(2)
+
+    def dropEvent(self, event: QtGui.QDropEvent) -> None:
+        super().dropEvent(event)
+        self.orderChanged.emit()
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -627,6 +633,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.recipe_list = RecipeList()
         self.recipe_list.setMinimumHeight(420)
+        self.recipe_list.orderChanged.connect(
+            self._update_recipe_preflight_view
+        )
         layout.addWidget(self.recipe_list, 1)
 
         edit_row = QtWidgets.QHBoxLayout()
@@ -1567,13 +1576,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 3500,
             )
         except Exception as exc:
+            if script:
+                raise
             QtWidgets.QMessageBox.critical(
                 self,
                 "Pockels command failed",
                 str(exc),
             )
-            if script:
-                raise
 
     def _close_all_pockels(self) -> None:
         # Request closure on every provider we may have touched. This prevents
@@ -1925,6 +1934,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _run_recipe(self) -> None:
         self._sync_recipe_from_list()
+        if not self.recipe.steps:
+            QtWidgets.QMessageBox.information(
+                self,
+                "Empty script",
+                "Add at least one step before running the script.",
+            )
+            return
         issues = preflight_recipe(self.recipe)
         hw = self._recipe_hardware_issues()
         errors = [
