@@ -7,3 +7,4 @@ assets/*.STP
 assets/*.step
 assets/*.stp
 !assets/README.md
+hardware_config.local.json
