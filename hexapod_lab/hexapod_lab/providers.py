@@ -8,7 +8,7 @@ import time
 from typing import Callable
 
 from .hxp_client import HXPClient
-from .types import HexapodSnapshot, LaserSnapshot, MotionState, Pose6D
+from .types import AttenuatorSnapshot, HexapodSnapshot, LaserSnapshot, MotionState, Pose6D
 
 
 class HexapodProvider(ABC):
@@ -304,3 +304,99 @@ class HXPDigitalLaserGate(LaserGateProvider):
 
     def snapshot(self) -> LaserSnapshot:
         return LaserSnapshot(timestamp_s=time.time(), gate_enabled=self._enabled, connected=self._connected, provider=self.name, connector_name=self.config.connector_name, readback_known=False, metadata={"gpio_name": self.config.gpio_name, "mask": self.config.mask})
+
+
+class AttenuatorProvider(ABC):
+    """Normalized optical-attenuator interface.
+
+    The GUI speaks in requested transmission percent. A device-specific real
+    driver may later translate that setpoint through its calibration curve to
+    motor angle, voltage, or another native quantity.
+    """
+
+    name: str = "attenuator"
+
+    @abstractmethod
+    def connect(self) -> None: ...
+
+    @abstractmethod
+    def disconnect(self) -> None: ...
+
+    @abstractmethod
+    def set_transmission_percent(self, value: float) -> None: ...
+
+    @abstractmethod
+    def snapshot(self) -> AttenuatorSnapshot: ...
+
+
+class VirtualAttenuatorProvider(AttenuatorProvider):
+    name = "virtual-attenuator"
+
+    def __init__(self, initial_transmission_percent: float = 0.0) -> None:
+        self._connected = False
+        self._transmission_percent = self._clamp(initial_transmission_percent)
+
+    @staticmethod
+    def _clamp(value: float) -> float:
+        value = float(value)
+        if not 0.0 <= value <= 100.0:
+            raise ValueError("attenuator transmission must be between 0 and 100 %")
+        return value
+
+    def connect(self) -> None:
+        self._connected = True
+
+    def disconnect(self) -> None:
+        self._connected = False
+
+    def set_transmission_percent(self, value: float) -> None:
+        if not self._connected:
+            raise ConnectionError("virtual attenuator is not connected")
+        self._transmission_percent = self._clamp(value)
+
+    def snapshot(self) -> AttenuatorSnapshot:
+        return AttenuatorSnapshot(
+            timestamp_s=time.time(),
+            transmission_percent=self._transmission_percent,
+            connected=self._connected,
+            provider=self.name,
+            readback_known=True,
+            device_name="Virtual attenuator",
+        )
+
+
+class UnconfiguredAttenuatorProvider(AttenuatorProvider):
+    """Safe placeholder until the physical attenuator hardware is identified.
+
+    This deliberately refuses commands instead of guessing a serial protocol,
+    motor angle convention, calibration curve, voltage range, or controller.
+    """
+
+    name = "real-attenuator-unconfigured"
+
+    def __init__(self, device_name: str = "Real attenuator — driver not configured") -> None:
+        self.device_name = device_name
+
+    def connect(self) -> None:
+        raise RuntimeError(
+            "Real attenuator control is not bound yet. Add the device-specific "
+            "driver/calibration before enabling hardware attenuation commands."
+        )
+
+    def disconnect(self) -> None:
+        return
+
+    def set_transmission_percent(self, value: float) -> None:
+        raise RuntimeError(
+            "Real attenuator control is unavailable until its hardware driver is configured"
+        )
+
+    def snapshot(self) -> AttenuatorSnapshot:
+        return AttenuatorSnapshot(
+            timestamp_s=time.time(),
+            transmission_percent=0.0,
+            connected=False,
+            provider=self.name,
+            readback_known=False,
+            device_name=self.device_name,
+        )
