@@ -10,7 +10,7 @@ from ..controller import LabController
 
 
 class CameraAcquisitionWorker(QObject):
-    frame_ready = Signal(object)
+    frame_ready = Signal(object, object)
     error = Signal(str)
     stopped = Signal()
 
@@ -19,17 +19,27 @@ class CameraAcquisitionWorker(QObject):
         self.controller = controller
         self.target_fps = max(0.5, float(target_fps))
         self._stop = threading.Event()
+        # A queued Qt signal owns its frame until the GUI handles it. Without
+        # acknowledgement, a slow render can accumulate unbounded 4M frames.
+        self._frame_processed = threading.Event()
+        self._frame_processed.set()
 
     @Slot()
     def run(self) -> None:
         self._stop.clear()
+        self._frame_processed.set()
         interval = 1.0 / self.target_fps
         try:
             self.controller.start_camera()
             while not self._stop.is_set() and not QThread.currentThread().isInterruptionRequested():
+                if not self._frame_processed.wait(0.1):
+                    continue
+                if self._stop.is_set() or QThread.currentThread().isInterruptionRequested():
+                    break
                 try:
                     frame = self.controller.acquire_frame(fresh=False, timeout_s=max(0.2, interval * 4))
-                    self.frame_ready.emit(frame)
+                    self._frame_processed.clear()
+                    self.frame_ready.emit(self, frame)
                 except Exception as exc:
                     self.error.emit(str(exc))
                     break
@@ -45,6 +55,12 @@ class CameraAcquisitionWorker(QObject):
         """Thread-safe; may be called directly from the GUI thread."""
 
         self._stop.set()
+        self._frame_processed.set()
+
+    def acknowledge_frame(self) -> None:
+        """Release the single outstanding preview after GUI handling or drop."""
+
+        self._frame_processed.set()
 
 
 def stop_worker_thread(
@@ -55,9 +71,11 @@ def stop_worker_thread(
 ) -> bool:
     if thread is None:
         return True
+    if not thread.isRunning():
+        return True
     if worker is not None:
         worker.request_stop()
     thread.requestInterruption()
-    if thread.isRunning() and not thread.wait(timeout_ms):
+    if not thread.wait(timeout_ms):
         return False
     return True

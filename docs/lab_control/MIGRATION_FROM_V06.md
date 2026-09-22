@@ -25,6 +25,17 @@ presents the familiar controls, but its widgets are no longer the authoritative
 state. Opening it from the advanced GUI shares the same controller, HEDS handles,
 phase results and state events.
 
+The unified GUI no longer exposes a reduced SLM subset. Home provides fast
+controls and both dedicated SLM pages embed the full legacy editor. Switching
+between those views does not create another configuration copy.
+
+## Numeric input stability
+
+Lab parameter controls ignore mouse-wheel changes while preserving typed input,
+arrow buttons and keyboard stepping. State refreshes are signal-blocked and
+targeted to the SLM that actually changed, so live camera frames, tab changes or
+updates from the other SLM do not reset an in-progress value.
+
 ## Circular pupil correction
 
 The legacy `circular_pupil` preset key is accepted only for compatibility and is

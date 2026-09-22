@@ -86,6 +86,7 @@ class SlmState:
 class CameraState:
     provider: str = "dummy"
     implementation_status: str = "SOFTWARE_TESTED"
+    device_id: str | None = None
     connection: ConnectionState = ConnectionState.DISCONNECTED
     acquisition: AcquisitionState = AcquisitionState.STOPPED
     exposure_us: float = 1000.0
@@ -99,6 +100,9 @@ class CameraState:
     last_frame_id: str | None = None
     last_frame_utc: str | None = None
     last_error: str | None = None
+    exposure_control: str = "SUPPORTED"
+    gain_control: str = "SUPPORTED"
+    frame_quality: str = "QUANTITATIVE"
 
 
 @dataclass
@@ -275,6 +279,7 @@ class ExperimentState:
             camera=CameraState(
                 provider=c.get("provider", "dummy"),
                 implementation_status=c.get("implementation_status", "SOFTWARE_TESTED"),
+                device_id=c.get("device_id"),
                 connection=ConnectionState(c.get("connection", "DISCONNECTED")),
                 acquisition=AcquisitionState(c.get("acquisition", "STOPPED")),
                 exposure_us=float(c.get("exposure_us", 1000.0)),
@@ -288,6 +293,9 @@ class ExperimentState:
                 last_frame_id=c.get("last_frame_id"),
                 last_frame_utc=c.get("last_frame_utc"),
                 last_error=c.get("last_error"),
+                exposure_control=c.get("exposure_control", "SUPPORTED"),
+                gain_control=c.get("gain_control", "SUPPORTED"),
+                frame_quality=c.get("frame_quality", "QUANTITATIVE"),
             ),
             geometry=GeometryState(**g),
             session=SessionState(**session),

@@ -1,0 +1,81 @@
+name: Virtual Lab GUI CI
+
+on:
+  push:
+    branches: [feature/virtual-lab-blind-correction]
+  pull_request:
+    branches: [feature/unified-lab-control]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  virtual-lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      PYTHONPATH: .:lab_gui
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install Qt runtime libraries for headless Linux
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libopengl0
+
+      - name: Install numerical and lab GUI dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install -r lab_gui/requirements.txt
+          python -m pip install -e . --no-deps
+
+      - name: Compile Virtual Lab source
+        run: |
+          python -m compileall -q \
+            lab_gui/labcontrol/virtual_lab.py \
+            lab_gui/labcontrol/virtual_lab_experiments.py \
+            lab_gui/labcontrol/virtual_lab_resolution.py \
+            lab_gui/labcontrol/mode_controller.py \
+            lab_gui/labcontrol/ui/virtual_advanced.py \
+            lab_gui/labcontrol/ui/virtual_advanced_v2.py \
+            lab_gui/labcontrol/ui/virtual_advanced_v3.py \
+            lab_gui/run_lab_control.py \
+            tools/run_virtual_lab_demo.py
+
+      - name: Run unified GUI and Virtual Lab regression tests
+        run: |
+          python -m pytest lab_gui/tests tests/test_fu_oscillating_vector_bessel.py -q
+
+      - name: Package tested Virtual Lab source and guides
+        uses: actions/upload-artifact@v4
+        with:
+          name: virtual-lab-full-system
+          path: |
+            lab_gui/
+            vbb_study/
+            tools/test_beamage_pipe.py
+            requirements-lab.txt
+            README_FIRST.txt
+            VIRTUAL_BRIGHTNESS_AND_SMALL_BEAMS.md
+            docs/VIRTUAL_LAB_SYNC_20260922.md
+            START_LAB_CONTROL_V2_1.bat
+            SPYDER_RUN_LAB_CONTROL_V2_1.py
+            INSTALL_OR_REPAIR_DEPENDENCIES.bat
+            LAB_PC_DIAGNOSTICS.py
+            RUN_DIAGNOSTICS.bat
+            TEST_BEAMAGE_PIPE.bat
+            outputs/validation/axicon_radius_response_20260917/
+            outputs/validation/fixed_camera_20260917/
+            figures/virtual_lab/
+            !**/__pycache__/**
+            !lab_gui/outputs/**
+            !lab_gui/logs/**
+            !lab_gui/presets/**

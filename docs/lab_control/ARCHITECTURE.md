@@ -42,11 +42,13 @@ logic back into widgets.
 
 ## One numerical frame pathway
 
-`CameraProvider.acquire_frame()` returns a `CameraFrame` containing an untouched
-float64 quantitative matrix. The same object is used for metrics, raw `.npy`
-storage and display rendering. `render_preview()` creates separate uint8 display
-pixels; percentile scaling, logarithmic scaling, gamma and colour never flow back
-to analysis.
+Quantitatively validated providers return a `CameraFrame` containing an untouched
+float64 matrix. The same object is used for metrics, raw `.npy` storage and
+display rendering. `render_preview()` creates separate uint8 display pixels;
+percentile scaling, logarithmic scaling, gamma and colour never flow back to
+analysis. A provider may explicitly return a preview-only matrix, as the
+PC-Beamage BMP route does; that object can be displayed but formal capture and
+local quantitative metrics reject it.
 
 ## Phase safety
 
@@ -65,13 +67,13 @@ with a 2π phase unit. No second composer or correction-stack path was introduce
 | Archived Beamage v1 BMG reader | **REPLAY-VALIDATED** | Prior branch audit records 52 real BMG files passing strict parsing |
 | Existing HEDS phase-safe implementation | **PHYSICALLY VALIDATED, inherited** | Preserved from the known-good lab branch; this refactor still needs a bench regression |
 | New `HedsSlmProvider` adapter | **HARDWARE-UNVERIFIED in this branch** | Thin adapter is tested with the dummy path; run the lab checklist |
-| Live Beamage named-pipe bridge | **HARDWARE-UNVERIFIED / bridge pending** | Correct provider boundary exists; vendor bridge is not fabricated |
+| Live Beamage named-pipe client | **SOFTWARE-TESTED / HARDWARE-UNVERIFIED** | Official C++ commands/framing are implemented and mock-tested; physical pipe and BMP require bench validation |
 
 ## Current limits
 
 - The broker boundary is in-process; no network/IPC service is shipped yet.
-- The Beamage provider requires a lab-PC bridge built against Gentec's current
-  official named-pipe example.
+- The Beamage vendor BMP is live-preview-only until it is compared against a
+  documented numeric export on the physical lab PC.
 - Live metrics run in the GUI thread at a throttled rate; acquisition itself is
   isolated in a `QThread`. A separate analysis worker is the next step if full
   2048×2048 processing proves too slow.

@@ -5,6 +5,8 @@
 .pytest-tmp-*/
 outputs/pytest_cache/
 outputs/pytest_runtime/
+/.pytest_fu_local/
+/outputs/figures/digital_twin/fu_oscillating_vector_bessel/
 __pycache__/
 *.pyc
 /*.ipynb
@@ -19,3 +21,10 @@ vbb_study.egg-info/
 /HEDS/
 /hedslib/
 /.venv-lab/
+
+# Personal-device runtime files (source and validation figures stay versioned)
+/.pytest_cache/
+/.pytest_*/
+/.codex_checks/
+/lab_gui/logs/
+/*.log

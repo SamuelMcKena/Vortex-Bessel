@@ -53,6 +53,11 @@ class CameraProvider(ABC):
     name = "camera"
     implementation_status = "HARDWARE_UNVERIFIED"
     declared_data_kind = "EXPERIMENT"
+    supports_configuration = True
+    # True when frame.z_mm is an independent observation (a replay file's
+    # recorded plane, a stage readback) rather than a copy of the commanded
+    # position already held in ExperimentState.
+    reports_independent_z = True
 
     @abstractmethod
     def connect(self) -> DeviceStatus: ...
@@ -82,6 +87,9 @@ class DummyCameraProvider(CameraProvider):
 
     name = "dummy"
     implementation_status = "SOFTWARE_TESTED"
+    # z is read back out of the state, so echoing it into the state would only
+    # race the operator's next stage command.
+    reports_independent_z = False
     declared_data_kind = "SYNTHETIC"
 
     def __init__(
@@ -286,7 +294,7 @@ class ReplayCameraProvider(CameraProvider):
 
 
 class BeamageBridge(Protocol):
-    """Contract to be implemented against Gentec's official .NET named-pipe example."""
+    """Contract implemented against Gentec's supplied Unicode C++ pipe example."""
 
     def connect(self) -> None: ...
     def disconnect(self) -> None: ...
@@ -299,23 +307,29 @@ class BeamageBridge(Protocol):
 class BeamageCameraProvider(CameraProvider):
     """Hardware adapter boundary for PC-Beamage's official named-pipe route.
 
-    Gentec publishes a .NET named-pipe example and states that PC-Beamage must be
-    installed and running.  The vendor bridge/protocol is not bundled here, so a
-    concrete bridge must be injected on the Windows lab PC.  Refusing to connect
-    without it is deliberate; screenshots are never treated as camera matrices.
+    The default bridge is the concrete client derived from Gentec's supplied
+    NamedPipeClient-V1.00.12 C++ source.  Dependency injection remains available
+    for exact protocol tests and future higher-fidelity SDK implementations.
     """
 
     name = "beamage"
     implementation_status = "HARDWARE_UNVERIFIED"
     declared_data_kind = "EXPERIMENT"
+    supports_configuration = False
 
     def __init__(self, bridge: BeamageBridge | None = None):
+        if bridge is None:
+            from .beamage_pipe import BeamagePipeClient
+
+            bridge = BeamagePipeClient()
         self._bridge = bridge
         self._connected = False
         self._running = False
         self._exposure_us = 1000.0
         self._gain = 0.0
         self._counter = 0
+        self.device_serial: str | None = None
+        self.image_dimensions: tuple[int | None, int | None] = (None, None)
         self._lock = threading.RLock()
 
     @property
@@ -323,18 +337,19 @@ class BeamageCameraProvider(CameraProvider):
         return self._connected
 
     def connect(self) -> DeviceStatus:
-        if self._bridge is None:
-            raise ProviderUnavailable(
-                "Beamage bridge is not configured. Install/run PC-Beamage and bind a bridge built from "
-                "Gentec's official BEAMAGE .NET named-pipe example; screen capture is not supported."
-            )
         self._bridge.connect()
+        identity = getattr(self._bridge, "identity", None)
+        self.device_serial = getattr(identity, "serial", None)
+        self.image_dimensions = (
+            getattr(identity, "width_px", None),
+            getattr(identity, "height_px", None),
+        )
         self._connected = True
         return DeviceStatus(
             self.name,
             ConnectionState.CONNECTED,
             self.implementation_status,
-            "Official named-pipe bridge connected; live bench behaviour still requires validation",
+            f"PC-Beamage named pipe connected to {self.device_serial or 'reported device'}; BMP preview is hardware-unverified",
         )
 
     def disconnect(self) -> None:
@@ -354,7 +369,7 @@ class BeamageCameraProvider(CameraProvider):
         self._running = True
 
     def stop(self) -> None:
-        if self._bridge is not None and self._connected:
+        if self._connected:
             self._bridge.stop()
         self._running = False
 
@@ -363,7 +378,7 @@ class BeamageCameraProvider(CameraProvider):
             raise ValueError("Exposure must be positive and gain non-negative.")
         self._exposure_us = float(exposure_us)
         self._gain = float(gain)
-        if self._bridge is not None and self._connected:
+        if self._connected:
             self._bridge.configure(self._exposure_us, self._gain)
 
     def acquire_frame(self, *, fresh: bool = True, timeout_s: float = 2.0) -> CameraFrame:

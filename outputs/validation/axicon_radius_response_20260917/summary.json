@@ -1,0 +1,29 @@
+{
+  "scope": "nominal full virtual optical route; q20 on SLM1, no hidden faults, raw native intensity",
+  "k_perp_m_inv": 482741.41419101483,
+  "cone_half_angle_deg": 4.538881896479249,
+  "predicted_first_bright_ring_radius_um": 46.027015353833846,
+  "native_grid_n": 4096,
+  "native_dx_um": 2.75,
+  "radii": [
+    {
+      "input_radius_mm": 1.0,
+      "characteristic_zone_mm": 12.596907404163693,
+      "ring_radius_at_10mm_um": 45.75,
+      "sampled_axial_peak_z_mm": 8.0
+    },
+    {
+      "input_radius_mm": 2.0,
+      "characteristic_zone_mm": 25.193814808327385,
+      "ring_radius_at_10mm_um": 45.75,
+      "sampled_axial_peak_z_mm": 12.0
+    },
+    {
+      "input_radius_mm": 3.0,
+      "characteristic_zone_mm": 37.790722212491076,
+      "ring_radius_at_10mm_um": 45.75,
+      "sampled_axial_peak_z_mm": 20.0
+    }
+  ],
+  "caveat": "Characteristic Gaussian zone is a scale, not a hard edge; fixed-power curves are diagnostic normalisation. Production camera normalises each plane by its own peak."
+}
