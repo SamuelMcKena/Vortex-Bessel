@@ -27,14 +27,18 @@ class Hexapod3DViewer(QtInteractor):
         self._exact_cad = False
         self._pose = Pose6D()
         self._laser_on = False
+        # Traces are stored in SAMPLE-LOCAL CAD coordinates so they stay
+        # attached to the sample when the carriage subsequently moves.
         self._travel_points: list[np.ndarray] = []
         self._process_points: list[np.ndarray] = []
         self._last_travel_point: np.ndarray | None = None
         self._last_process_point: np.ndarray | None = None
+        self._beam_hit_world: np.ndarray | None = None
+        self._beam_hit_sample_xy: tuple[float, float] | None = None
         self._status_cb = None
 
-        self.set_background("#10151c")
-        self.add_axes(line_width=2)
+        self.set_background("#071018", top="#111a24")
+        self.add_axes(line_width=2, color="#71808e")
         self.enable_anti_aliasing("fxaa")
         self._build_fallback_scene()
         self.reset_camera()
@@ -78,24 +82,129 @@ class Hexapod3DViewer(QtInteractor):
         self._leg_mesh.lines = np.asarray(lines, dtype=np.int64)
         self._leg_actor = self.add_mesh(self._leg_mesh,color="#aab5bf",line_width=12,render_lines_as_tubes=True,name="legs")
 
-        self._sample_home_center = top_center + np.array([0.0, 28.0, 0.0])
-        sample = pv.Box(bounds=(-25, 25, top_center[1] + 14.0, top_center[1] + 42.0, -25, 25))
-        self._sample_actor = self.add_mesh(sample, color="#c7d1d9", opacity=0.45, name="sample")
+        self._sample_half_size_mm = np.array([25.0, 14.0, 25.0])
+        self._sample_home_center = top_center + np.array(
+            [0.0, self._sample_half_size_mm[1] + 2.0, 0.0]
+        )
+        sample = pv.Box(
+            bounds=(
+                -self._sample_half_size_mm[0],
+                self._sample_half_size_mm[0],
+                top_center[1] + 2.0,
+                top_center[1] + 2.0 + 2.0 * self._sample_half_size_mm[1],
+                -self._sample_half_size_mm[2],
+                self._sample_half_size_mm[2],
+            )
+        )
+        self._sample_actor = self.add_mesh(
+            sample,
+            color="#a9d7ee",
+            opacity=0.30,
+            smooth_shading=True,
+            specular=0.55,
+            specular_power=35,
+            show_edges=True,
+            edge_color="#8ec5df",
+            name="sample",
+        )
+        self._sample_surface_point_home = np.array(
+            [
+                0.0,
+                top_center[1] + 2.0 + 2.0 * self._sample_half_size_mm[1],
+                0.0,
+            ],
+            dtype=float,
+        )
 
-        beam_origin = top_center + np.array([0.0, 360.0, 0.0])
-        beam_end = np.asarray(self.profile.base_frame_origin_mm, dtype=float) - np.array([0.0, 80.0, 0.0])
-        self._beam_origin = beam_origin
+        # Fixed lab ray rendered ONLY from above to the moving sample surface.
+        # It never passes visually through the hexapod mechanism.
+        self._beam_origin = top_center + np.array([0.0, 340.0, 0.0])
         self._beam_direction = np.array([0.0, -1.0, 0.0])
-        self.add_mesh(pv.Line(beam_origin, beam_end), color="#d75f5f", line_width=3, name="laser-axis")
-        self._beam_hit_mesh = pv.Sphere(radius=5.0, center=top_center)
-        self._beam_hit_actor = self.add_mesh(self._beam_hit_mesh, color="#f0d6d6", name="beam-hit")
+        self._beam_mesh = pv.Line(
+            self._beam_origin,
+            self._sample_surface_point_home,
+        )
+        self._beam_actor = self.add_mesh(
+            self._beam_mesh,
+            color="#ff4f49",
+            line_width=5,
+            opacity=0.22,
+            render_lines_as_tubes=True,
+            name="laser-segment",
+        )
+        self._beam_hit_mesh = pv.Sphere(
+            radius=4.8,
+            center=self._sample_surface_point_home,
+            theta_resolution=28,
+            phi_resolution=20,
+        )
+        self._beam_hit_actor = self.add_mesh(
+            self._beam_hit_mesh,
+            color="#ffd06a",
+            opacity=0.45,
+            name="beam-hit",
+        )
 
-        self._travel_mesh = self._make_line_poly(np.empty((0, 3)))
-        self._travel_actor = self.add_mesh(self._travel_mesh, color="#7f8a96", line_width=3, name="travel-trace")
-        self._process_mesh = self._make_line_poly(np.empty((0, 3)))
-        self._process_actor = self.add_mesh(self._process_mesh, color="#e5b15c", line_width=5, name="process-trace")
+        anchor = np.asarray([self._sample_surface_point_home], dtype=float)
+        self._travel_mesh = self._make_line_poly(anchor)
+        self._travel_actor = self.add_mesh(
+            self._travel_mesh,
+            color="#60707d",
+            line_width=2,
+            opacity=0.28,
+            name="travel-trace",
+        )
+        self._travel_actor.SetVisibility(False)
+        self._process_mesh = self._make_line_poly(anchor.copy())
+        self._process_actor = self.add_mesh(
+            self._process_mesh,
+            color="#ffc45e",
+            line_width=6,
+            render_lines_as_tubes=True,
+            name="process-trace",
+        )
+        self._process_actor.SetVisibility(False)
 
-        self.add_text("CAD-derived Stewart rig • fixed lab laser axis", position="upper_left", font_size=10, name="mode-label")
+        self.add_text(
+            "LIVE DIGITAL TWIN  •  fixed beam / moving sample",
+            position="upper_left",
+            font_size=10,
+            color="#a9b8c5",
+            name="mode-label",
+        )
+
+    @property
+    def beam_hit_sample_xy(self) -> tuple[float, float] | None:
+        """Current laser footprint in moving sample coordinates (X,Y), mm."""
+        return self._beam_hit_sample_xy
+
+    @property
+    def beam_hit_world(self) -> np.ndarray | None:
+        return None if self._beam_hit_world is None else self._beam_hit_world.copy()
+
+    def _beam_sample_surface_intersection(
+        self,
+        pose: Pose6D,
+    ) -> tuple[np.ndarray | None, np.ndarray]:
+        top_tf = self.kinematics.top_transform(pose)
+        surface_point = transform_point(
+            top_tf,
+            self._sample_surface_point_home,
+        )
+        surface_normal = top_tf[:3, :3] @ np.array([0.0, 1.0, 0.0])
+        denom = float(np.dot(surface_normal, self._beam_direction))
+        if abs(denom) < 1e-10:
+            return None, top_tf
+        ray_t = float(
+            np.dot(
+                surface_normal,
+                surface_point - self._beam_origin,
+            )
+            / denom
+        )
+        if ray_t < 0.0:
+            return None, top_tf
+        return self._beam_origin + ray_t * self._beam_direction, top_tf
 
     def clear_traces(self) -> None:
         self._travel_points.clear(); self._process_points.clear()
@@ -105,14 +214,20 @@ class Hexapod3DViewer(QtInteractor):
         self.render()
 
     @staticmethod
-    def _sync_trace_mesh(mesh: pv.PolyData, points: list[np.ndarray]) -> None:
+    def _sync_trace_mesh(mesh: pv.PolyData, points: list[np.ndarray], actor) -> None:
         if not points:
-            mesh.points = np.empty((0, 3)); mesh.lines = np.empty(0, dtype=np.int64); return
-        arr = np.asarray(points, dtype=float); mesh.points = arr
+            actor.SetVisibility(False)
+            return
+        arr = np.asarray(points, dtype=float)
+        mesh.points = arr
         if len(arr) >= 2:
-            mesh.lines = np.hstack(([len(arr)], np.arange(len(arr), dtype=np.int64)))
+            mesh.lines = np.hstack(
+                ([len(arr)], np.arange(len(arr), dtype=np.int64))
+            )
+            actor.SetVisibility(True)
         else:
             mesh.lines = np.empty(0, dtype=np.int64)
+            actor.SetVisibility(False)
 
     def _append_trace(self, points: list[np.ndarray], p: np.ndarray, *, threshold_mm: float, process: bool) -> None:
         last = self._last_process_point if process else self._last_travel_point
@@ -133,14 +248,73 @@ class Hexapod3DViewer(QtInteractor):
             points[2 * i] = bottom[i]; points[2 * i + 1] = top_joints[i]
         self._leg_mesh.points = points
 
-        hit = self.kinematics.beam_intersection_with_top_plane(pose, self._beam_origin, self._beam_direction)
+        hit, top_tf = self._beam_sample_surface_intersection(pose)
+        self._beam_hit_world = None if hit is None else hit.copy()
+        self._beam_hit_sample_xy = None
+
         if hit is not None:
-            self._beam_hit_mesh.points = pv.Sphere(radius=5.0, center=hit).points
-            self._append_trace(self._travel_points, hit, threshold_mm=0.20, process=False)
-            if laser_on: self._append_trace(self._process_points, hit, threshold_mm=0.08, process=True)
-        self._sync_trace_mesh(self._travel_mesh, self._travel_points, self._travel_actor)
-        self._sync_trace_mesh(self._process_mesh, self._process_points, self._process_actor)
-        if self._exact_cad: self._update_exact_cad(pose)
+            # Laser graphic terminates exactly at the top surface of the sample.
+            self._beam_mesh.points = np.vstack([self._beam_origin, hit])
+            self._beam_actor.SetVisibility(True)
+            self._beam_actor.GetProperty().SetOpacity(
+                0.98 if laser_on else 0.16
+            )
+            self._beam_actor.GetProperty().SetLineWidth(
+                6.0 if laser_on else 2.5
+            )
+
+            sphere = pv.Sphere(
+                radius=5.5 if laser_on else 3.5,
+                center=hit,
+                theta_resolution=28,
+                phi_resolution=20,
+            )
+            self._beam_hit_mesh.points = sphere.points
+            self._beam_hit_actor.SetVisibility(True)
+            self._beam_hit_actor.GetProperty().SetOpacity(
+                0.95 if laser_on else 0.22
+            )
+
+            inv_top = np.linalg.inv(top_tf)
+            local_hit = transform_point(inv_top, hit)
+            self._beam_hit_sample_xy = (
+                float(local_hit[0]),
+                float(local_hit[2]),
+            )
+            self._append_trace(
+                self._travel_points,
+                local_hit,
+                threshold_mm=0.20,
+                process=False,
+            )
+            if laser_on:
+                self._append_trace(
+                    self._process_points,
+                    local_hit,
+                    threshold_mm=0.05,
+                    process=True,
+                )
+        else:
+            self._beam_actor.SetVisibility(False)
+            self._beam_hit_actor.SetVisibility(False)
+
+        self._sync_trace_mesh(
+            self._travel_mesh,
+            self._travel_points,
+            self._travel_actor,
+        )
+        self._sync_trace_mesh(
+            self._process_mesh,
+            self._process_points,
+            self._process_actor,
+        )
+        # The path is sample-local, so it moves with the sample instead of
+        # hanging in laboratory space after the carriage moves.
+        self._set_actor_matrix(self._travel_actor, top_tf)
+        self._set_actor_matrix(self._process_actor, top_tf)
+
+        if self._exact_cad:
+            self._update_exact_cad(pose)
         self.render()
 
     def _update_exact_cad(self, pose: Pose6D) -> None:
@@ -173,11 +347,28 @@ class Hexapod3DViewer(QtInteractor):
             if idx in top_set: color="#6d7882"
             elif idx in base_set: color="#4d5660"
             else: color="#9da8b3"
-            self._cad_actors[idx]=self.add_mesh(mesh,color=color,smooth_shading=True,name=f"cad-{idx:02d}")
+            self._cad_actors[idx] = self.add_mesh(
+                mesh,
+                color=color,
+                smooth_shading=True,
+                specular=0.48,
+                specular_power=34,
+                ambient=0.18,
+                diffuse=0.78,
+                name=f"cad-{idx:02d}",
+            )
         self._exact_cad=True
         self._base_actor.GetProperty().SetOpacity(0.05)
         self._top_actor.GetProperty().SetOpacity(0.05)
         self._leg_actor.GetProperty().SetOpacity(0.08)
         self._update_exact_cad(self._pose)
         self.reset_camera()
-        self._status(f"Loaded exact STEP assembly ({len(cache.mesh_paths)} solids); CAD articulation enabled")
+        self.camera_position = [
+            (760, 590, 820),
+            (0, 245, 0),
+            (0, 1, 0),
+        ]
+        self._status(
+            f"Loaded exact STEP assembly ({len(cache.mesh_paths)} solids); "
+            "CAD articulation enabled"
+        )
