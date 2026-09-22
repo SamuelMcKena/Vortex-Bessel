@@ -492,17 +492,22 @@ class SLMControlPanel(QWidget):
         ]
 
     def _connect_changed_signals(self) -> None:
+        # ``changed`` carries no payload, but valueChanged/currentTextChanged/
+        # stateChanged/toggled all emit one argument.  Connecting ``changed.emit``
+        # directly made PySide raise "changed() only accepts 0 argument(s)" on
+        # every edit, so no SLM parameter change ever reached the state store.
+        emit = lambda *_args: self.changed.emit()  # noqa: E731 - Qt slot adapter
         for w in self._all_widgets():
             if isinstance(w, QLineEdit):
                 w.editingFinished.connect(self.changed.emit)
             elif isinstance(w, (QSpinBox, QDoubleSpinBox)):
-                w.valueChanged.connect(self.changed.emit)
+                w.valueChanged.connect(emit)
             elif isinstance(w, QComboBox):
-                w.currentTextChanged.connect(self.changed.emit)
+                w.currentTextChanged.connect(emit)
             elif isinstance(w, QCheckBox):
-                w.stateChanged.connect(self.changed.emit)
+                w.stateChanged.connect(emit)
             elif isinstance(w, QGroupBox) and w.isCheckable():
-                w.toggled.connect(self.changed.emit)
+                w.toggled.connect(emit)
 
     def _browse_phase_file(self, kind: str) -> None:
         if kind == "wavefront":

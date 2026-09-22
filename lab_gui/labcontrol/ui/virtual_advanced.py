@@ -10,11 +10,12 @@ import faulthandler
 import json
 import sys
 import threading
+import time
 import traceback
 from pathlib import Path
 from typing import Any, Callable
 
-from PySide6.QtCore import QObject, QThread, Signal
+from PySide6.QtCore import QObject, Qt, QThread, Signal, Slot
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -26,13 +27,17 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMessageBox,
     QPlainTextEdit,
+    QGridLayout,
     QPushButton,
     QSplitter,
+    QVBoxLayout,
+    QWidget,
 )
 
 from slm_lab_control.config import AppConfig
 from slm_lab_control.ui.style import APP_QSS
 
+from ..calibration import CalibrationKey, CalibrationStatus
 from ..devices.camera import DummyCameraProvider, ReplayCameraProvider
 from ..metrics import MetricEngine
 from ..mode_controller import ModeAwareLabController
@@ -54,7 +59,7 @@ _FAULT_LOG_HANDLE = None
 
 
 class _VirtualTaskWorker(QObject):
-    frame = Signal(object)
+    frame = Signal(object, object)
     progress = Signal(object)
     finished = Signal(object)
     failed = Signal(str)
@@ -63,14 +68,29 @@ class _VirtualTaskWorker(QObject):
         super().__init__()
         self.task = task
         self.cancel_event = threading.Event()
+        self._preview_pending = threading.Event()
+        self._last_preview_utc = 0.0
 
     def cancel(self) -> None:
         self.cancel_event.set()
 
+    def _emit_preview(self, frame) -> None:
+        # Probe frames are evidence for the optimiser, not a video stream. The
+        # optimiser may produce them far faster than Qt can draw a 4M image.
+        now = time.monotonic()
+        if self._preview_pending.is_set() or now - self._last_preview_utc < 0.5:
+            return
+        self._preview_pending.set()
+        self._last_preview_utc = now
+        self.frame.emit(self, frame)
+
+    def acknowledge_frame(self) -> None:
+        self._preview_pending.clear()
+
     def run(self) -> None:
         try:
             result = self.task(
-                frame_callback=self.frame.emit,
+                frame_callback=self._emit_preview,
                 progress_callback=self.progress.emit,
                 cancelled=self.cancel_event.is_set,
             )
@@ -154,7 +174,7 @@ class VirtualLabWindow(AdvancedLabWindow):
             "The digital twin impersonates the camera at the CameraFrame boundary. Hidden truth is not available to the optimiser.",
         )
 
-        top = QSplitter()
+        top = QSplitter(Qt.Vertical)
         scenario_card, scenario_box = panel(
             "Blind scenario",
             "Seeded hidden errors are reproducible. Exact truth remains hidden until you explicitly reveal it.",
@@ -169,7 +189,8 @@ class VirtualLabWindow(AdvancedLabWindow):
         self.virtual_quality = NoWheelComboBox()
         self.virtual_quality.addItems(["preview", "validation"])
         self.virtual_quality.setCurrentText("preview")
-        self.virtual_realistic_camera = QCheckBox("Add deterministic detector noise")
+        self.virtual_realistic_camera = QCheckBox("Detector noise + power flicker")
+        self.virtual_realistic_camera.setChecked(True)
         scenario_form.addRow("Scenario", self.virtual_scenario)
         scenario_form.addRow("Seed", self.virtual_seed)
         scenario_form.addRow("Numerical quality", self.virtual_quality)
@@ -184,14 +205,17 @@ class VirtualLabWindow(AdvancedLabWindow):
         reveal = QPushButton("Reveal truth")
         reveal.setObjectName("Danger")
         reveal.clicked.connect(self._reveal_virtual_truth)
-        buttons.addWidget(generate)
-        buttons.addWidget(reset)
-        buttons.addWidget(reveal)
+        buttons.addWidget(generate, 1)
         scenario_box.addLayout(buttons)
+        more = QHBoxLayout()
+        more.addWidget(reset, 1)
+        more.addWidget(reveal, 1)
+        scenario_box.addLayout(more)
         self.virtual_scenario_status = QLabel("No blind scenario generated in this GUI session.")
         self.virtual_scenario_status.setObjectName("Muted")
         self.virtual_scenario_status.setWordWrap(True)
         scenario_box.addWidget(self.virtual_scenario_status)
+        self.virtual_scenario_card = scenario_card
         top.addWidget(scenario_card)
 
         geometry_card, geometry_box = panel(
@@ -211,21 +235,23 @@ class VirtualLabWindow(AdvancedLabWindow):
         self.virtual_axicon_angle = NoWheelDoubleSpinBox()
         self.virtual_axicon_angle.setRange(0.01, 45.0)
         self.virtual_axicon_angle.setDecimals(4)
-        self.virtual_axicon_angle.setSuffix("° model base angle")
+        self.virtual_axicon_angle.setSuffix("°")
         self.virtual_axicon_angle.setValue(
             self.mode_controller.virtual_engine.geometry.axicon_model_base_angle_deg
         )
-        geom_form.addRow("SLM1 → SLM2 model", self.virtual_slm_sep)
-        geom_form.addRow("Axicon model angle", self.virtual_axicon_angle)
+        geom_form.addRow("SLM1→SLM2", self.virtual_slm_sep)
+        geom_form.addRow("Base angle", self.virtual_axicon_angle)
         geometry_box.addLayout(geom_form)
         apply_geometry = QPushButton("Apply model assumptions")
         apply_geometry.clicked.connect(self._apply_virtual_geometry)
         geometry_box.addWidget(apply_geometry)
+        self.virtual_geometry_card = geometry_card
         top.addWidget(geometry_card)
-        top.setSizes([650, 850])
+        top.setSizes([360, 400])
+        self.virtual_setup_split = top
         layout.addWidget(top)
 
-        body = QSplitter()
+        body = QSplitter(Qt.Vertical)
         image_card, image_box = panel(
             "Mock camera / z acquisition",
             "Same numerical frame contract as the camera pipeline; no false-colour pixels enter the metrics.",
@@ -233,13 +259,18 @@ class VirtualLabWindow(AdvancedLabWindow):
         self.virtual_camera_view = QuantitativeImageView()
         self.virtual_camera_view.setMinimumSize(520, 420)
         image_box.addWidget(self.virtual_camera_view, 1)
+        # These belong to the multi-plane correction plan rather than to the live
+        # camera, so they are kept in their own widget that a subclass can move.
+        z_planner = QWidget()
+        z_planner_box = QVBoxLayout(z_planner)
+        z_planner_box.setContentsMargins(0, 0, 0, 0)
         z_form = QFormLayout()
         self.virtual_z_plan = QLineEdit("31, 34, 37, 40, 43, 46")
         self.virtual_z_plan.setToolTip(
             "Comma-separated virtual millimetres from the post-axicon model plane. Physical camera z=0 remains uncalibrated."
         )
         z_form.addRow("z planes (mm)", self.virtual_z_plan)
-        image_box.addLayout(z_form)
+        z_planner_box.addLayout(z_form)
         acquisition_buttons = QHBoxLayout()
         single = QPushButton("Capture current z")
         single.clicked.connect(self._capture_virtual_current)
@@ -248,11 +279,15 @@ class VirtualLabWindow(AdvancedLabWindow):
         stack.clicked.connect(self._capture_virtual_stack)
         acquisition_buttons.addWidget(single)
         acquisition_buttons.addWidget(stack)
-        image_box.addLayout(acquisition_buttons)
+        z_planner_box.addLayout(acquisition_buttons)
+        self.virtual_z_planner = z_planner
+        image_box.addWidget(z_planner)
         self.virtual_stack_status = QPlainTextEdit()
         self.virtual_stack_status.setReadOnly(True)
         self.virtual_stack_status.setMaximumHeight(170)
         image_box.addWidget(self.virtual_stack_status)
+        self.virtual_camera_card = image_card
+        self.virtual_camera_card_layout = image_box
         body.addWidget(image_card)
 
         correction_card, correction_box = panel(
@@ -276,26 +311,30 @@ class VirtualLabWindow(AdvancedLabWindow):
         correction_form.addRow("Passes", self.virtual_passes)
         correction_box.addLayout(correction_form)
 
-        run_buttons = QHBoxLayout()
-        optimise = QPushButton("Start blind SLM correction")
+        run_buttons = QGridLayout()
+        optimise = QPushButton("Run + apply correction")
         optimise.setObjectName("Accent")
+        optimise.setToolTip("Run the SLM-only sensorless search and apply every verified improvement.")
         optimise.clicked.connect(self._start_blind_virtual_correction)
+        self.virtual_optimise_button = optimise
         align = QPushButton("Alignment Assist")
         align.setToolTip("Separate virtual x/y axicon alignment search after SLM-only correction.")
         align.clicked.connect(self._start_virtual_alignment)
         cancel = QPushButton("Cancel task")
         cancel.setObjectName("Danger")
         cancel.clicked.connect(self._cancel_virtual_task)
-        run_buttons.addWidget(optimise)
-        run_buttons.addWidget(align)
-        run_buttons.addWidget(cancel)
+        run_buttons.addWidget(optimise, 0, 0)
+        run_buttons.addWidget(align, 1, 0)
+        run_buttons.addWidget(cancel, 2, 0)
         correction_box.addLayout(run_buttons)
         self.virtual_progress = QPlainTextEdit()
         self.virtual_progress.setReadOnly(True)
         correction_box.addWidget(self.virtual_progress, 1)
+        self.virtual_correction_card = correction_card
         body.addWidget(correction_card)
-        body.setSizes([850, 650])
+        body.setSizes([700, 380])
         layout.addWidget(body, 1)
+        self.virtual_acquisition_body = body
 
         truth_card, truth_box = panel(
             "Results / truth reveal",
@@ -306,6 +345,7 @@ class VirtualLabWindow(AdvancedLabWindow):
         self.virtual_results.setMaximumHeight(190)
         truth_box.addWidget(self.virtual_results)
         layout.addWidget(truth_card)
+        self.virtual_results_card = truth_card
 
         self._refresh_virtual_geometry_summary()
 
@@ -328,6 +368,8 @@ class VirtualLabWindow(AdvancedLabWindow):
         mode = self.mode_controller.operating_mode
         with blocked_signals((self.mode_choice,)):
             self.mode_choice.setCurrentText(mode.value)
+        if hasattr(self, "recipe_simulated_calibration"):
+            self.recipe_simulated_calibration.setVisible(mode is OperatingMode.VIRTUAL_LAB)
 
         if mode is OperatingMode.VIRTUAL_LAB:
             text = "VIRTUAL LAB • SIMULATED DATA • virtual SLM/camera/stage"
@@ -349,13 +391,15 @@ class VirtualLabWindow(AdvancedLabWindow):
         self.mode_badge.setObjectName(object_name)
         self.mode_badge.style().unpolish(self.mode_badge)
         self.mode_badge.style().polish(self.mode_badge)
-        self.home_camera_status.setText(text + "\n" + self.home_camera_status.text())
+        # The sidebar badge carries the mode. Prepending it to the Home camera
+        # status on every state update made that label grow once per live frame
+        # and eventually distorted the page layout.
 
     def _change_operating_mode(self, text: str) -> None:
         if self._syncing:
             return
         try:
-            self.stop_live()
+            self._stop_live_before_provider_change()
             message = self.mode_controller.set_operating_mode(OperatingMode(text))
             self.current_frame = None
             self.current_metrics = None
@@ -377,23 +421,23 @@ class VirtualLabWindow(AdvancedLabWindow):
             return
         try:
             if name == "virtual":
-                self.stop_live()
+                self._stop_live_before_provider_change()
                 self.mode_controller.set_operating_mode(OperatingMode.VIRTUAL_LAB)
                 self._refresh_state(self.store.snapshot())
                 return
             if name == "beamage":
-                self.stop_live()
+                self._stop_live_before_provider_change()
                 self.mode_controller.set_operating_mode(OperatingMode.LIVE_LAB)
                 self._refresh_state(self.store.snapshot())
                 return
             if name == "replay":
-                self.stop_live()
+                self._stop_live_before_provider_change()
                 self.mode_controller.set_operating_mode(OperatingMode.RECORDED_LAB)
                 self.camera_status.setText("RECORDED LAB selected. Choose quantitative replay files.")
                 self._refresh_state(self.store.snapshot())
                 return
             if name == "dummy":
-                self.stop_live()
+                self._stop_live_before_provider_change()
                 self.mode_controller.set_operating_mode(OperatingMode.VIRTUAL_LAB)
                 self.controller.set_camera_provider(
                     DummyCameraProvider(self.store.snapshot, shape_yx=(512, 512)),
@@ -415,7 +459,7 @@ class VirtualLabWindow(AdvancedLabWindow):
         if not paths:
             return
         try:
-            self.stop_live()
+            self._stop_live_before_provider_change()
             provider = ReplayCameraProvider(
                 paths,
                 loop=True,
@@ -451,6 +495,7 @@ class VirtualLabWindow(AdvancedLabWindow):
         if (
             hasattr(self, "virtual_camera_view")
             and self.mode_controller.operating_mode is OperatingMode.VIRTUAL_LAB
+            and self.pages.currentIndex() == self.PAGE_VIRTUAL
         ):
             self._rerender_virtual()
 
@@ -468,13 +513,61 @@ class VirtualLabWindow(AdvancedLabWindow):
             show_roi=True,
         )
 
+    def _mark_simulated_calibrations(self) -> None:
+        """Let recipes be rehearsed against the digital twin.
+
+        Recipe prerequisites exist so that a physical run cannot quietly rest on
+        unrecorded calibration.  On the virtual bench the model *is* the
+        calibration, so the same keys are recorded as VALID with provenance that
+        says SIMULATED in every field rather than the guard being bypassed.
+        """
+
+        if self.mode_controller.operating_mode is not OperatingMode.VIRTUAL_LAB:
+            super()._mark_simulated_calibrations()
+            return
+        try:
+            engine = self.mode_controller.virtual_engine
+            scenario = engine.scenario
+            summary = engine.geometry.public_summary()
+            for key in CalibrationKey:
+                self.calibration.mark(
+                    key,
+                    CalibrationStatus.VALID,
+                    calibration_id=f"SIMULATED::{scenario.scenario_id}",
+                    evidence=(
+                        "SIMULATED VIRTUAL BENCH - not a physical calibration",
+                        f"scenario_id={scenario.scenario_id}",
+                        f"truth_hash={scenario.truth_hash}",
+                        f"model_grid_n={engine.grid_n}",
+                    ),
+                    source_session="virtual_lab",
+                    hardware_fingerprint={"bench": "VIRTUAL", "geometry": json.dumps(summary, sort_keys=True)},
+                    notes=(
+                        "Recorded so Virtual Lab recipes can be rehearsed. These values describe the "
+                        "numerical model only and must never be carried onto the physical bench."
+                    ),
+                )
+            self.recipe_engine.calibration = self.calibration
+            self._refresh_calibration_table()
+            self._refresh_recipe_prerequisites()
+            self.recipe_log.appendPlainText(
+                "Recorded SIMULATED calibration provenance for the virtual bench; recipes can now be rehearsed."
+            )
+        except Exception as exc:
+            self._show_error("Could not record simulated calibrations", exc)
+
     def _ensure_virtual_mode(self) -> None:
         if self.mode_controller.operating_mode is not OperatingMode.VIRTUAL_LAB:
+            self._stop_live_before_provider_change()
             self.mode_controller.set_operating_mode(OperatingMode.VIRTUAL_LAB)
             with blocked_signals((self.mode_choice, self.home_provider_choice, self.camera_provider_choice)):
                 self.mode_choice.setCurrentText(OperatingMode.VIRTUAL_LAB.value)
                 self.home_provider_choice.setCurrentText("virtual")
                 self.camera_provider_choice.setCurrentText("virtual")
+
+    def _stop_live_before_provider_change(self) -> None:
+        if not self.stop_live():
+            raise RuntimeError("The camera is finishing an in-flight frame. Wait for it to stop before changing providers.")
 
     def _refresh_virtual_geometry_summary(self) -> None:
         if not hasattr(self, "virtual_geometry"):
@@ -543,14 +636,25 @@ class VirtualLabWindow(AdvancedLabWindow):
         self.mode_controller.cast(("SLM1", "SLM2"), persist=False)
 
     def _capture_virtual_current(self) -> None:
+        was_live = self._camera_thread is not None and self._camera_thread.isRunning()
+        stopped = False
         try:
+            if not self.stop_live():
+                raise RuntimeError("Live camera is finishing an in-flight frame; try the single capture again shortly.")
+            stopped = True
             self._ensure_virtual_mode()
-            self._ensure_virtual_cast()
+            if hasattr(self, "_configure_virtual_camera_model"):
+                self._configure_virtual_camera_model()
+            if any(
+                self.mode_controller.virtual_engine.cast_hash(name) is None
+                for name in ("SLM1", "SLM2")
+            ):
+                self._ensure_virtual_cast()
             if self.controller.camera_provider is None or not self.controller.camera_provider.connected:
                 self.controller.connect_camera()
             self.controller.start_camera()
-            z_plan = self._parse_z_plan()
-            self.mode_controller.move_stage(z_plan[0])
+            z_mm = self.virtual_camera_z.value() if hasattr(self, "virtual_camera_z") else self._parse_z_plan()[0]
+            self.mode_controller.move_stage(z_mm)
             frame = self.controller.acquire_frame(fresh=True)
             self._on_frame(frame)
             self.virtual_stack_status.setPlainText(
@@ -560,27 +664,52 @@ class VirtualLabWindow(AdvancedLabWindow):
             )
         except Exception as exc:
             self._show_error("Virtual capture failed", exc)
+        finally:
+            if stopped:
+                try:
+                    self.controller.stop_camera()
+                except Exception:
+                    pass
+                if was_live:
+                    self.start_live()
 
     def _start_virtual_task(self, task: Callable[..., Any]) -> None:
         if self._virtual_thread is not None and self._virtual_thread.isRunning():
             raise RuntimeError("A Virtual Lab task is already running.")
-        self.stop_live()
+        if not self.stop_live():
+            raise RuntimeError("Live camera is still finishing a frame; wait for it to stop before a Virtual Lab task.")
         thread = QThread(self)
         worker = _VirtualTaskWorker(task)
         worker.moveToThread(thread)
-        worker.frame.connect(self._on_frame)
-        worker.progress.connect(self._virtual_progress_event)
-        worker.finished.connect(self._virtual_task_finished)
-        worker.failed.connect(self._virtual_task_failed)
+        # Routed through the dispatcher: these handlers are overridden by the v2/v3
+        # windows, and PySide6 6.11 runs an overridden queued slot on the worker
+        # thread, where touching widgets corrupts the heap.
+        gui = self._gui_thread_dispatcher()
+        worker.frame.connect(gui.forward("_on_task_frame"), Qt.DirectConnection)
+        worker.progress.connect(gui.forward("_virtual_progress_event"), Qt.DirectConnection)
+        worker.finished.connect(gui.forward("_virtual_task_finished"), Qt.DirectConnection)
+        worker.failed.connect(gui.forward("_virtual_task_failed"), Qt.DirectConnection)
         worker.finished.connect(thread.quit)
         worker.failed.connect(thread.quit)
         thread.started.connect(worker.run)
         thread.finished.connect(worker.deleteLater)
         thread.finished.connect(thread.deleteLater)
-        thread.finished.connect(self._virtual_task_cleanup)
+        thread.finished.connect(gui.forward("_virtual_task_cleanup"), Qt.DirectConnection)
         self._virtual_thread = thread
         self._virtual_worker = worker
         thread.start()
+
+    @Slot(object, object)
+    def _on_task_frame(self, worker: _VirtualTaskWorker, frame) -> None:
+        try:
+            if QThread.currentThread() != self.thread():
+                raise RuntimeError("A virtual task preview was delivered outside the GUI thread.")
+            if worker is self._virtual_worker and self.pages.currentIndex() in {
+                self.PAGE_HOME, self.PAGE_MEASURE, self.PAGE_VIRTUAL,
+            }:
+                self._on_frame(frame)
+        finally:
+            worker.acknowledge_frame()
 
     def _capture_virtual_stack(self) -> None:
         try:
@@ -650,6 +779,7 @@ class VirtualLabWindow(AdvancedLabWindow):
             self._virtual_worker.cancel()
             self.virtual_progress.appendPlainText("Cancellation requested…")
 
+    @Slot(object)
     def _virtual_progress_event(self, payload: dict[str, Any]) -> None:
         kind = payload.get("kind", "progress")
         if kind == "z_plane":
@@ -673,6 +803,7 @@ class VirtualLabWindow(AdvancedLabWindow):
             line = json.dumps(payload)
         self.virtual_progress.appendPlainText(line)
 
+    @Slot(object)
     def _virtual_task_finished(self, result: Any) -> None:
         if isinstance(result, VirtualStackResult):
             self._last_virtual_stack = result
@@ -685,10 +816,12 @@ class VirtualLabWindow(AdvancedLabWindow):
             self.virtual_results.setPlainText(str(result))
         self.virtual_progress.appendPlainText("Task complete.")
 
+    @Slot(str)
     def _virtual_task_failed(self, message: str) -> None:
         self.virtual_progress.appendPlainText("FAILED: " + message)
         QMessageBox.warning(self, "Virtual Lab task failed", message)
 
+    @Slot()
     def _virtual_task_cleanup(self) -> None:
         self._virtual_thread = None
         self._virtual_worker = None

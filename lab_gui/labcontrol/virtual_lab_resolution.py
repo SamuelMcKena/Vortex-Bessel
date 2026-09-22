@@ -20,12 +20,13 @@ from typing import Any
 
 import numpy as np
 
-from .virtual_lab import EPS
+from .virtual_radiometry import linear_camera_signal
 from .virtual_lab_experiments import ExperimentalVirtualBenchEngine
 
 
 class VirtualOutputResolution(str, Enum):
     NATIVE = "MODEL NATIVE"
+    LIVE_1M = "LIVE MODEL — 1024×1024"
     BEAMAGE_4M = "BEAMAGE 4M — 2048×2048"
     MAXIMUM = "MAXIMUM MODEL — 4096×4096"
     MAXIMUM_TO_BEAMAGE = "MAX MODEL → BEAMAGE 4M — 4096→2048"
@@ -40,6 +41,7 @@ class ResolutionAwareVirtualBenchEngine(ExperimentalVirtualBenchEngine):
         output_resolution: VirtualOutputResolution | str = VirtualOutputResolution.NATIVE,
         beamage_n: int = 2048,
         maximum_grid_n: int = 4096,
+        live_n: int | None = None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -50,6 +52,10 @@ class ResolutionAwareVirtualBenchEngine(ExperimentalVirtualBenchEngine):
         )
         self.beamage_n = int(beamage_n)
         self.maximum_grid_n = int(maximum_grid_n)
+        # Interactive grid.  512 visibly aliases the q=20 ring family while 2048
+        # costs seconds per camera move, so half the Beamage pixel count is the
+        # grid an operator can actually drive a live view on.
+        self.live_n = int(live_n) if live_n is not None else max(16, self.beamage_n // 2)
         if self.beamage_n < 16:
             raise ValueError("beamage_n is unreasonably small.")
         if self.maximum_grid_n < self.beamage_n:
@@ -65,18 +71,22 @@ class ResolutionAwareVirtualBenchEngine(ExperimentalVirtualBenchEngine):
         value = mode if isinstance(mode, VirtualOutputResolution) else VirtualOutputResolution(str(mode))
         with self._lock:
             self._output_resolution = value
+            self._invalidate_optics()
 
     def set_quality(self, quality: str) -> None:
         q = str(quality).strip().lower()
         if q == "maximum":
             with self._lock:
                 self.quality = "maximum"
+                self._invalidate_optics()
             return
         super().set_quality(q)
 
     @property
     def grid_n(self) -> int:
         mode = self._output_resolution
+        if mode is VirtualOutputResolution.LIVE_1M:
+            return self.live_n
         if mode is VirtualOutputResolution.BEAMAGE_4M:
             return self.beamage_n
         if mode in {VirtualOutputResolution.MAXIMUM, VirtualOutputResolution.MAXIMUM_TO_BEAMAGE}:
@@ -87,12 +97,16 @@ class ResolutionAwareVirtualBenchEngine(ExperimentalVirtualBenchEngine):
 
     @property
     def output_n(self) -> int:
-        if self._output_resolution in {
-            VirtualOutputResolution.BEAMAGE_4M,
-            VirtualOutputResolution.MAXIMUM_TO_BEAMAGE,
-        }:
-            return self.beamage_n
-        return self.grid_n
+        # Every mode except the explicit "ideal camera" MAXIMUM view reports
+        # true Beamage pixels; the modes differ only in how finely the SLM relay
+        # is computed.  The axicon grid is always chosen to resolve intensity.
+        if self._output_resolution is VirtualOutputResolution.MAXIMUM:
+            return self.maximum_grid_n
+        return self.beamage_n
+
+    @property
+    def detector_n(self) -> int:
+        return int(self.output_n)
 
     @property
     def shape_yx(self) -> tuple[int, int]:
@@ -111,6 +125,7 @@ class ResolutionAwareVirtualBenchEngine(ExperimentalVirtualBenchEngine):
             "propagation_grid_yx": [self.grid_n, self.grid_n],
             "output_frame_yx": [self.output_n, self.output_n],
             "beamage_pixel_count_reference_yx": [self.beamage_n, self.beamage_n],
+            "live_model_grid_yx": [self.live_n, self.live_n],
             "maximum_model_grid_yx": [self.maximum_grid_n, self.maximum_grid_n],
             "physical_sampling_status": "PIXEL_COUNT_EQUIVALENT_ONLY_NOT_CAMERA_FOV_CALIBRATED",
         }
@@ -146,17 +161,13 @@ class ResolutionAwareVirtualBenchEngine(ExperimentalVirtualBenchEngine):
         gain: float = 0.0,
         full_scale: float = 4095.0,
     ) -> tuple[np.ndarray, dict[str, Any]]:
-        field, metadata = self._forward_complex_field(state, z_mm=float(z_mm))
-        model_intensity = np.abs(field) ** 2
+        model_intensity, metadata = self._model_intensity(state, float(z_mm))
         detector_intensity, sampling_method = self._sensor_integrate(model_intensity)
 
-        peak = float(np.max(detector_intensity))
-        if peak <= EPS:
-            camera = np.zeros_like(detector_intensity, dtype=np.float64)
-        else:
-            scale = 0.72 * float(full_scale) * max(float(exposure_us), 1.0) / 1000.0
-            scale *= max(1.0 + float(gain) / 100.0, 0.0)
-            camera = detector_intensity / peak * scale
+        camera, radiometry = linear_camera_signal(
+            detector_intensity, exposure_us=exposure_us, gain=gain,
+        )
+        metadata.update(radiometry)
 
         if self.realistic_camera:
             with self._lock:
@@ -165,8 +176,10 @@ class ResolutionAwareVirtualBenchEngine(ExperimentalVirtualBenchEngine):
             background = 12.0
             read_sigma = 2.0
             shot = rng.normal(0.0, np.sqrt(np.maximum(camera, 0.0)) * 0.20)
-            camera = camera + background + shot + rng.normal(0.0, read_sigma, camera.shape)
-            metadata["virtual_camera_model"] = "background + shot-like noise + read noise"
+            power_scale = max(0.0, 1.0 + float(rng.normal(0.0, 0.004)))
+            camera = camera * power_scale + background + shot + rng.normal(0.0, read_sigma, camera.shape)
+            metadata["virtual_camera_model"] = "background + shot-like noise + read noise + 0.4% rms source-power fluctuation"
+            metadata["virtual_power_scale"] = power_scale
         else:
             metadata["virtual_camera_model"] = "clean deterministic intensity sampling"
 

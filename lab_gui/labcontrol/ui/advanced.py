@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from PySide6.QtCore import QObject, Qt, QThread, Signal
+from PySide6.QtCore import QObject, Qt, QThread, Signal, Slot
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QApplication,
@@ -26,12 +26,14 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
     QLineEdit,
+    QLayout,
     QListWidget,
     QMainWindow,
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QSpinBox,
+    QScrollArea,
     QSplitter,
     QStackedWidget,
     QTableWidget,
@@ -61,11 +63,18 @@ from ..devices.camera import (
 )
 from ..devices.beamage_pipe import focus_pc_beamage_window
 from ..metrics import BeamMetrics, MetricEngine
-from ..recipes import RecipeEngine, RecipeRun, builtin_recipes
+from ..recipes import RecipeEngine, RecipePrerequisiteError, RecipeRun, builtin_recipes
 from ..state import AcquisitionState, ConnectionState, ExperimentState, ExperimentStore, PhysicalAxiconState
 from .camera_worker import CameraAcquisitionWorker, stop_worker_thread
 from .beam_walk_view import BeamWalkPlot
-from .controls import NoWheelComboBox, NoWheelDoubleSpinBox, NoWheelSpinBox, blocked_signals
+from .controls import (
+    NoWheelComboBox,
+    NoWheelDoubleSpinBox,
+    NoWheelSpinBox,
+    GuiThreadDispatcher,
+    blocked_signals,
+    make_shrinkable,
+)
 from .image_view import QuantitativeImageView, render_preview
 from .slm_views import SlmDetailView, SlmQuickCard
 
@@ -93,6 +102,19 @@ QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QTableWidget, QPlainTextEdit, QL
   background: #0b151c; border: 1px solid #314653; border-radius: 5px; padding: 5px; selection-background-color: #277f70;
 }
 QHeaderView::section { background: #152630; color: #bcd0da; padding: 7px; border: 0; }
+/* Unstyled tab bars were almost unreadable on this dark ground, which hid the
+   parameter groups the Virtual Lab cockpit puts behind tabs. */
+QTabWidget::pane { border: 1px solid #263a47; border-radius: 8px; top: -1px; background: #0e1922; }
+QTabBar::tab {
+  background: #101c24; color: #9fb3bf; border: 1px solid #263a47; border-bottom: 0;
+  border-top-left-radius: 7px; border-top-right-radius: 7px; padding: 7px 14px; margin-right: 3px;
+}
+QTabBar::tab:selected { background: #17323f; color: #ffffff; font-weight: 700; }
+QTabBar::tab:hover:!selected { background: #142733; color: #d4e2ea; }
+#ImageWell { background: #070f14; border: 1px solid #263a47; border-radius: 6px; color: #6f8593; }
+/* A disabled Accent button must not read as the next thing to press. */
+QPushButton:disabled { background: #17242c; color: #5a6b76; border: 1px solid #22323c; }
+QPushButton#Accent:disabled { background: #17242c; color: #5a6b76; font-weight: 600; }
 """
 
 
@@ -103,6 +125,7 @@ def panel(title: str, subtitle: str = "") -> tuple[QFrame, QVBoxLayout]:
     layout.setContentsMargins(15, 14, 15, 14)
     heading = QLabel(title)
     heading.setObjectName("Section")
+    heading.setWordWrap(True)
     layout.addWidget(heading)
     if subtitle:
         note = QLabel(subtitle)
@@ -135,7 +158,19 @@ class AdvancedLabWindow(QMainWindow):
     ):
         super().__init__()
         self.setWindowTitle("Unified Optical Lab Control")
-        self.resize(1680, 1020)
+        screen = QApplication.primaryScreen()
+        if screen is not None:
+            # resize() sets the client area; the title bar and borders are added
+            # on top of it, so sizing to the full work area still overhangs the
+            # screen.  Leave room for the frame and start at the work-area origin.
+            available = screen.availableGeometry()
+            self.resize(
+                min(1680, available.width() - 16),
+                min(1020, available.height() - 48),
+            )
+            self.move(available.left(), available.top())
+        else:
+            self.resize(1680, 1020)
         if controller is None:
             initial = ExperimentState.from_app_config(AppConfig())
             initial.system.experiment_label = "Optical lab session"
@@ -163,6 +198,8 @@ class AdvancedLabWindow(QMainWindow):
         self._syncing = False
         self._build()
         self._state_bridge = StateSignalBridge(self)
+        # AutoConnection updates synchronously for GUI edits, but queues state
+        # changes emitted by the camera worker onto this QObject's GUI thread.
         self._state_bridge.changed.connect(self._on_state_change)
         self._unsubscribe = self.store.subscribe(
             lambda event, state: self._state_bridge.changed.emit(event, state)
@@ -188,7 +225,7 @@ class AdvancedLabWindow(QMainWindow):
 
         sidebar = QFrame()
         sidebar.setObjectName("LabSidebar")
-        sidebar.setFixedWidth(255)
+        sidebar.setMinimumWidth(255)
         side = QVBoxLayout(sidebar)
         side.setContentsMargins(16, 20, 16, 18)
         brand = QLabel("LAB CONTROL")
@@ -222,7 +259,14 @@ class AdvancedLabWindow(QMainWindow):
         self.sidebar_status.setObjectName("Muted")
         self.sidebar_status.setWordWrap(True)
         side.addWidget(self.sidebar_status)
-        root.addWidget(sidebar)
+        sidebar_scroll = QScrollArea()
+        sidebar_scroll.setObjectName("LabSidebarScroll")
+        sidebar_scroll.setWidgetResizable(True)
+        sidebar_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        sidebar_scroll.setWidget(sidebar)
+        self.sidebar_scroll = sidebar_scroll
+        self._apply_sidebar_width()
+        root.addWidget(sidebar_scroll)
 
         body = QWidget()
         body_layout = QVBoxLayout(body)
@@ -233,6 +277,12 @@ class AdvancedLabWindow(QMainWindow):
         self.page_title.setObjectName("Title")
         self.optical_summary = QLabel()
         self.optical_summary.setObjectName("Muted")
+        # Without wrapping, this one-line summary grows with the experiment
+        # state and became the window's minimum width: the application could
+        # not be resized below roughly 1700 px and overflowed smaller screens.
+        self.optical_summary.setWordWrap(True)
+        self.optical_summary.setMinimumWidth(180)
+        self.page_title.setMinimumWidth(140)
         titles.addWidget(self.page_title)
         titles.addWidget(self.optical_summary)
         header.addLayout(titles, 1)
@@ -255,12 +305,20 @@ class AdvancedLabWindow(QMainWindow):
         self._build_presets_page()
         self._build_system_page()
         self._build_system_info_page()
+        # Every page has to survive a laptop-width window; compressing the
+        # inputs once here is what keeps them off a horizontal scrollbar.
+        for page in self._page_contents:
+            make_shrinkable(page)
         self.set_page(self.PAGE_HOME)
 
     def _page(self, title: str, subtitle: str) -> tuple[QWidget, QVBoxLayout]:
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 8, 0, 0)
+        # Every page must remain operable on a laptop or a scaled display.  A
+        # minimum-size layout lets the scroll area grow instead of crushing
+        # cards, form rows and buttons into unreadable horizontal strips.
+        layout.setSizeConstraint(QLayout.SetMinimumSize)
         heading = QLabel(title)
         heading.setObjectName("Section")
         note = QLabel(subtitle)
@@ -268,8 +326,19 @@ class AdvancedLabWindow(QMainWindow):
         note.setWordWrap(True)
         layout.addWidget(heading)
         layout.addWidget(note)
-        self.pages.addWidget(page)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll.setWidget(page)
+        self.pages.addWidget(scroll)
+        if not hasattr(self, "_page_contents"):
+            self._page_contents: list[QWidget] = []
+        self._page_contents.append(page)
         return page, layout
+
+    def _page_layout(self, index: int) -> QVBoxLayout:
+        return self._page_contents[index].layout()
 
     def _build_system_page(self) -> None:
         _, layout = self._page(
@@ -283,6 +352,9 @@ class AdvancedLabWindow(QMainWindow):
         self.calibration_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.calibration_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
         self.calibration_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
+        # Three auto-sized columns otherwise set this page's minimum width.
+        self.calibration_table.setMinimumWidth(240)
+        self.calibration_table.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         calibration_layout.addWidget(self.calibration_table)
         registry_row = QHBoxLayout()
         load = QPushButton("Load registry…")
@@ -301,7 +373,8 @@ class AdvancedLabWindow(QMainWindow):
         self.physical_change = NoWheelComboBox()
         self.physical_change.addItems([change.value for change in PhysicalChange])
         actions.addWidget(self.physical_change)
-        report = QPushButton("Record change and invalidate dependencies")
+        report = QPushButton("Record change + invalidate")
+        report.setToolTip("Record the physical change and mark its dependency closure stale.")
         report.setObjectName("Danger")
         report.clicked.connect(self._report_physical_change)
         actions.addWidget(report)
@@ -324,7 +397,15 @@ class AdvancedLabWindow(QMainWindow):
             "Lab cockpit",
             "Immediate SLM command state on the left; the camera is the dominant live instrument view on the right.",
         )
+        # The window header already names the page and carries the optical
+        # summary; on a laptop screen those two lines are the difference between
+        # both SLM cards fitting and the second one falling below the fold.
+        for _ in range(2):
+            item = layout.takeAt(0)
+            if item is not None and item.widget() is not None:
+                item.widget().setParent(None)
         split = QSplitter(Qt.Horizontal)
+        self.home_split = split
         left = QWidget()
         left_layout = QVBoxLayout(left)
         left_layout.setContentsMargins(0, 0, 4, 0)
@@ -340,9 +421,9 @@ class AdvancedLabWindow(QMainWindow):
 
         camera_card, camera_box = panel("Live camera", "The same acquired frame feeds Home, Measure, metrics and storage.")
         self.home_camera_view = QuantitativeImageView()
-        self.home_camera_view.setMinimumSize(650, 500)
+        self.home_camera_view.setMinimumSize(380, 300)
         camera_box.addWidget(self.home_camera_view, 1)
-        camera_row = QHBoxLayout()
+        camera_row = QGridLayout()
         self.home_provider_choice = NoWheelComboBox()
         self.home_provider_choice.addItems(["dummy", "replay", "beamage"])
         self.home_provider_choice.currentTextChanged.connect(self._select_camera_provider)
@@ -357,15 +438,15 @@ class AdvancedLabWindow(QMainWindow):
         stop.clicked.connect(self.stop_live)
         capture = QPushButton("Formal capture")
         capture.clicked.connect(self._formal_capture)
-        camera_row.addWidget(QLabel("Provider"))
-        camera_row.addWidget(self.home_provider_choice)
-        camera_row.addWidget(connect)
-        camera_row.addWidget(self.home_pc_beamage_controls)
-        camera_row.addWidget(start)
-        camera_row.addWidget(stop)
-        camera_row.addWidget(capture)
+        camera_row.addWidget(QLabel("Provider"), 0, 0)
+        camera_row.addWidget(self.home_provider_choice, 0, 1)
+        camera_row.addWidget(connect, 0, 2)
+        camera_row.addWidget(self.home_pc_beamage_controls, 1, 0, 1, 3)
+        camera_row.addWidget(start, 2, 0)
+        camera_row.addWidget(stop, 2, 1)
+        camera_row.addWidget(capture, 2, 2)
         camera_box.addLayout(camera_row)
-        display_row = QHBoxLayout()
+        display_row = QGridLayout()
         self.home_colour_mode = NoWheelComboBox()
         self.home_colour_mode.addItems(["inferno", "gentec-like", "turbo", "viridis", "grayscale"])
         self.home_display_scale = NoWheelComboBox()
@@ -384,6 +465,15 @@ class AdvancedLabWindow(QMainWindow):
         fit_beam.clicked.connect(self.home_camera_view.fit_signal)
         reset = QPushButton("Full frame")
         reset.clicked.connect(self.home_camera_view.fit_full_frame)
+        home_core = QPushButton("Core")
+        home_core.setToolTip("Zoom to the central ring at camera-pixel scale.")
+        home_core.clicked.connect(
+            lambda: (
+                self.home_auto_fit.setChecked(False),
+                self.home_display_scale.setCurrentText("full range"),
+                self.home_camera_view.fit_core(),
+            )
+        )
         zoom_in = QPushButton("+")
         zoom_in.setFixedWidth(32)
         zoom_in.clicked.connect(self.home_camera_view.zoom_in)
@@ -392,19 +482,20 @@ class AdvancedLabWindow(QMainWindow):
         zoom_out.clicked.connect(self.home_camera_view.zoom_out)
         self.home_auto_fit = QCheckBox("Auto-fit beam")
         self.home_auto_fit.setChecked(True)
-        display_row.addWidget(QLabel("Colour"))
-        display_row.addWidget(self.home_colour_mode)
-        display_row.addWidget(QLabel("Scale"))
-        display_row.addWidget(self.home_display_scale)
-        display_row.addWidget(QLabel("Gamma"))
-        display_row.addWidget(self.home_display_gamma)
-        display_row.addStretch(1)
-        display_row.addWidget(self.home_auto_fit)
-        display_row.addWidget(fit_beam)
-        display_row.addWidget(reset)
-        display_row.addWidget(zoom_out)
-        display_row.addWidget(zoom_in)
+        display_row.addWidget(QLabel("Colour"), 0, 0)
+        display_row.addWidget(self.home_colour_mode, 0, 1)
+        display_row.addWidget(QLabel("Scale"), 0, 2)
+        display_row.addWidget(self.home_display_scale, 0, 3)
+        display_row.addWidget(QLabel("Gamma"), 1, 0)
+        display_row.addWidget(self.home_display_gamma, 1, 1)
+        display_row.addWidget(self.home_auto_fit, 1, 2, 1, 2)
+        display_row.addWidget(fit_beam, 2, 0)
+        display_row.addWidget(home_core, 2, 1)
+        display_row.addWidget(reset, 2, 2)
+        display_row.addWidget(zoom_out, 3, 0)
+        display_row.addWidget(zoom_in, 3, 1)
         camera_box.addLayout(display_row)
+        make_shrinkable(camera_card)
         self.home_camera_status = QLabel("Camera disconnected")
         self.home_camera_status.setObjectName("Muted")
         self.home_camera_status.setWordWrap(True)
@@ -509,10 +600,11 @@ class AdvancedLabWindow(QMainWindow):
         layout.addWidget(causal)
 
         split = QSplitter(Qt.Horizontal)
+        self.measure_split = split
         image_card, image_layout = panel("Live beam image")
         self.image_view = QuantitativeImageView()
         image_layout.addWidget(self.image_view, 1)
-        view_row = QHBoxLayout()
+        view_row = QGridLayout()
         self.colour_mode = NoWheelComboBox()
         self.colour_mode.addItems(["inferno", "gentec-like", "turbo", "viridis", "grayscale"])
         self.display_scale = NoWheelComboBox()
@@ -539,18 +631,17 @@ class AdvancedLabWindow(QMainWindow):
                 widget.currentTextChanged.connect(self._rerender)
             else:
                 widget.valueChanged.connect(self._rerender)
-        view_row.addWidget(QLabel("Colour"))
-        view_row.addWidget(self.colour_mode)
-        view_row.addWidget(QLabel("Scale"))
-        view_row.addWidget(self.display_scale)
-        view_row.addWidget(QLabel("Gamma"))
-        view_row.addWidget(self.display_gamma)
-        view_row.addStretch(1)
-        view_row.addWidget(self.auto_fit)
-        view_row.addWidget(fit_beam)
-        view_row.addWidget(reset)
-        view_row.addWidget(zoom_out)
-        view_row.addWidget(zoom_in)
+        view_row.addWidget(QLabel("Colour"), 0, 0)
+        view_row.addWidget(self.colour_mode, 0, 1)
+        view_row.addWidget(QLabel("Scale"), 0, 2)
+        view_row.addWidget(self.display_scale, 0, 3)
+        view_row.addWidget(QLabel("Gamma"), 0, 4)
+        view_row.addWidget(self.display_gamma, 0, 5)
+        view_row.addWidget(self.auto_fit, 1, 0, 1, 2)
+        view_row.addWidget(fit_beam, 1, 2)
+        view_row.addWidget(reset, 1, 3)
+        view_row.addWidget(zoom_out, 1, 4)
+        view_row.addWidget(zoom_in, 1, 5)
         image_layout.addLayout(view_row)
         overlay_row = QHBoxLayout()
         self.overlay_centre = QCheckBox("Detected centre")
@@ -565,8 +656,9 @@ class AdvancedLabWindow(QMainWindow):
         split.addWidget(image_card)
 
         controls = QWidget()
-        controls.setMinimumWidth(390)
+        controls.setMinimumWidth(330)
         controls.setMaximumWidth(480)
+        self.measure_controls = controls
         controls_layout = QVBoxLayout(controls)
         controls_layout.setContentsMargins(6, 0, 0, 0)
         camera_card, camera_box = panel("Camera provider")
@@ -650,10 +742,45 @@ class AdvancedLabWindow(QMainWindow):
         capture.clicked.connect(self._formal_capture)
         capture_box.addWidget(capture)
         controls_layout.addWidget(capture_card)
+        make_shrinkable(controls)
         controls_layout.addStretch(1)
-        split.addWidget(controls)
+        controls_scroll = QScrollArea()
+        controls_scroll.setWidgetResizable(True)
+        controls_scroll.setFrameShape(QFrame.NoFrame)
+        controls_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        controls_scroll.setWidget(controls)
+        self.measure_controls_scroll = controls_scroll
+        split.addWidget(controls_scroll)
         split.setSizes([1120, 420])
         layout.addWidget(split, 1)
+
+    def _apply_sidebar_width(self) -> None:
+        if not hasattr(self, "sidebar_scroll"):
+            return
+        narrow = self.width() < 1400
+        # 232 is the narrowest that still shows "Calibration / readiness" whole.
+        width = 232 if narrow else 272
+        self.sidebar_scroll.findChild(QFrame, "LabSidebar").setMinimumWidth(width - 17)
+        self.sidebar_scroll.setFixedWidth(width)
+
+    def resizeEvent(self, event):  # noqa: N802
+        super().resizeEvent(event)
+        self._apply_sidebar_width()
+        if not hasattr(self, "home_split") or not hasattr(self, "measure_split"):
+            return
+        usable = max(600, self.width() - self.sidebar_scroll.width() - 44)
+        if self.home_split.orientation() != Qt.Horizontal:
+            self.home_split.setOrientation(Qt.Horizontal)
+        # The camera is the instrument; the SLM command cards only need enough
+        # width for their controls, so the camera takes the rest.
+        slm_column = min(360, max(300, int(usable * 0.32)))
+        self.home_split.setSizes([slm_column, usable - slm_column])
+        if self.measure_split.orientation() != Qt.Horizontal:
+            self.measure_split.setOrientation(Qt.Horizontal)
+        control_column = min(480, max(330, int(usable * 0.33)))
+        self.measure_controls.setMaximumWidth(control_column)
+        self.measure_controls_scroll.setMaximumWidth(control_column)
+        self.measure_split.setSizes([usable - control_column, control_column])
 
     def _build_recover_page(self) -> None:
         _, layout = self._page(
@@ -673,6 +800,19 @@ class AdvancedLabWindow(QMainWindow):
         recipe_box.addWidget(self.recipe_choice)
         recipe_box.addWidget(self.recipe_description)
         recipe_box.addWidget(self.recipe_steps, 1)
+        self.recipe_prerequisite_status = QLabel()
+        self.recipe_prerequisite_status.setWordWrap(True)
+        recipe_box.addWidget(self.recipe_prerequisite_status)
+        self.recipe_simulated_calibration = QPushButton(
+            "Mark prerequisites VALID from the virtual bench"
+        )
+        self.recipe_simulated_calibration.setToolTip(
+            "Records SIMULATED calibration provenance so recipes can be rehearsed against the digital twin. "
+            "It never asserts anything about the physical bench."
+        )
+        self.recipe_simulated_calibration.clicked.connect(self._mark_simulated_calibrations)
+        self.recipe_simulated_calibration.setVisible(False)
+        recipe_box.addWidget(self.recipe_simulated_calibration)
         start = QPushButton("Start selected recipe")
         start.setObjectName("Accent")
         start.clicked.connect(self._start_recipe)
@@ -777,7 +917,10 @@ class AdvancedLabWindow(QMainWindow):
             button.setChecked(position == index)
         self._rerender()
 
+    @Slot(object, object)
     def _on_state_change(self, event, state: ExperimentState) -> None:
+        if QThread.currentThread() != self.thread():
+            raise RuntimeError("Experiment state reached Qt widgets outside the GUI thread.")
         refresh_slms: set[str] = set()
         for path in event.changed_paths:
             if path.startswith("application"):
@@ -787,6 +930,8 @@ class AdvancedLabWindow(QMainWindow):
             elif path.startswith("slm2"):
                 refresh_slms.add("SLM2")
         self._refresh_state(state, refresh_slms=refresh_slms)
+        if any(path.startswith("calibration_statuses") for path in event.changed_paths):
+            self._refresh_calibration_table()
 
     def _refresh_state(
         self,
@@ -884,7 +1029,8 @@ class AdvancedLabWindow(QMainWindow):
                 f"SLM2: {state.slm2.connection.value} • phase mode verified={state.slm2.phase_mode_verified}\n"
                 f"Camera: {camera_text}"
             )
-            self._refresh_calibration_table()
+            if refresh_slms is None:
+                self._refresh_calibration_table()
         finally:
             self._syncing = False
 
@@ -980,6 +1126,12 @@ class AdvancedLabWindow(QMainWindow):
         else:
             self.camera_status.setText("PC-Beamage window was not found. Start it and connect the camera first.")
 
+    def _gui_thread_dispatcher(self) -> GuiThreadDispatcher:
+        dispatcher = getattr(self, "_gui_dispatcher", None)
+        if dispatcher is None:
+            dispatcher = self._gui_dispatcher = GuiThreadDispatcher(self)
+        return dispatcher
+
     def start_live(self) -> None:
         if self._camera_thread is not None and self._camera_thread.isRunning():
             return
@@ -989,14 +1141,29 @@ class AdvancedLabWindow(QMainWindow):
             # PC-Beamage writes and reloads a full 2048×2048 BMP.  A modest
             # preview rate is much more stable than treating it like an in-memory
             # camera SDK, while dummy/replay remain responsive at 15 fps.
-            target_fps = 3.0 if isinstance(self.controller.camera_provider, BeamageCameraProvider) else 15.0
+            provider_name = getattr(self.controller.camera_provider, "name", None)
+            # A virtual frame involves numerical sampling and full-resolution
+            # display work.  Keep its preview rate below the cheap dummy/replay
+            # path; the worker also waits for GUI acknowledgement per frame.
+            if provider_name == "virtual":
+                engine = getattr(self.controller.camera_provider, "engine", None)
+                output_n = getattr(engine, "output_n", 1024)
+                target_fps = 4.0 if output_n <= 1024 else 1.5 if output_n <= 2048 else 0.5
+            else:
+                target_fps = 3.0 if isinstance(self.controller.camera_provider, BeamageCameraProvider) else 15.0
             worker = CameraAcquisitionWorker(self.controller, target_fps=target_fps)
             worker.moveToThread(thread)
             thread.started.connect(worker.run)
-            worker.frame_ready.connect(self._on_frame)
-            worker.error.connect(self._camera_error)
+            # The receiver must be a QObject slot on the GUI thread. A lambda
+            # here ran in the emitting worker thread and corrupted Qt widgets.
+            # Routed through the dispatcher: a plain queued connection runs an
+            # overridden handler on the worker thread under PySide6 6.11.
+            gui = self._gui_thread_dispatcher()
+            worker.frame_ready.connect(gui.forward("_on_live_frame"), Qt.DirectConnection)
+            worker.error.connect(gui.forward("_camera_error"), Qt.DirectConnection)
             worker.stopped.connect(thread.quit, Qt.DirectConnection)
-            thread.finished.connect(self._live_stopped)
+            thread.finished.connect(gui.forward("_live_stopped"), Qt.DirectConnection)
+            thread.finished.connect(worker.deleteLater)
             self._camera_thread = thread
             self._camera_worker = worker
             self.start_live_button.setEnabled(False)
@@ -1004,19 +1171,48 @@ class AdvancedLabWindow(QMainWindow):
         except Exception as exc:
             self._show_error("Could not start live camera", exc)
 
-    def stop_live(self) -> None:
+    def stop_live(self) -> bool:
         thread, worker = self._camera_thread, self._camera_worker
         if thread is None:
-            return
-        if not stop_worker_thread(thread, worker):
-            self.camera_status.setText("Camera worker did not stop within 3 seconds; disconnect hardware safely.")
+            return True
+        virtual = getattr(self.controller.camera_provider, "name", None) == "virtual"
+        timeout_ms = 10000 if virtual else 3000
+        if not stop_worker_thread(thread, worker, timeout_ms=timeout_ms):
+            self.camera_status.setText(
+                "Camera is finishing an in-flight frame. Wait for it to stop before starting another task or closing."
+            )
+            return False
         self._camera_thread = None
         self._camera_worker = None
+        thread.deleteLater()
         self.start_live_button.setEnabled(True)
+        return True
 
+    @Slot()
     def _live_stopped(self) -> None:
+        thread = self._camera_thread
+        # A synchronous Stop may already have started a replacement worker by
+        # the time this queued notification arrives. Only clear a finished
+        # worker, and keep the QThread alive until this cleanup slot runs.
+        if thread is not None and not thread.isRunning():
+            self._camera_thread = None
+            self._camera_worker = None
+            thread.deleteLater()
         self.start_live_button.setEnabled(True)
 
+    @Slot(object, object)
+    def _on_live_frame(self, worker: CameraAcquisitionWorker, frame: CameraFrame) -> None:
+        try:
+            if QThread.currentThread() != self.thread():
+                raise RuntimeError("A camera preview was delivered outside the GUI thread.")
+            # A queued frame from a provider that has since stopped or changed
+            # must not overwrite the current camera state.
+            if worker is self._camera_worker:
+                self._on_frame(frame)
+        finally:
+            worker.acknowledge_frame()
+
+    @Slot(str)
     def _camera_error(self, message: str) -> None:
         self.camera_status.setText(f"Acquisition error: {message}")
         self.store.update(
@@ -1178,7 +1374,12 @@ class AdvancedLabWindow(QMainWindow):
 
     def _formal_capture(self) -> None:
         was_live = self._camera_thread is not None and self._camera_thread.isRunning()
-        self.stop_live()
+        if not self.stop_live():
+            self._show_error(
+                "Formal capture delayed",
+                RuntimeError("The live camera is finishing an in-flight frame; try again once it stops."),
+            )
+            return
         try:
             self._configure_camera()
             if self.controller.camera_provider is None:
@@ -1337,6 +1538,8 @@ class AdvancedLabWindow(QMainWindow):
             affected = self.calibration.apply_physical_change(
                 self.store, PhysicalChange(self.physical_change.currentText())
             )
+            self._refresh_calibration_table()
+            self._refresh_recipe_prerequisites()
             QMessageBox.information(
                 self,
                 "Dependencies updated",
@@ -1352,6 +1555,7 @@ class AdvancedLabWindow(QMainWindow):
         try:
             self.calibration = CalibrationRegistry.load(path)
             self.recipe_engine.calibration = self.calibration
+            self._refresh_recipe_prerequisites()
             self.calibration.publish(self.store, reason=f"Loaded calibration registry {path}")
             self._refresh_calibration_table()
         except Exception as exc:
@@ -1372,11 +1576,59 @@ class AdvancedLabWindow(QMainWindow):
         self.recipe_steps.clear()
         for index, step in enumerate(definition.steps, 1):
             self.recipe_steps.addItem(f"{index}. {step.title}  •  {step.kind.value}")
+        self._refresh_recipe_prerequisites()
+
+    def _missing_recipe_prerequisites(self) -> tuple[str, ...]:
+        definition = builtin_recipes()[self.recipe_choice.currentText()]
+        return tuple(
+            f"{key.value} [{self.calibration.status(key).value}]"
+            for key in definition.prerequisites
+            if self.calibration.status(key) != CalibrationStatus.VALID
+        )
+
+    def _refresh_recipe_prerequisites(self) -> None:
+        if not hasattr(self, "recipe_prerequisite_status"):
+            return
+        missing = self._missing_recipe_prerequisites()
+        if missing:
+            self.recipe_prerequisite_status.setText(
+                "Cannot start yet \u2014 these calibrations are not VALID:\n  "
+                + "\n  ".join(missing)
+                + "\nRecord them on Calibration / readiness, load a saved registry, "
+                "or rehearse the recipe on the virtual bench."
+            )
+            self.recipe_prerequisite_status.setObjectName("StatusWarn")
+        else:
+            self.recipe_prerequisite_status.setText("All prerequisites for this recipe are VALID.")
+            self.recipe_prerequisite_status.setObjectName("StatusGood")
+        self.recipe_prerequisite_status.style().unpolish(self.recipe_prerequisite_status)
+        self.recipe_prerequisite_status.style().polish(self.recipe_prerequisite_status)
+
+    def _mark_simulated_calibrations(self) -> None:
+        QMessageBox.information(
+            self,
+            "Virtual Lab only",
+            "Simulated calibration provenance can only be recorded while the Virtual Lab is the "
+            "experiment source. On the physical bench, record real calibrations instead.",
+        )
 
     def _start_recipe(self) -> None:
         try:
             self.recipe_run = self.recipe_engine.start(self.recipe_choice.currentText())
             self._show_recipe_step()
+            self.recipe_log.appendPlainText(f"Started {self.recipe_run.recipe_name}")
+        except RecipePrerequisiteError:
+            self._refresh_recipe_prerequisites()
+            QMessageBox.warning(
+                self,
+                "Recipe prerequisites are not VALID",
+                "This recipe depends on calibrations that have not been recorded as VALID:\n\n  "
+                + "\n  ".join(self._missing_recipe_prerequisites())
+                + "\n\nThe dependency guard is deliberate: a recipe run would otherwise produce "
+                "results whose provenance cannot be defended.\n\nRecord or load those calibrations "
+                "on Calibration / readiness, or switch the experiment source to Virtual Lab and mark "
+                "simulated prerequisites to rehearse the procedure.",
+            )
         except Exception as exc:
             self._show_error("Recipe cannot start", exc)
 
@@ -1454,7 +1706,9 @@ class AdvancedLabWindow(QMainWindow):
         QMessageBox.warning(self, title, str(error))
 
     def closeEvent(self, event):  # noqa: N802 - Qt API
-        self.stop_live()
+        if not self.stop_live():
+            event.ignore()
+            return
         try:
             if self.controller.camera_provider is not None:
                 self.controller.camera_provider.disconnect()

@@ -128,6 +128,16 @@ def test_numeric_controls_ignore_wheel_but_keep_normal_stepping() -> None:
 def test_camera_worker_stops_cleanly_and_delivers_quantitative_frame() -> None:
     qt = app()
     window = AdvancedLabWindow()
+    from PySide6.QtCore import QThread
+
+    delivered_on_gui_thread = []
+    original_on_frame = window._on_frame
+
+    def checked_on_frame(frame):
+        delivered_on_gui_thread.append(QThread.currentThread() == window.thread())
+        original_on_frame(frame)
+
+    window._on_frame = checked_on_frame
     try:
         window.start_live()
         deadline = time.monotonic() + 2.0
@@ -136,6 +146,7 @@ def test_camera_worker_stops_cleanly_and_delivers_quantitative_frame() -> None:
             time.sleep(0.01)
         assert window.current_frame is not None
         assert window.current_frame.data.ndim == 2
+        assert delivered_on_gui_thread == [True], "Qt widgets must never be updated from the camera worker"
         window.stop_live()
         assert window._camera_thread is None
         assert window._camera_worker is None
@@ -201,12 +212,22 @@ def test_beamage_preview_keeps_every_acquired_pixel_and_can_fit_signal() -> None
             scale="percentile",
             gamma=1.0,
         )
-        assert view._pixmap_item.pixmap().width() == 1301
-        assert view._pixmap_item.pixmap().height() == 900
+        # Every acquired pixel is kept; only a zoomed-out *screen* rendering is
+        # area-averaged so the display cannot invent moire.
+        assert view._display_rgb.shape[:2] == (900, 1301)
+        assert (view.scene().sceneRect().width(), view.scene().sceneRect().height()) == (1301, 900)
         rect = view.signal_rect()
         assert rect is not None
         assert rect.width() < 1301
         assert rect.height() < 900
+        view.resize(1400, 1000)
+        view.resetTransform()
+        view.scale(2.0, 2.0)
+        qt.processEvents()
+        assert view._pixmap_item.pixmap().width() == 1301, "zoomed in, every camera pixel must be drawn"
+        view.scale(0.2, 0.2)
+        assert view._pixmap_item.pixmap().width() < 1301
+        assert view._pixmap_item.scale() > 1.0
         view.fit_signal()
         qt.processEvents()
     finally:

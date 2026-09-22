@@ -14,6 +14,7 @@ import traceback
 from pathlib import Path
 from typing import Any
 
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -23,6 +24,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QPlainTextEdit,
     QPushButton,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -116,13 +118,14 @@ class VirtualLabExperimentWindow(VirtualLabWindow):
 
     def _build_virtual_page(self) -> None:
         super()._build_virtual_page()
-        page = self.pages.widget(self.PAGE_VIRTUAL)
-        layout = page.layout()
+        layout = self._page_layout(self.PAGE_VIRTUAL)
         if layout is None:
             raise RuntimeError("Virtual Lab page has no layout.")
 
         perturb_card = self._build_perturbation_builder()
         measurement_card = self._build_measurement_and_convergence()
+        self.virtual_perturbation_card = perturb_card
+        self.virtual_measurement_card = measurement_card
 
         # Existing page layout: heading, note, scenario/geometry, camera/correction,
         # results.  Put experiment controls between geometry and acquisition.
@@ -140,17 +143,18 @@ class VirtualLabExperimentWindow(VirtualLabWindow):
             "Perturbation Builder — combine faults deliberately",
             "These values are hidden bench truth. They can all coexist. The SLM optimiser sees only intensity frames and the commands it issued.",
         )
-        grid = QGridLayout()
+        tabs = QTabWidget()
 
         beam = QWidget()
         beam_form = QFormLayout(beam)
-        self.perturb_beam_enabled = QCheckBox("Enable input-beam perturbations")
+        self.perturb_beam_form = beam_form
+        self.perturb_beam_enabled = QCheckBox("Beam errors on")
         self.perturb_beam_enabled.setChecked(True)
         self.perturb_beam_radius_mm = _dspin(0.05, 20.0, 2.0, 0.05, 3, " mm")
-        self.perturb_radius_x = _dspin(0.5, 1.5, 1.0, 0.01, 4)
-        self.perturb_radius_y = _dspin(0.5, 1.5, 1.0, 0.01, 4)
-        self.perturb_dx = _dspin(-1000.0, 1000.0, 0.0, 5.0, 2, " µm")
-        self.perturb_dy = _dspin(-1000.0, 1000.0, 0.0, 5.0, 2, " µm")
+        self.perturb_radius_x = _dspin(0.2, 3.0, 1.0, 0.05, 4)
+        self.perturb_radius_y = _dspin(0.2, 3.0, 1.0, 0.05, 4)
+        self.perturb_dx = _dspin(-3000.0, 3000.0, 0.0, 25.0, 2, " µm")
+        self.perturb_dy = _dspin(-3000.0, 3000.0, 0.0, 25.0, 2, " µm")
         self.perturb_tx = _dspin(-10.0, 10.0, 0.0, 0.01, 4, " mrad")
         self.perturb_ty = _dspin(-10.0, 10.0, 0.0, 0.01, 4, " mrad")
         self.perturb_curv_x = _dspin(-1000.0, 1000.0, 0.0, 0.1, 3, " m")
@@ -170,7 +174,7 @@ class VirtualLabExperimentWindow(VirtualLabWindow):
 
         wave = QWidget()
         wave_form = QFormLayout(wave)
-        self.perturb_wave_enabled = QCheckBox("Enable hidden wavefront aberration")
+        self.perturb_wave_enabled = QCheckBox("Wavefront errors on")
         self.perturb_wave_enabled.setChecked(True)
         self.perturb_defocus = _dspin(-2.0, 2.0, 0.0, 0.01, 4, " waves")
         self.perturb_astig_x = _dspin(-2.0, 2.0, 0.0, 0.01, 4, " waves")
@@ -188,10 +192,10 @@ class VirtualLabExperimentWindow(VirtualLabWindow):
 
         alignment = QWidget()
         align_form = QFormLayout(alignment)
-        self.perturb_axicon_enabled = QCheckBox("Enable physical-axicon decentre")
+        self.perturb_axicon_enabled = QCheckBox("Axicon offset on")
         self.perturb_axicon_enabled.setChecked(True)
-        self.perturb_axicon_x = _dspin(-1000.0, 1000.0, 0.0, 5.0, 2, " µm")
-        self.perturb_axicon_y = _dspin(-1000.0, 1000.0, 0.0, 5.0, 2, " µm")
+        self.perturb_axicon_x = _dspin(-3000.0, 3000.0, 0.0, 25.0, 2, " µm")
+        self.perturb_axicon_y = _dspin(-3000.0, 3000.0, 0.0, 25.0, 2, " µm")
         align_form.addRow(self.perturb_axicon_enabled)
         align_form.addRow("Axicon X offset", self.perturb_axicon_x)
         align_form.addRow("Axicon Y offset", self.perturb_axicon_y)
@@ -203,22 +207,26 @@ class VirtualLabExperimentWindow(VirtualLabWindow):
         alignment_note.setWordWrap(True)
         align_form.addRow("", alignment_note)
 
-        grid.addWidget(beam, 0, 0)
-        grid.addWidget(wave, 0, 1)
-        grid.addWidget(alignment, 0, 2)
-        box.addLayout(grid)
+        tabs.addTab(beam, "Beam")
+        tabs.addTab(wave, "Wavefront")
+        tabs.addTab(alignment, "Axicon")
+        box.addWidget(tabs)
 
-        row = QHBoxLayout()
-        apply_button = QPushButton("Apply manual perturbations")
+        row = QGridLayout()
+        apply_button = QPushButton("Apply faults")
         apply_button.setObjectName("Accent")
         apply_button.clicked.connect(self._apply_manual_perturbations)
         random_button = QPushButton("Randomise multi-fault case")
         random_button.clicked.connect(self._randomise_manual_perturbations)
-        nominal_button = QPushButton("Clear perturbations")
+        strong_button = QPushButton("Load strong mixed example")
+        strong_button.setToolTip("Loads a visible beam/axicon/wavefront fault into the controls; Apply faults to use it.")
+        strong_button.clicked.connect(self._load_strong_manual_perturbations)
+        nominal_button = QPushButton("Clear faults")
         nominal_button.clicked.connect(self._clear_manual_perturbations)
-        row.addWidget(apply_button)
-        row.addWidget(random_button)
-        row.addWidget(nominal_button)
+        row.addWidget(apply_button, 0, 0)
+        row.addWidget(nominal_button, 0, 1)
+        row.addWidget(random_button, 1, 0, 1, 2)
+        row.addWidget(strong_button, 2, 0, 1, 2)
         box.addLayout(row)
 
         self.manual_perturbation_status = QLabel(
@@ -304,6 +312,25 @@ class VirtualLabExperimentWindow(VirtualLabWindow):
         self._write_spec_to_controls(spec)
         self._apply_manual_perturbations()
 
+    def _load_strong_manual_perturbations(self) -> None:
+        self.perturb_beam_enabled.setChecked(True)
+        self.perturb_wave_enabled.setChecked(True)
+        self.perturb_axicon_enabled.setChecked(True)
+        self._write_spec_to_controls(ManualPerturbationSpec(
+            radius_x_scale=1.35,
+            radius_y_scale=0.75,
+            beam_decentre_x_um=450.0,
+            beam_decentre_y_um=-300.0,
+            beam_pointing_x_mrad=0.35,
+            coma_x_waves=0.65,
+            astigmatism_x_waves=0.35,
+            axicon_decentre_y_um=200.0,
+        ))
+        self.manual_perturbation_status.setText(
+            "Strong mixed example loaded, not applied. Inspect Beam, Wavefront and Axicon, then press "
+            "Apply faults. SLM-only correction may not undo mechanical faults."
+        )
+
     def _clear_manual_perturbations(self) -> None:
         self._write_spec_to_controls(ManualPerturbationSpec())
         self.perturb_beam_radius_mm.setValue(2.0)
@@ -318,7 +345,7 @@ class VirtualLabExperimentWindow(VirtualLabWindow):
             "Measurement budget + iterative SLM recovery",
             "Choose how many mock camera planes/repeats are measured, what phase authority the SLMs may use, and when repeated correction should stop.",
         )
-        outer = QHBoxLayout()
+        tabs = QTabWidget()
 
         measure = QWidget()
         measure_form = QFormLayout(measure)
@@ -365,23 +392,23 @@ class VirtualLabExperimentWindow(VirtualLabWindow):
         self.converge_tolerance_pct = _dspin(0.0, 20.0, 0.5, 0.1, 3, " %")
         self.converge_patience = _ispin(1, 10, 2)
         self.converge_max_frames = _ispin(10, 100000, 5000)
-        converge_form.addRow("Maximum correction cycles", self.converge_max_cycles)
-        converge_form.addRow("Stop below improvement", self.converge_tolerance_pct)
-        converge_form.addRow("Consecutive low-gain cycles", self.converge_patience)
-        converge_form.addRow("Maximum camera frames", self.converge_max_frames)
+        converge_form.addRow("Max cycles", self.converge_max_cycles)
+        converge_form.addRow("Stop below", self.converge_tolerance_pct)
+        converge_form.addRow("Patience", self.converge_patience)
+        converge_form.addRow("Max frames", self.converge_max_frames)
 
-        outer.addWidget(measure)
-        outer.addWidget(authority)
-        outer.addWidget(converge)
-        box.addLayout(outer)
+        tabs.addTab(measure, "z planes")
+        tabs.addTab(authority, "SLM modes")
+        tabs.addTab(converge, "Budget")
+        box.addWidget(tabs)
 
         action_row = QHBoxLayout()
-        self.auto_converge_button = QPushButton("Start auto-converge SLM-only")
+        self.auto_converge_button = QPushButton("Auto-converge (SLM only)")
         self.auto_converge_button.setObjectName("Accent")
         self.auto_converge_button.clicked.connect(self._start_auto_converge)
         estimate_button = QPushButton("Recalculate frame budget")
         estimate_button.clicked.connect(self._update_frame_budget_preview)
-        action_row.addWidget(self.auto_converge_button)
+        box.addWidget(self.auto_converge_button)
         action_row.addWidget(estimate_button)
         box.addLayout(action_row)
 
@@ -521,6 +548,7 @@ class VirtualLabExperimentWindow(VirtualLabWindow):
         except Exception as exc:
             self._show_error("Could not start auto-converge SLM correction", exc)
 
+    @Slot(object)
     def _virtual_progress_event(self, payload: dict[str, Any]) -> None:
         kind = payload.get("kind")
         if kind == "cycle_start":

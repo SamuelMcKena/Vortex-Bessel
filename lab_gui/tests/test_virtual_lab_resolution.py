@@ -46,9 +46,8 @@ def test_maximum_to_beamage_area_integrates_instead_of_interpolating() -> None:
 def test_native_mode_retains_current_model_grid() -> None:
     engine = ResolutionAwareVirtualBenchEngine(beamage_n=64, maximum_grid_n=128)
     engine.set_output_resolution(VirtualOutputResolution.NATIVE)
-    assert engine.grid_n == engine.geometry.preview_grid_n
-    assert engine.shape_yx == (engine.geometry.preview_grid_n, engine.geometry.preview_grid_n)
-
+    assert engine.grid_n == engine.geometry.preview_grid_n  # the SLM relay grid
+    assert engine.shape_yx == (64, 64)  # the camera stays at Beamage pixels
 
 def test_resolution_gui_exposes_beamage_maximum_and_controlled_comparison_modes() -> None:
     qt = app()

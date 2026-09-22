@@ -13,6 +13,7 @@ from labcontrol.devices.camera import (
     ReplayCameraProvider,
 )
 from labcontrol.devices.base import ProviderUnavailable
+from labcontrol.devices.beamage_pipe import BeamagePipeClient
 from labcontrol.metrics import MetricEngine
 from labcontrol.state import ExperimentState, ExperimentStore
 
@@ -61,9 +62,17 @@ def test_replay_camera_reads_quantitative_npy_without_rendering(tmp_path: Path) 
     assert actual.metadata["source_path"] == str(source)
 
 
-def test_beamage_refuses_to_fabricate_connection_without_live_windows_pipe() -> None:
-    with pytest.raises(ProviderUnavailable, match="named pipe is available only on Windows"):
-        BeamageCameraProvider().connect()
+def test_beamage_refuses_to_fabricate_connection_when_pipe_is_unavailable(monkeypatch) -> None:
+    def unavailable(_client):
+        raise ProviderUnavailable("No live PC-Beamage named pipe")
+
+    # Keep this test independent of OS and of any camera that happens to be
+    # connected to the test machine. Never probe the physical pipe in CI.
+    monkeypatch.setattr(BeamagePipeClient, "connect", unavailable)
+    provider = BeamageCameraProvider()
+    with pytest.raises(ProviderUnavailable, match="No live PC-Beamage named pipe"):
+        provider.connect()
+    assert not provider.connected
 
 
 def test_metric_family_tracks_authoritative_vortex_state() -> None:

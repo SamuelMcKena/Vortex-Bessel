@@ -325,6 +325,12 @@ class LabController:
         if self.camera_provider is None:
             raise RuntimeError("No camera provider has been selected.")
         frame = self.camera_provider.acquire_frame(fresh=fresh, timeout_s=timeout_s)
+        # Only a provider that observes the plane independently may write the
+        # camera position back.  Synthetic providers read z out of this same
+        # state, so echoing it back raced every stage command issued while a
+        # live acquisition was running: the frame already in flight restored the
+        # previous z and the camera appeared stuck at its old plane.
+        adopt_z = getattr(self.camera_provider, "reports_independent_z", True)
         self.store.update(
             lambda state: (
                 setattr(state.camera, "last_frame_id", frame.frame_id),
@@ -333,7 +339,9 @@ class LabController:
                 setattr(state.camera, "full_scale", frame.full_scale),
                 setattr(state.camera, "exposure_us", frame.exposure_us),
                 setattr(state.camera, "gain", frame.gain),
-                setattr(state.camera, "current_z_mm", frame.z_mm),
+                setattr(state.camera, "current_z_mm", frame.z_mm)
+                if adopt_z
+                else None,
                 setattr(
                     state.camera,
                     "frame_quality",

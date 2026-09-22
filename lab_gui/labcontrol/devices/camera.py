@@ -54,6 +54,10 @@ class CameraProvider(ABC):
     implementation_status = "HARDWARE_UNVERIFIED"
     declared_data_kind = "EXPERIMENT"
     supports_configuration = True
+    # True when frame.z_mm is an independent observation (a replay file's
+    # recorded plane, a stage readback) rather than a copy of the commanded
+    # position already held in ExperimentState.
+    reports_independent_z = True
 
     @abstractmethod
     def connect(self) -> DeviceStatus: ...
@@ -83,6 +87,9 @@ class DummyCameraProvider(CameraProvider):
 
     name = "dummy"
     implementation_status = "SOFTWARE_TESTED"
+    # z is read back out of the state, so echoing it into the state would only
+    # race the operator's next stage command.
+    reports_independent_z = False
     declared_data_kind = "SYNTHETIC"
 
     def __init__(

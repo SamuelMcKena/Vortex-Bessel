@@ -89,7 +89,9 @@ def render_preview(
 ) -> np.ndarray:
     """Create display pixels without cropping, resampling or mutating camera data."""
 
-    source = np.asarray(raw, dtype=np.float64)
+    # Camera data remains untouched; display arithmetic uses half the memory
+    # of float64, important for a full 2048/4096-square virtual preview.
+    source = np.asarray(raw, dtype=np.float32)
     if source.ndim != 2 or not np.isfinite(source).all():
         raise ValueError("Preview requires a finite 2-D matrix.")
 
@@ -97,18 +99,37 @@ def render_preview(
     # Estimate display levels on a sparse view for large sensor frames.  Every
     # source pixel is still mapped into the final full-resolution preview.
     level_sample = source[::4, ::4] if source.size > 1_000_000 else source
-    if mode in {"sensor range", "sensor"} and full_scale is not None and full_scale > 0:
+    if mode in {"sensor range", "sensor", "sensor log"} and full_scale is not None and full_scale > 0:
         low, high = 0.0, float(full_scale)
     elif mode in {"full range", "min/max"}:
-        low, high = float(np.min(level_sample)), float(np.max(level_sample))
+        # Every pixel: a thin ring can fall between the samples of a sparse view.
+        low, high = float(np.min(source)), float(np.max(source))
     else:
         # Use nearly the complete histogram while rejecting a few hot/dead pixels.
-        low, high = (float(v) for v in np.percentile(level_sample, (0.1, 99.95)))
-    unit = np.clip((source - low) / max(high - low, 1e-12), 0.0, 1.0)
-    if mode == "log":
-        unit = np.log1p(300.0 * unit) / np.log(301.0)
-    unit = np.power(unit, 1.0 / max(float(gamma), 0.05))
+        # The upper level must come from *every* pixel: a q=5 Bessel core is a
+        # few pixels wide, so a sparse sample skips it, the colour scale tops out
+        # on the dim envelope and the ring is drawn saturated and invisible.
+        low = float(np.percentile(level_sample, 0.1))
+        flat = source.ravel()
+        # Reject only a handful of hot pixels.  A fixed fraction (0.05 % is
+        # ~2000 pixels on a 4M sensor) is larger than a whole q=20 ring, so the
+        # ring and its neighbouring fringes all clipped into a fat white disc.
+        top = max(3, min(25, int(round(flat.size * 0.0005))))
+        high = float(np.partition(flat, flat.size - top)[flat.size - top])
+    unit = (source - low) / max(high - low, 1e-12)
+    np.clip(unit, 0.0, 1.0, out=unit)
+    if mode in {"log", "sensor log"}:
+        np.multiply(unit, 300.0, out=unit)
+        np.log1p(unit, out=unit)
+        unit /= np.log(301.0)
+    np.power(unit, 1.0 / max(float(gamma), 0.05), out=unit)
     return _apply_colour_map(unit, colour)
+
+
+def _cosmetic(pen: QPen) -> QPen:
+    """Overlay lines keep their screen width at any zoom instead of covering camera pixels."""
+    pen.setCosmetic(True)
+    return pen
 
 
 class QuantitativeImageView(QGraphicsView):
@@ -121,12 +142,23 @@ class QuantitativeImageView(QGraphicsView):
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.setResizeAnchor(QGraphicsView.AnchorViewCenter)
         self.setBackgroundBrush(QColor("#071017"))
-        self.setMinimumSize(520, 420)
+        # Deliberately small: pages that have room give their view a larger
+        # minimum themselves.  A large default made the camera pages taller
+        # than a laptop screen and forced them to scroll.
+        self.setMinimumSize(300, 240)
         self.raw_frame: np.ndarray | None = None
         self.frame: CameraFrame | None = None
         self.metrics: BeamMetrics | None = None
         self._overlay_items = []
         self._first_image = True
+        # Display level of detail.  Drawing a 2048-pixel frame into a ~900-pixel
+        # view with nearest-neighbour sampling invents a moiré that is not in the
+        # camera data, which is easily mistaken for real sensor aliasing.  When
+        # zoomed out, screen pixels therefore show the *average* of the camera
+        # pixels they cover; at 1:1 or closer every camera pixel is drawn as is.
+        self._display_rgb: np.ndarray | None = None
+        self._display_factor = 0
+        self._pixel_scale = 1.0
 
     def set_quantitative_frame(
         self,
@@ -139,18 +171,28 @@ class QuantitativeImageView(QGraphicsView):
         show_centre: bool = True,
         show_ring: bool = True,
         show_roi: bool = True,
+        display_data: np.ndarray | None = None,
+        pixel_scale: float = 1.0,
+        display_full_scale: float | None = None,
     ) -> None:
+        """Show a camera frame, or other data laid over the same camera-pixel coordinates.
+
+        ``display_data`` (e.g. the noise-free native model intensity) is drawn
+        with each of its samples ``pixel_scale`` camera pixels wide, so zoom,
+        fit and overlays stay registered to the camera frame.
+        """
+
         self.frame = frame
         self.raw_frame = frame.data
         self.metrics = metrics
         # Do not decimate Beamage's 2048x2048 frame.  Zoom is a view transform,
         # so every acquired pixel remains available when inspecting the beam.
         preview = render_preview(
-            frame.data,
+            frame.data if display_data is None else display_data,
             colour=colour,
             scale=scale,
             gamma=gamma,
-            full_scale=frame.full_scale,
+            full_scale=frame.full_scale if display_data is None else display_full_scale,
         )
         self.set_preview_array(
             preview,
@@ -159,7 +201,22 @@ class QuantitativeImageView(QGraphicsView):
             show_ring=show_ring,
             show_roi=show_roi,
             clipped=bool(metrics and metrics.values.get("clipped")),
+            pixel_scale=pixel_scale if display_data is not None else 1.0,
         )
+
+    def release_frame(self) -> None:
+        """Free a hidden preview's pixels without changing display controls."""
+
+        self.frame = None
+        self.raw_frame = None
+        self.metrics = None
+        self._pixmap_item.setPixmap(QPixmap())
+        self._display_rgb = None
+        self._display_factor = 0
+        for item in self._overlay_items:
+            self.scene().removeItem(item)
+        self._overlay_items.clear()
+        self.scene().setSceneRect(QRectF())
 
     def set_preview_array(
         self,
@@ -170,18 +227,19 @@ class QuantitativeImageView(QGraphicsView):
         show_ring: bool = True,
         show_roi: bool = True,
         clipped: bool = False,
+        pixel_scale: float = 1.0,
     ) -> None:
         array = np.ascontiguousarray(preview)
         if array.ndim == 2:
-            height, width = array.shape
-            image = QImage(array.data, width, height, width, QImage.Format_Grayscale8).copy()
-        elif array.ndim == 3 and array.shape[2] == 3:
-            height, width, _ = array.shape
-            image = QImage(array.data, width, height, 3 * width, QImage.Format_RGB888).copy()
-        else:
+            array = np.repeat(array[:, :, None], 3, axis=2)
+        if not (array.ndim == 3 and array.shape[2] == 3):
             raise ValueError("Preview must be grayscale or RGB.")
-        self._pixmap_item.setPixmap(QPixmap.fromImage(image))
-        self.scene().setSceneRect(0, 0, width, height)
+        height, width, _ = array.shape
+        self._display_rgb = array
+        self._display_factor = 0
+        self._pixel_scale = float(pixel_scale)
+        self.scene().setSceneRect(0, 0, width * self._pixel_scale, height * self._pixel_scale)
+        self._refresh_display_detail()
         for item in self._overlay_items:
             self.scene().removeItem(item)
         self._overlay_items.clear()
@@ -189,14 +247,14 @@ class QuantitativeImageView(QGraphicsView):
             cy, cx = metrics.centre_yx_px
             radius = float(metrics.values.get("principal_ring_radius_px") or 0.0)
             if show_roi:
-                roi_radius = max(radius * 1.7, min(width, height) * 0.12)
+                roi_radius = max(radius * 1.7, min(width, height) * self._pixel_scale * 0.12)
                 self._overlay_items.append(
                     self.scene().addEllipse(
                         cx - roi_radius,
                         cy - roi_radius,
                         2 * roi_radius,
                         2 * roi_radius,
-                        QPen(QColor("#69d2ff"), 1.2, Qt.DashLine),
+                        _cosmetic(QPen(QColor("#69d2ff"), 1.2, Qt.DashLine)),
                     )
                 )
             if show_ring and radius > 0:
@@ -206,7 +264,7 @@ class QuantitativeImageView(QGraphicsView):
                         cy - radius,
                         2 * radius,
                         2 * radius,
-                        QPen(QColor("#f6c85f"), 2.0),
+                        _cosmetic(QPen(QColor("#f6c85f"), 2.0)),
                     )
                 )
                 core = radius * 0.35
@@ -216,16 +274,22 @@ class QuantitativeImageView(QGraphicsView):
                         cy - core,
                         2 * core,
                         2 * core,
-                        QPen(QColor("#e995ff"), 1.2, Qt.DotLine),
+                        _cosmetic(QPen(QColor("#e995ff"), 1.2, Qt.DotLine)),
                     )
                 )
             if show_centre:
                 pen = QPen(QColor("#59f2b1"), 1.6)
-                arm = max(8.0, radius * 0.25)
+                pen.setCosmetic(True)
+                # A gapped cross: the markers sit outside the ring so a
+                # few-pixel vortex core is never painted over.
+                gap = max(3.0, radius * 1.6)
+                arm = max(8.0, radius * 1.2)
                 self._overlay_items.extend(
                     [
-                        self.scene().addLine(cx - arm, cy, cx + arm, cy, pen),
-                        self.scene().addLine(cx, cy - arm, cx, cy + arm, pen),
+                        self.scene().addLine(cx - gap - arm, cy, cx - gap, cy, pen),
+                        self.scene().addLine(cx + gap, cy, cx + gap + arm, cy, pen),
+                        self.scene().addLine(cx, cy - gap - arm, cx, cy - gap, pen),
+                        self.scene().addLine(cx, cy + gap, cx, cy + gap + arm, pen),
                     ]
                 )
         if clipped:
@@ -256,16 +320,67 @@ class QuantitativeImageView(QGraphicsView):
         rect = QRectF(x0 - extra_x, y0 - extra_y, width + 2 * extra_x, height + 2 * extra_y)
         return rect.intersected(self.scene().sceneRect())
 
+    def _refresh_display_detail(self) -> None:
+        rgb = self._display_rgb
+        if rgb is None:
+            return
+        # Screen pixels per *displayed sample*: native model samples are a
+        # fraction of a camera pixel wide.
+        scale = (abs(self.transform().m11()) or 1.0) * self._pixel_scale
+        factor = max(1, int(np.floor(1.0 / scale))) if scale < 1.0 else 1
+        if factor == self._display_factor:
+            return
+        self._display_factor = factor
+        if factor > 1:
+            h = (rgb.shape[0] // factor) * factor
+            w = (rgb.shape[1] // factor) * factor
+            view = rgb[:h, :w].reshape(h // factor, factor, w // factor, factor, 3)
+            shown = np.ascontiguousarray(view.mean(axis=(1, 3)).round().astype(np.uint8))
+        else:
+            shown = rgb
+        height, width, _ = shown.shape
+        image = QImage(shown.data, width, height, 3 * width, QImage.Format_RGB888).copy()
+        self._pixmap_item.setPixmap(QPixmap.fromImage(image))
+        self._pixmap_item.setScale(float(factor) * self._pixel_scale)
+
+    def scale(self, sx: float, sy: float) -> None:  # noqa: D401 - Qt API override
+        super().scale(sx, sy)
+        self._refresh_display_detail()
+
+    def resizeEvent(self, event):  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        self._refresh_display_detail()
+
     def fit_signal(self) -> None:
         rect = self.signal_rect()
         if rect is not None and not rect.isEmpty():
             self.resetTransform()
             self.fitInView(rect, Qt.KeepAspectRatio)
+            self._refresh_display_detail()
+
+    def fit_core(self, *, half_width_px: float | None = None) -> None:
+        """Zoom to the beam centre at camera-pixel scale, where the ring and real sensor aliasing are visible."""
+
+        metrics = self.metrics
+        if metrics is not None:
+            cy, cx = metrics.centre_yx_px
+            radius = float(metrics.values.get("principal_ring_radius_px") or 0.0)
+        elif self.raw_frame is not None:
+            data = np.asarray(self.raw_frame)
+            cy, cx = np.unravel_index(int(np.argmax(data)), data.shape)
+            radius = 0.0
+        else:
+            return
+        half = float(half_width_px) if half_width_px else max(12.0, 3.0 * radius)
+        self.resetTransform()
+        self.fitInView(QRectF(cx - half, cy - half, 2 * half, 2 * half), Qt.KeepAspectRatio)
+        self._refresh_display_detail()
 
     def fit_full_frame(self) -> None:
         self.resetTransform()
         if not self.scene().sceneRect().isEmpty():
             self.fitInView(self.scene().sceneRect(), Qt.KeepAspectRatio)
+        self._refresh_display_detail()
 
     def zoom_in(self) -> None:
         self.scale(1.35, 1.35)

@@ -17,6 +17,7 @@ import hashlib
 import json
 import math
 import threading
+import time
 from dataclasses import asdict, dataclass, field, replace
 from enum import Enum
 from pathlib import Path
@@ -42,13 +43,44 @@ from vbb_study.digital_twin.vortex_system_route import (
     AxiconError,
     physical_axicon_on_own_plane,
 )
+from vbb_study.digital_twin.vortex_continuous_propagation import (
+    build_fixed_support_spectrum,
+    native_field_at_z,
+)
 from vbb_study.digital_twin.vortex_wavefront_errors import unit_rms_zernike
+from labcontrol.relay_4f import apply_fourier_plane_aperture, rotate_180
+from labcontrol.sample_plane import SamplePlaneScale, bench_ring_radius_um, sample_plane_scale
+from labcontrol.axicon_propagation import (
+    BEAMAGE_PIXEL_UM,
+    BEAMAGE_PIXELS,
+    DEFAULT_MIN_SAMPLES_PER_PERIOD,
+    MEASURED_BENCH_AXICON_K_PERP_M_INV,
+    MEASURED_BENCH_AXICON_SOURCE,
+    AxiconPropagationPlan,
+    build_resolved_axicon_spectrum,
+    detector_intensity,
+    plan_axicon_propagation,
+    resolved_field_at_z,
+)
 from vbb_study.equations.fields import make_xy_grid
 from vbb_study.equations.propagation import angular_spectrum_propagate_bl
 
 
 TWOPI = 2.0 * np.pi
 EPS = 1e-30
+
+
+def _finite_beam_metadata(metadata: Mapping[str, Any]) -> dict[str, Any]:
+    """Represent collimated axes without non-standard JSON infinities."""
+    result = dict(metadata)
+    for axis in ("x", "y"):
+        key = f"beam_curvature_radius_{axis}_m"
+        value = result.get(key)
+        collimated = value is not None and not math.isfinite(float(value))
+        if collimated:
+            result[key] = None
+        result[f"beam_{axis}_collimated"] = bool(collimated)
+    return result
 
 
 class OperatingMode(str, Enum):
@@ -76,7 +108,12 @@ class VirtualLabGeometry:
     """Known bench facts and explicitly labelled modelling placeholders."""
 
     wavelength_nm: float = 1030.0
-    simulation_window_mm: float = 8.0
+    # 10 mm matches the bench digital twin (FIT_WINDOW_M) and holds the annulus
+    # of the measured bench axicon well past the end of its Bessel zone.
+    # Exactly the Beamage-4M sensor (2048 x 5.5 µm): every virtual camera pixel
+    # is then a true 5.5 µm pixel, so sensor aliasing of the ~6.5 µm Bessel
+    # intensity fringes appears as it does on the real camera.
+    simulation_window_mm: float = BEAMAGE_PIXELS * BEAMAGE_PIXEL_UM / 1000.0
     preview_grid_n: int = 256
     validation_grid_n: int = 512
 
@@ -88,32 +125,59 @@ class VirtualLabGeometry:
     slm1_to_slm2_mm: float = 0.040
     slm1_to_slm2_source: str = "repo_placeholder_unmeasured"
 
-    # User-reported bench values.  With f=300 mm lenses and 300 mm lens-centre
-    # separation this is NOT silently treated as an ideal symmetric 4F.
+    # Operator-reported layout (2026-09-17):
+    #   SLM -300- L1(f=300) -300- aperture -300- L2(f=300) -300- axicon.
+    # Every spacing equals a focal length, so this *is* a symmetric 4F: unit
+    # magnification, 180-degree image rotation, stop in the shared focal plane.
     lens1_focal_length_mm: float = 300.0
     lens2_focal_length_mm: float = 300.0
-    lens_to_lens_separation_mm: float = 300.0
-    relay_geometry_source: str = "user_reported_f300_lenses_and_confirmed_300mm_lens_separation"
+    slm_to_lens1_mm: float = 300.0
+    lens_to_lens_separation_mm: float = 600.0
+    lens2_to_axicon_mm: float = 300.0
+    relay_magnification: float = 1.0
+    # A symmetric 4F images the SLM onto the axicon rotated by 180 degrees, so
+    # odd errors (tilt, coma, decentre) reach the axicon with the opposite sign.
+    relay_inverts_image: bool = True
+    relay_geometry_source: str = "operator_reported_20260917_symmetric_4f_300mm_spacings"
     pinhole_role: str = "+1 diffraction-order selection"
-    pinhole_axial_position_mm: float | None = None
+    pinhole_axial_position_mm: float | None = 300.0
+    # Stop diameter in the shared focal plane.  None = ideal order selection
+    # with no spatial filtering; the bench aperture has not been measured.
+    fourier_aperture_diameter_mm: float | None = None
+    fourier_aperture_source: str = "not_measured_default_ideal_order_select"
 
     # The optic is reported as a "20 degree Thorlabs axicon".  The repository's
     # current exact-refractive model requires a *base angle*.  Until the part
     # number / convention is bound, retain the old 2 deg model value only as an
     # explicit simulation placeholder.
     axicon_reported_label: str = "Thorlabs 20° axicon"
+    # The axicon is set, as in the bench digital twin, by its measured transverse
+    # wavenumber.  The "20°" label is not a model base angle: this k_perp implies
+    # ~9.9° in the exact refractive convention.  Set k_perp to None to drive the
+    # model by base angle instead.
+    axicon_k_perp_m_inv: float | None = MEASURED_BENCH_AXICON_K_PERP_M_INV
+    axicon_k_perp_source: str = MEASURED_BENCH_AXICON_SOURCE
     axicon_model_base_angle_deg: float = 2.0
-    axicon_model_angle_source: str = "repo_placeholder_not_bound_to_reported_20deg_label"
+    axicon_model_angle_source: str = "used only when axicon_k_perp_m_inv is None"
     axicon_refractive_index: float = 1.458
     axicon_external_index: float = 1.0
+    axicon_min_samples_per_period: float = DEFAULT_MIN_SAMPLES_PER_PERIOD
+    max_propagation_grid_n: int = 4096
+
+    # Optional demagnifying objective after the axicon; nothing like it is on
+    # the bench today.  M = 1/N for a 1:N objective.  The post-axicon pattern
+    # scales exactly (see labcontrol/sample_plane.py), so this changes the
+    # reported lengths and the z mapping, never the simulated field.
+    objective_demagnification: float = 1.0
+    objective_source: str = "not_installed_default_unity"
 
     # The physical camera reference is not yet established.  Virtual z is
     # therefore relative to the post-axicon model plane.
     camera_z_reference: str = "virtual post-axicon plane; physical camera z=0 UNCALIBRATED"
 
-    # Until the pinhole axial location and full relay distances are measured, the
-    # model uses an ideal selected-order handoff rather than inventing a 4F.
-    relay_mode: str = "ideal_selected_order_surrogate"
+    # The relay distances are now bench-reported, so the model applies the 4F's
+    # unit magnification and image rotation.  Only the stop diameter is unknown.
+    relay_mode: str = "symmetric_4f_unit_magnification_order_select"
 
     def quality_grid(self, quality: str) -> int:
         q = str(quality).strip().lower()
@@ -128,9 +192,12 @@ class VirtualLabGeometry:
         payload["geometry_status"] = "PARTIALLY_BOUND_NOT_BENCH_CALIBRATED"
         payload["known_fact_notes"] = [
             "Both relay lenses reported as 300 mm focal length.",
-            "Lens-centre to lens-centre separation confirmed as 300 mm.",
-            "Pinhole is between the lenses and selects +1; exact axial position is unknown.",
-            "Physical optic reported as a Thorlabs 20° axicon; model base-angle convention remains unbound.",
+            "Operator-reported spacings SLM-300-L1-300-aperture-300-L2-300-axicon: a symmetric 4F, "
+            "so the axicon sees the SLM field at unit magnification, rotated by 180 degrees.",
+            "The aperture selects +1 in the shared focal plane; its diameter is not measured, so no "
+            "spatial filtering is applied unless one is entered.",
+            "Physical optic reported as a Thorlabs 20° axicon; modelled by its measured k_perp from the "
+            "BeamGage q=20 z-scan rather than by the manufacturer label.",
         ]
         payload["claim_boundary"] = (
             "Offline optical-control model only. Unknown distances/angle conventions remain "
@@ -300,9 +367,29 @@ class VirtualBenchEngine:
         self._revealed = False
         self._full_cast_phase: dict[str, np.ndarray] = {}
         self._optical_cast_phase: dict[str, np.ndarray] = {}
+        self._cast_slm_states: dict[str, Any] = {}
         self._cast_hashes: dict[str, str] = {}
         self._alignment = AlignmentCommand()
         self._frame_counter = 0
+        self._optical_cache_token = 0
+        self._cached_model_intensity: tuple[tuple[Any, ...], np.ndarray, dict[str, Any]] | None = None
+        # One frozen post-axicon spectrum per optical state: every camera plane
+        # is then a single inverse FFT instead of a full relay + axicon rebuild.
+        self._axicon_spectrum_cache: tuple[tuple[Any, ...], Any, dict[str, Any]] | None = None
+        # The SLM relay does not change when only the camera moves.
+        self._relay_cache: tuple[tuple[Any, ...], np.ndarray, dict[str, Any]] | None = None
+        # Noise-free intensity on the resolved model grid, before camera pixels.
+        # Only kept while a view asks for it; ~64 MB for the 4096² bench grid.
+        self.keep_native_intensity = False
+        self._native_cache: tuple[tuple[Any, ...], np.ndarray] | None = None
+
+    def _invalidate_optics(self) -> None:
+        # Called with the bench lock held whenever a physical/SLM input changes.
+        self._optical_cache_token += 1
+        self._cached_model_intensity = None
+        self._axicon_spectrum_cache = None
+        self._relay_cache = None
+        self._native_cache = None
 
     @property
     def scenario(self) -> VirtualScenarioHandle:
@@ -324,10 +411,12 @@ class VirtualBenchEngine:
         self.geometry.quality_grid(quality)
         with self._lock:
             self.quality = str(quality).lower()
+            self._invalidate_optics()
 
     def set_geometry(self, **updates: Any) -> None:
         with self._lock:
             self.geometry = replace(self.geometry, **updates)
+            self._invalidate_optics()
 
     def generate_scenario(self, kind: str | ScenarioKind, seed: int) -> VirtualScenarioHandle:
         scenario_kind = kind if isinstance(kind, ScenarioKind) else ScenarioKind(str(kind))
@@ -344,6 +433,7 @@ class VirtualBenchEngine:
             self._scenario = handle
             self._revealed = False
             self._alignment = AlignmentCommand()
+            self._invalidate_optics()
         return handle
 
     def reset_scenario(self) -> VirtualScenarioHandle:
@@ -368,6 +458,7 @@ class VirtualBenchEngine:
     def set_alignment_command(self, *, axicon_x_um: float, axicon_y_um: float) -> None:
         with self._lock:
             self._alignment = AlignmentCommand(float(axicon_x_um), float(axicon_y_um))
+            self._invalidate_optics()
 
     @property
     def alignment_command(self) -> AlignmentCommand:
@@ -380,6 +471,7 @@ class VirtualBenchEngine:
         optical_phase_rad: np.ndarray,
         *,
         full_phase_hash: str | None = None,
+        slm_state: Any | None = None,
     ) -> None:
         key = str(name).upper()
         if key not in {"SLM1", "SLM2"}:
@@ -391,7 +483,10 @@ class VirtualBenchEngine:
         with self._lock:
             self._full_cast_phase[key] = full.copy()
             self._optical_cast_phase[key] = optical.copy()
+            if slm_state is not None:
+                self._cast_slm_states[key] = copy.deepcopy(slm_state)
             self._cast_hashes[key] = full_phase_hash or phase_sha256(full)
+            self._invalidate_optics()
 
     def blank(self, name: str, shape: tuple[int, int]) -> None:
         zeros = np.zeros(shape, dtype=np.float64)
@@ -400,10 +495,120 @@ class VirtualBenchEngine:
     def cast_hash(self, name: str) -> str | None:
         return self._cast_hashes.get(str(name).upper())
 
+    def cast_vortex_charge(self) -> int:
+        """Charge encoded in the last virtual casts, not uncast GUI edits."""
+        with self._lock:
+            return sum(
+                int(slm.phase.vortex_charge)
+                for slm in self._cast_slm_states.values()
+                if slm.phase.switches.vortex
+            )
+
+    def clear_cast_phases(self) -> None:
+        with self._lock:
+            self._full_cast_phase.clear()
+            self._optical_cast_phase.clear()
+            self._cast_slm_states.clear()
+            self._cast_hashes.clear()
+            self._invalidate_optics()
+
+    def _model_intensity(self, state: ExperimentState, z_mm: float) -> tuple[np.ndarray, dict[str, Any]]:
+        """Cache the propagated field, not camera noise, between live frames."""
+        with self._lock:
+            key = (
+                self._optical_cache_token,
+                self.grid_n,
+                float(z_mm),
+                float(state.system.wavelength_nm),
+            )
+            cached = self._cached_model_intensity
+            if cached is not None and cached[0] == key:
+                return cached[1], copy.deepcopy(cached[2])
+
+        started = time.perf_counter()
+        self._axicon_stage_rebuilt = False
+        field, metadata = self._forward_complex_field(state, z_mm=float(z_mm))
+        elapsed = time.perf_counter() - started
+        if self._axicon_stage_rebuilt:
+            # A new optical state (every optimiser probe) pays for relay, axicon
+            # and spectrum; the GUI uses this to give honest run-time estimates.
+            self.last_full_rebuild_s = elapsed
+        # Area-integrate the resolved intensity over each camera pixel.
+        intensity = detector_intensity(field, int(metadata.get("propagation_integration_factor", 1)))
+        intensity = np.asarray(intensity, dtype=np.float64)
+        native = detector_intensity(field, 1) if self.keep_native_intensity else None
+        with self._lock:
+            if key[0] == self._optical_cache_token:
+                self._cached_model_intensity = (key, intensity, copy.deepcopy(metadata))
+                if native is not None:
+                    self._native_cache = (key, native)
+        return intensity, metadata
+
+    def native_intensity(self, state: ExperimentState, z_mm: float) -> tuple[np.ndarray, float]:
+        """Noise-free resolved-model intensity for a plane, and its size in camera pixels.
+
+        This is what the optics produce before any camera: the Bessel intensity
+        fringes fully resolved.  Comparing it with the camera frame shows what
+        5.5 µm pixels and detector noise do to the same light.
+        """
+
+        with self._lock:
+            key = (
+                self._optical_cache_token,
+                self.grid_n,
+                float(z_mm),
+                float(state.system.wavelength_nm),
+            )
+            cached = self._native_cache
+            if cached is not None and cached[0] == key:
+                native = cached[1]
+                return native, float(self.detector_n) / float(native.shape[0])
+        field, _metadata = self._forward_complex_field(state, z_mm=float(z_mm))
+        native = detector_intensity(field, 1)
+        with self._lock:
+            if key[0] == self._optical_cache_token:
+                self._native_cache = (key, native)
+        return native, float(self.detector_n) / float(native.shape[0])
+
     def _grid(self) -> dict[str, Any]:
         n = self.grid_n
         width_m = float(self.geometry.simulation_window_mm) * 1e-3
         return make_xy_grid(n, width_m / n)
+
+    def _apply_4f_relay(
+        self,
+        field: np.ndarray,
+        grid: Mapping[str, Any],
+        *,
+        wavelength_m: float,
+        geometry: "VirtualLabGeometry",
+    ) -> tuple[np.ndarray, dict[str, Any]]:
+        """Carry the SLM field through the bench 4F onto the axicon.
+
+        The relay is 1:1, so the field is not rescaled.  The stop in the shared
+        focal plane low-passes it when a diameter is entered, and the symmetric
+        4F hands the axicon a 180-degree rotated image of the SLM plane.
+        """
+
+        meta: dict[str, Any] = {
+            "relay_magnification": float(geometry.relay_magnification),
+            "relay_image_rotation_deg": 180.0 if geometry.relay_inverts_image else 0.0,
+        }
+        diameter_mm = geometry.fourier_aperture_diameter_mm
+        if diameter_mm:
+            field, aperture_meta = apply_fourier_plane_aperture(
+                field,
+                dx_m=float(grid["dx"]),
+                wavelength_m=float(wavelength_m),
+                focal_length_m=float(geometry.lens1_focal_length_mm) * 1e-3,
+                diameter_m=float(diameter_mm) * 1e-3,
+            )
+            meta.update(aperture_meta)
+        else:
+            meta["fourier_aperture_diameter_mm"] = None
+        if geometry.relay_inverts_image:
+            field = rotate_180(field)
+        return field, meta
 
     def _hidden_input_phase(
         self,
@@ -424,6 +629,162 @@ class VirtualBenchEngine:
             )
         return phase
 
+    @property
+    def detector_n(self) -> int:
+        """Camera pixels across the window; the relay grid unless a camera model says otherwise."""
+        return int(self.grid_n)
+
+    def axicon_plan(self, *, grid_n: int | None = None, geometry: "VirtualLabGeometry | None" = None,
+                    beam_radius_mm: float | None = None, wavelength_nm: float | None = None) -> AxiconPropagationPlan:
+        """What the axicon stage will compute on a (possibly proposed) grid/geometry."""
+        geometry = self.geometry if geometry is None else geometry
+        return plan_axicon_propagation(
+            geometry,
+            wavelength_m=float(wavelength_nm if wavelength_nm is not None else geometry.wavelength_nm) * 1e-9,
+            relay_grid_n=int(self.grid_n if grid_n is None else grid_n),
+            detector_n=self._detector_n_for(int(self.grid_n if grid_n is None else grid_n)),
+            beam_radius_mm=float(
+                beam_radius_mm if beam_radius_mm is not None else getattr(self, "canonical_beam_radius_mm", 2.0)
+            ),
+        )
+
+    def peak_model_intensity(self, state: ExperimentState, z_mm: float) -> float:
+        """Brightest model intensity at this plane, before camera gain or noise.
+
+        Exposure arithmetic needs the true peak: a clipped frame no longer
+        carries it, and detector noise would bias a frame-based estimate.
+        """
+
+        intensity, _metadata = self._model_intensity(state, float(z_mm))
+        return float(np.max(np.asarray(intensity)))
+
+    def sample_plane(
+        self,
+        *,
+        charge: int = 0,
+        geometry: "VirtualLabGeometry | None" = None,
+        wavelength_nm: float | None = None,
+    ) -> SamplePlaneScale:
+        """Where this bench's pattern lands if a 1:N objective follows the axicon.
+
+        Pure bookkeeping: the post-axicon pattern is scale invariant, so the
+        simulated frame is already the sample-plane pattern in new units.
+        """
+
+        geometry = self.geometry if geometry is None else geometry
+        plan = self.axicon_plan(geometry=geometry)
+        ring_um = bench_ring_radius_um(k_perp_m_inv=plan.k_perp_m_inv, charge=charge) if plan.valid else None
+        return sample_plane_scale(
+            demagnification=float(geometry.objective_demagnification),
+            camera_pixel_um=float(self.pixel_size_um),
+            native_pixel_um=float(self.pixel_size_um) / max(1, int(plan.integration_factor or 1)),
+            ring_radius_um=ring_um,
+            bessel_length_mm=plan.bessel_zone_mm if plan.valid else None,
+            k_perp_m_inv=plan.k_perp_m_inv if plan.valid else None,
+            wavelength_nm=float(wavelength_nm if wavelength_nm else geometry.wavelength_nm),
+        )
+
+    def _cached_relay(self, key: tuple[Any, ...], compute: Callable[[], tuple[np.ndarray, dict[str, Any]]]):
+        with self._lock:
+            cached = self._relay_cache
+        if cached is not None and cached[0] == key:
+            return cached[1], cached[2]
+        field, beam_meta = compute()
+        with self._lock:
+            if key[0] == self._optical_cache_token:
+                self._relay_cache = (key, field, beam_meta)
+        return field, beam_meta
+
+    def _detector_n_for(self, relay_grid_n: int) -> int:
+        return int(self.detector_n) if relay_grid_n == int(self.grid_n) else int(relay_grid_n)
+
+    def _observe_after_axicon(
+        self,
+        field_on_axicon: np.ndarray,
+        *,
+        geometry: "VirtualLabGeometry",
+        wavelength_m: float,
+        decentre_m: tuple[float, float],
+        z_mm: float,
+        beam_radius_mm: float,
+    ) -> tuple[np.ndarray, dict[str, Any]]:
+        """Axicon + free-space stage, ported from the bench digital twin's multirate route."""
+
+        relay_n = int(np.asarray(field_on_axicon).shape[0])
+        plan = plan_axicon_propagation(
+            geometry, wavelength_m=wavelength_m, relay_grid_n=relay_n, beam_radius_mm=beam_radius_mm,
+            detector_n=self._detector_n_for(relay_n),
+        )
+        if not plan.valid:
+            raise ProviderError(plan.message)
+        z_m = float(z_mm) * 1e-3
+        # One band limit serves every plane up to z_support.  Rounding up to the
+        # next 10 mm keeps a camera walked in small steps on the same spectrum.
+        z_support_m = max(0.04, math.ceil((abs(z_m) + 1e-9) / 0.01) * 0.01)
+        key = (
+            self._optical_cache_token,
+            relay_n,
+            plan.propagation_grid_n,
+            float(wavelength_m),
+            round(float(plan.k_perp_m_inv), 3),
+            tuple(round(float(v), 12) for v in decentre_m),
+            z_support_m,
+        )
+        with self._lock:
+            cached = self._axicon_spectrum_cache
+        if cached is not None and cached[0] == key:
+            spectrum, stage_meta = cached[1], cached[2]
+        else:
+            window_m = float(geometry.simulation_window_mm) * 1e-3
+            self._axicon_stage_rebuilt = True
+            try:
+                spectrum = build_resolved_axicon_spectrum(
+                    field_on_axicon,
+                    window_m=window_m,
+                    fine_n=int(plan.propagation_grid_n),
+                    wavelength_m=wavelength_m,
+                    k_perp_m_inv=float(plan.k_perp_m_inv),
+                    decentre_m=tuple(float(v) for v in decentre_m),
+                    z_support_m=z_support_m,
+                    minimum_retained_spectral_power=0.98,
+                )
+            except RuntimeError as exc:
+                raise ProviderError(
+                    f"The camera at z={z_mm:g} mm is too far for the {geometry.simulation_window_mm:g} mm model "
+                    "window: the light cone leaves the window before it reaches the camera. Move the camera "
+                    f"closer. ({exc})"
+                ) from exc
+            axicon_meta = {
+                "base_angle_rad": math.radians(float(plan.base_angle_deg)),
+                "refractive_index": float(geometry.axicon_refractive_index),
+                "external_index": float(geometry.axicon_external_index),
+                "exact_kr_m_inv": float(plan.k_perp_m_inv),
+                "decentre_m": tuple(float(v) for v in decentre_m),
+                "tip_model": "sharp",
+                "transmission": "exp(-i k_perp r) on the resolved axicon grid",
+            }
+            stage_meta = {
+                "axicon_propagation_method": (
+                    "multirate fixed-window Fourier handoff + fixed-support angular spectrum "
+                    "(ported from real_bmg_digital_twin_correction.propagate_route)"
+                ),
+                "axicon_plan": plan.as_dict(),
+                "axicon_model": axicon_meta,
+                "axicon_k_perp_source": geometry.axicon_k_perp_source
+                if geometry.axicon_k_perp_m_inv is not None else "model base angle",
+                "retained_spectral_power_fraction": float(spectrum.retained_spectral_power_fraction),
+                "detector_pixel_um": float(geometry.simulation_window_mm) * 1000.0 / self._detector_n_for(relay_n),
+                "z_support_mm": z_support_m * 1e3,
+            }
+            with self._lock:
+                if key[0] == self._optical_cache_token:
+                    self._axicon_spectrum_cache = (key, spectrum, stage_meta)
+        observed = resolved_field_at_z(spectrum, z_m)
+        metadata = dict(stage_meta)
+        metadata["propagation_integration_factor"] = int(plan.propagation_grid_n // self._detector_n_for(relay_n))
+        metadata["propagation_grid_n"] = int(plan.propagation_grid_n)
+        return np.asarray(observed, dtype=np.complex128), metadata
+
     def _forward_complex_field(
         self,
         state: ExperimentState,
@@ -435,6 +796,7 @@ class VirtualBenchEngine:
             scenario = self._scenario
             alignment = self._alignment
             optical = {k: v.copy() for k, v in self._optical_cast_phase.items()}
+            cast_states = {k: copy.deepcopy(v) for k, v in self._cast_slm_states.items()}
             hashes = dict(self._cast_hashes)
             geometry = self.geometry
 
@@ -446,44 +808,57 @@ class VirtualBenchEngine:
                 + ". Cast both virtual SLMs before acquiring a frame."
             )
 
-        grid = self._grid()
         wavelength_m = float(state.system.wavelength_nm) * 1e-9
-        beam_radius_m = 2.0e-3  # existing repo assumption; retained as uncalibrated model input
-        beam_error = GaussianBeamError(
-            decentre_m=tuple(hidden.beam_decentre_m),
-            pointing_rad=tuple(hidden.beam_pointing_rad),
-        )
-        field, beam_meta = gaussian_input_field(
-            grid,
-            wavelength_m=wavelength_m,
-            canonical_radius_m=beam_radius_m,
-            error=beam_error,
-        )
+        with self._lock:
+            relay_token = self._optical_cache_token
+        relay_key = (relay_token, self.grid_n, wavelength_m, 2.0)
 
-        pupil_radius_m = max(
-            0.5e-3,
-            0.5 * float(state.slm1.phase.pupil_diameter_mm) * 1e-3,
-        )
-        hidden_phase = self._hidden_input_phase(grid, wavelength_m, pupil_radius_m)
-        field = np.asarray(field, dtype=np.complex128) * np.exp(1j * hidden_phase)
-
-        phi1 = _phase_sample_to_model(optical["SLM1"], state.slm1, grid)
-        field = field * np.exp(1j * phi1)
-
-        d12_m = float(geometry.slm1_to_slm2_mm) * 1e-3
-        if abs(d12_m) > 1e-15:
-            field = angular_spectrum_propagate_bl(
-                field,
-                grid,
-                wavelength_m,
-                d12_m,
-                n_medium=1.0,
-                bandlimit=True,
-                include_evanescent=True,
+        def compute_relay():
+            grid = self._grid()
+            beam_radius_m = 2.0e-3  # existing repo assumption; retained as uncalibrated model input
+            beam_error = GaussianBeamError(
+                decentre_m=tuple(hidden.beam_decentre_m),
+                pointing_rad=tuple(hidden.beam_pointing_rad),
             )
+            field, beam_meta = gaussian_input_field(
+                grid,
+                wavelength_m=wavelength_m,
+                canonical_radius_m=beam_radius_m,
+                error=beam_error,
+            )
+            beam_meta = _finite_beam_metadata(beam_meta)
 
-        phi2 = _phase_sample_to_model(optical["SLM2"], state.slm2, grid)
-        field = np.asarray(field, dtype=np.complex128) * np.exp(1j * phi2)
+            pupil_radius_m = max(
+                0.5e-3,
+                0.5 * float(cast_states.get("SLM1", state.slm1).phase.pupil_diameter_mm) * 1e-3,
+            )
+            hidden_phase = self._hidden_input_phase(grid, wavelength_m, pupil_radius_m)
+            field = np.asarray(field, dtype=np.complex128) * np.exp(1j * hidden_phase)
+
+            phi1 = _phase_sample_to_model(optical["SLM1"], cast_states.get("SLM1", state.slm1), grid)
+            field = field * np.exp(1j * phi1)
+
+            d12_m = float(geometry.slm1_to_slm2_mm) * 1e-3
+            if abs(d12_m) > 1e-15:
+                field = angular_spectrum_propagate_bl(
+                    field,
+                    grid,
+                    wavelength_m,
+                    d12_m,
+                    n_medium=1.0,
+                    bandlimit=True,
+                    include_evanescent=True,
+                )
+
+            phi2 = _phase_sample_to_model(optical["SLM2"], cast_states.get("SLM2", state.slm2), grid)
+            field = np.asarray(field, dtype=np.complex128) * np.exp(1j * phi2)
+            field, relay_meta = self._apply_4f_relay(
+                field, grid, wavelength_m=wavelength_m, geometry=geometry
+            )
+            beam_meta.update(relay_meta)
+            return field, beam_meta
+
+        field, beam_meta = self._cached_relay(relay_key, compute_relay)
 
         # Deliberate claim boundary: the known 300 mm lens-centre separation and
         # unknown pinhole axial position are not forced into an ideal 4F formula.
@@ -493,47 +868,20 @@ class VirtualBenchEngine:
             float(hidden.axicon_decentre_m[0]) + float(alignment.axicon_x_um) * 1e-6,
             float(hidden.axicon_decentre_m[1]) + float(alignment.axicon_y_um) * 1e-6,
         )
-        axicon_t, axicon_meta = physical_axicon_on_own_plane(
-            grid,
+        observed, stage_meta = self._observe_after_axicon(
+            field,
+            geometry=geometry,
             wavelength_m=wavelength_m,
-            base_angle_rad=math.radians(float(geometry.axicon_model_base_angle_deg)),
-            refractive_index=float(geometry.axicon_refractive_index),
-            external_index=float(geometry.axicon_external_index),
-            error=AxiconError(decentre_m=effective_axicon_decentre),
+            decentre_m=effective_axicon_decentre,
+            z_mm=float(z_mm),
+            beam_radius_mm=2.0,
         )
-        post_axicon = np.asarray(field, dtype=np.complex128) * axicon_t
-
-        z_m = float(z_mm) * 1e-3
-        if abs(z_m) > 1e-15:
-            observed = angular_spectrum_propagate_bl(
-                post_axicon,
-                grid,
-                wavelength_m,
-                z_m,
-                n_medium=1.0,
-                bandlimit=True,
-                include_evanescent=True,
-            )
-        else:
-            observed = post_axicon
-
-        radial_period_m = TWOPI / max(abs(float(axicon_meta["exact_kr_m_inv"])), EPS)
-        sampling_per_radial_period = radial_period_m / max(float(grid["dx"]), EPS)
-        warnings: list[str] = []
-        if sampling_per_radial_period < 3.0:
-            warnings.append(
-                f"Axicon radial phase period is sampled by only {sampling_per_radial_period:.2f} "
-                "pixels; use Validation quality before interpreting fine structure."
-            )
-        warnings.append(
-            "4F order selection is an ideal selected-order surrogate because the physical pinhole "
-            "axial position/full relay geometry are not yet bench-bound."
-        )
-        warnings.append(
-            "The reported '20° Thorlabs axicon' is not yet mapped to the model base-angle "
-            f"convention; using {geometry.axicon_model_base_angle_deg:g}° "
-            f"({geometry.axicon_model_angle_source})."
-        )
+        axicon_meta = stage_meta["axicon_model"]
+        warnings: list[str] = [
+            "4F relay modelled from the operator-reported 300 mm spacings: unit magnification and a "
+            "180-degree image rotation. Order selection is ideal unless a stop diameter is entered; "
+            "lens aberrations and the stop's centring are not modelled.",
+        ]
 
         metadata = {
             "scenario_id": scenario.scenario_id,
@@ -554,6 +902,10 @@ class VirtualBenchEngine:
             "slm1_to_slm2_source": geometry.slm1_to_slm2_source,
             "lens_to_lens_separation_mm": geometry.lens_to_lens_separation_mm,
             "pinhole_axial_position_mm": geometry.pinhole_axial_position_mm,
+            "relay_magnification": geometry.relay_magnification,
+            "relay_image_rotation_deg": 180.0 if geometry.relay_inverts_image else 0.0,
+            "fourier_aperture_diameter_mm": geometry.fourier_aperture_diameter_mm,
+            "objective_demagnification": geometry.objective_demagnification,
             "axicon_reported_label": geometry.axicon_reported_label,
             "axicon_model": axicon_meta,
             "beam_model": beam_meta,
@@ -561,6 +913,7 @@ class VirtualBenchEngine:
             "alignment_command": asdict(alignment),
             "warnings": warnings,
             "hidden_truth_exposed": False,
+            **stage_meta,
         }
         return np.asarray(observed, dtype=np.complex128), metadata
 
@@ -573,17 +926,12 @@ class VirtualBenchEngine:
         gain: float = 0.0,
         full_scale: float = 4095.0,
     ) -> tuple[np.ndarray, dict[str, Any]]:
-        field, metadata = self._forward_complex_field(state, z_mm=float(z_mm))
-        intensity = np.abs(field) ** 2
-        peak = float(np.max(intensity))
-        if peak <= EPS:
-            camera = np.zeros_like(intensity, dtype=np.float64)
-        else:
-            # Exposure is a relative virtual detector gain.  It does not claim a
-            # calibrated Beamage radiometric response.
-            scale = 0.72 * float(full_scale) * max(float(exposure_us), 1.0) / 1000.0
-            scale *= max(1.0 + float(gain) / 100.0, 0.0)
-            camera = intensity / peak * scale
+        intensity, metadata = self._model_intensity(state, float(z_mm))
+        from .virtual_radiometry import linear_camera_signal
+        camera, radiometry = linear_camera_signal(
+            intensity, exposure_us=exposure_us, gain=gain,
+        )
+        metadata.update(radiometry)
 
         if self.realistic_camera:
             # Deterministic per-frame noise: seeded from scenario + frame counter,
@@ -594,8 +942,10 @@ class VirtualBenchEngine:
             background = 12.0
             read_sigma = 2.0
             shot = rng.normal(0.0, np.sqrt(np.maximum(camera, 0.0)) * 0.20)
-            camera = camera + background + shot + rng.normal(0.0, read_sigma, camera.shape)
-            metadata["virtual_camera_model"] = "background + shot-like noise + read noise"
+            power_scale = max(0.0, 1.0 + float(rng.normal(0.0, 0.004)))
+            camera = camera * power_scale + background + shot + rng.normal(0.0, read_sigma, camera.shape)
+            metadata["virtual_camera_model"] = "background + shot-like noise + read noise + 0.4% rms source-power fluctuation"
+            metadata["virtual_power_scale"] = power_scale
         else:
             metadata["virtual_camera_model"] = "clean deterministic intensity sampling"
 
@@ -673,6 +1023,10 @@ class VirtualCameraProvider(CameraProvider):
         self._exposure_us = float(exposure_us)
         self._gain = float(gain)
 
+    # The virtual camera derives z from the state it is handed, so the frame's
+    # z is not an independent observation of the camera position.
+    reports_independent_z = False
+
     def acquire_frame(self, *, fresh: bool = True, timeout_s: float = 2.0) -> CameraFrame:
         if not self._connected:
             raise ProviderError("Virtual camera is disconnected.")
@@ -738,12 +1092,17 @@ class VirtualSlmProvider(SlmProvider):
 
     def _selected_order_phase(self, name: str) -> np.ndarray:
         # The present relay geometry is incomplete.  The virtual bench therefore
-        # models a selected-order handoff.  Remove only the locked blaze term via
-        # the SAME PhaseService rather than manually subtracting a grating.
+        # models a selected-order handoff.  Use the same authoritative phase
+        # composer with blaze disabled on a COPY of the config.  PhaseService
+        # validates ExperimentState and re-enables the hardware-locked carrier;
+        # using it here accidentally propagated the blaze on both virtual SLMs.
+        # The full hardware-command phase remains untouched and provenance-linked.
+        from slm_lab_control.phase import compose_phase
+
         state = self.state_supplier()
-        phase_cfg = getattr(state, name.lower()).phase
+        phase_cfg = copy.deepcopy(getattr(state, name.lower()).phase)
         phase_cfg.switches.blaze = False
-        return np.asarray(self.phase_service.generate(state).results[name].phase_rad, dtype=np.float64)
+        return np.asarray(compose_phase(phase_cfg).phase_rad, dtype=np.float64)
 
     def cast(
         self,
@@ -762,6 +1121,7 @@ class VirtualSlmProvider(SlmProvider):
             full_phase,
             optical_phase,
             full_phase_hash=phase_sha256(full_phase),
+            slm_state=getattr(self.state_supplier(), key.lower()),
         )
         message = (
             f"{key}: VIRTUAL CAST to digital twin; no HEDS command issued "
@@ -785,6 +1145,7 @@ class VirtualSlmProvider(SlmProvider):
 
     def close(self) -> str:
         self._connected = False
+        self.engine.clear_cast_phases()
         return "Virtual SLM provider closed; no physical hardware was addressed."
 
     def disconnect(self) -> str:
@@ -1084,6 +1445,7 @@ class BlindCorrectionRunner:
         )
         accepted_runs: list[dict[str, Any]] = []
         optimiser = SensorlessOptimiser(self.controller.store)
+        active_run = None
 
         try:
             for pass_index in range(passes):
@@ -1102,6 +1464,7 @@ class BlindCorrectionRunner:
                             minimum_fractional_improvement=0.002,
                             max_control_drift_fraction=0.05,
                         )
+                        active_run = run
                         if progress_callback is not None:
                             progress_callback(
                                 {
@@ -1170,7 +1533,14 @@ class BlindCorrectionRunner:
                                 "verification_score": verify_stack.objective.total,
                             }
                         )
+                        active_run = None
         except InterruptedError:
+            if active_run is not None:
+                # A candidate or recommended command may be on the virtual
+                # panel when cancellation arrives. Never leave an unverified
+                # trial cast as though it were the accepted correction.
+                optimiser.rollback(active_run, reason="Virtual correction cancelled before verification")
+                self.controller.cast((active_run.slm_name,), persist=False)
             final = self._stack(
                 z_plan_mm,
                 frame_callback=frame_callback,
@@ -1189,12 +1559,31 @@ class BlindCorrectionRunner:
                 cancelled=True,
             )
 
-        final = self._stack(
-            z_plan_mm,
-            frame_callback=frame_callback,
-            progress_callback=progress_callback,
-            cancelled=cancelled,
-        )
+        try:
+            final = self._stack(
+                z_plan_mm,
+                frame_callback=frame_callback,
+                progress_callback=progress_callback,
+                cancelled=cancelled,
+            )
+        except InterruptedError:
+            # Accepted modes remain accepted, but the cancelled final readout
+            # must still report the state actually left on the virtual SLMs.
+            final = self._stack(
+                z_plan_mm,
+                frame_callback=frame_callback,
+                progress_callback=None,
+                cancelled=None,
+            )
+            return BlindCorrectionResult(
+                initial_objective=initial.objective.total,
+                final_objective=final.objective.total,
+                improvement_fraction=(initial.objective.total - final.objective.total)
+                / max(abs(initial.objective.total), EPS),
+                accepted_runs=accepted_runs,
+                final_stack=final,
+                cancelled=True,
+            )
         improvement = (
             (initial.objective.total - final.objective.total)
             / max(abs(initial.objective.total), EPS)

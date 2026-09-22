@@ -20,6 +20,7 @@ mechanical Alignment Assist is considered.
 
 from __future__ import annotations
 
+import copy
 import math
 from dataclasses import asdict, dataclass
 from typing import Any, Callable, Mapping, Sequence
@@ -41,6 +42,7 @@ from labcontrol.virtual_lab import (
     VirtualBenchEngine,
     VirtualScenarioHandle,
     _HiddenScenario,
+    _finite_beam_metadata,
     _phase_sample_to_model,
     _scenario_from_seed,
     _truth_hash,
@@ -150,6 +152,7 @@ class ExperimentalVirtualBenchEngine(VirtualBenchEngine):
             raise ValueError("Canonical beam radius must be between 0.05 and 20 mm.")
         with self._lock:
             self.canonical_beam_radius_mm = value
+            self._invalidate_optics()
 
     def generate_scenario(self, kind: str | ScenarioKind, seed: int) -> VirtualScenarioHandle:
         scenario_kind = kind if isinstance(kind, ScenarioKind) else ScenarioKind(str(kind))
@@ -184,6 +187,7 @@ class ExperimentalVirtualBenchEngine(VirtualBenchEngine):
             self._scenario = handle
             self._revealed = False
             self._alignment = AlignmentCommand()
+            self._invalidate_optics()
         return handle
 
     def apply_manual_perturbations(
@@ -218,6 +222,7 @@ class ExperimentalVirtualBenchEngine(VirtualBenchEngine):
             self._scenario = handle
             self._revealed = False
             self._alignment = AlignmentCommand()
+            self._invalidate_optics()
         return handle
 
     def _forward_complex_field(
@@ -233,6 +238,7 @@ class ExperimentalVirtualBenchEngine(VirtualBenchEngine):
             scenario = self._scenario
             alignment = self._alignment
             optical = {k: v.copy() for k, v in self._optical_cast_phase.items()}
+            cast_states = {k: copy.deepcopy(v) for k, v in self._cast_slm_states.items()}
             hashes = dict(self._cast_hashes)
             geometry = self.geometry
             beam_radius_mm = float(self.canonical_beam_radius_mm)
@@ -244,79 +250,79 @@ class ExperimentalVirtualBenchEngine(VirtualBenchEngine):
                 + ". Cast both virtual SLMs before acquiring a frame."
             )
 
-        grid = self._grid()
         wavelength_m = float(state.system.wavelength_nm) * 1e-9
-        beam_error = GaussianBeamError(
-            radius_x_scale=float(getattr(hidden, "radius_x_scale", 1.0)),
-            radius_y_scale=float(getattr(hidden, "radius_y_scale", 1.0)),
-            decentre_m=tuple(hidden.beam_decentre_m),
-            pointing_rad=tuple(hidden.beam_pointing_rad),
-            curvature_radius_x_m=float(getattr(hidden, "curvature_radius_x_m", math.inf)),
-            curvature_radius_y_m=float(getattr(hidden, "curvature_radius_y_m", math.inf)),
-        )
-        field, beam_meta = gaussian_input_field(
-            grid,
-            wavelength_m=wavelength_m,
-            canonical_radius_m=beam_radius_mm * 1e-3,
-            error=beam_error,
-        )
+        with self._lock:
+            relay_token = self._optical_cache_token
+        relay_key = (relay_token, self.grid_n, wavelength_m, beam_radius_mm)
 
-        pupil_radius_m = max(0.5e-3, 0.5 * float(state.slm1.phase.pupil_diameter_mm) * 1e-3)
-        hidden_phase = self._hidden_input_phase(grid, wavelength_m, pupil_radius_m)
-        field = np.asarray(field, dtype=np.complex128) * np.exp(1j * hidden_phase)
-
-        phi1 = _phase_sample_to_model(optical["SLM1"], state.slm1, grid)
-        field = field * np.exp(1j * phi1)
-
-        d12_m = float(geometry.slm1_to_slm2_mm) * 1e-3
-        if abs(d12_m) > 1e-15:
-            field = angular_spectrum_propagate_bl(
-                field, grid, wavelength_m, d12_m,
-                n_medium=1.0, bandlimit=True, include_evanescent=True,
+        def compute_relay():
+            grid = self._grid()
+            beam_error = GaussianBeamError(
+                radius_x_scale=float(getattr(hidden, "radius_x_scale", 1.0)),
+                radius_y_scale=float(getattr(hidden, "radius_y_scale", 1.0)),
+                decentre_m=tuple(hidden.beam_decentre_m),
+                pointing_rad=tuple(hidden.beam_pointing_rad),
+                curvature_radius_x_m=float(getattr(hidden, "curvature_radius_x_m", math.inf)),
+                curvature_radius_y_m=float(getattr(hidden, "curvature_radius_y_m", math.inf)),
             )
+            field, beam_meta = gaussian_input_field(
+                grid,
+                wavelength_m=wavelength_m,
+                canonical_radius_m=beam_radius_mm * 1e-3,
+                error=beam_error,
+            )
+            # Resizing or making the beam elliptical redistributes fixed
+            # incident power; do not renormalise after clipping/decentring.
+            from .virtual_radiometry import fixed_power_amplitude
+            amplitude_scale = fixed_power_amplitude(
+                beam_meta["beam_radius_x_m"], beam_meta["beam_radius_y_m"],
+            )
+            field *= amplitude_scale
+            beam_meta["fixed_power_amplitude_scale"] = amplitude_scale
+            beam_meta = _finite_beam_metadata(beam_meta)
 
-        phi2 = _phase_sample_to_model(optical["SLM2"], state.slm2, grid)
-        field = np.asarray(field, dtype=np.complex128) * np.exp(1j * phi2)
+            pupil_radius_m = max(0.5e-3, 0.5 * float(cast_states.get("SLM1", state.slm1).phase.pupil_diameter_mm) * 1e-3)
+            hidden_phase = self._hidden_input_phase(grid, wavelength_m, pupil_radius_m)
+            field = np.asarray(field, dtype=np.complex128) * np.exp(1j * hidden_phase)
+
+            phi1 = _phase_sample_to_model(optical["SLM1"], cast_states.get("SLM1", state.slm1), grid)
+            field = field * np.exp(1j * phi1)
+
+            d12_m = float(geometry.slm1_to_slm2_mm) * 1e-3
+            if abs(d12_m) > 1e-15:
+                field = angular_spectrum_propagate_bl(
+                    field, grid, wavelength_m, d12_m,
+                    n_medium=1.0, bandlimit=True, include_evanescent=True,
+                )
+
+            phi2 = _phase_sample_to_model(optical["SLM2"], cast_states.get("SLM2", state.slm2), grid)
+            field = np.asarray(field, dtype=np.complex128) * np.exp(1j * phi2)
+            field, relay_meta = self._apply_4f_relay(
+                field, grid, wavelength_m=wavelength_m, geometry=geometry
+            )
+            beam_meta.update(relay_meta)
+            return field, beam_meta
+
+        field, beam_meta = self._cached_relay(relay_key, compute_relay)
 
         effective_axicon_decentre = (
             float(hidden.axicon_decentre_m[0]) + float(alignment.axicon_x_um) * 1e-6,
             float(hidden.axicon_decentre_m[1]) + float(alignment.axicon_y_um) * 1e-6,
         )
-        axicon_t, axicon_meta = physical_axicon_on_own_plane(
-            grid,
+        observed, stage_meta = self._observe_after_axicon(
+            field,
+            geometry=geometry,
             wavelength_m=wavelength_m,
-            base_angle_rad=math.radians(float(geometry.axicon_model_base_angle_deg)),
-            refractive_index=float(geometry.axicon_refractive_index),
-            external_index=float(geometry.axicon_external_index),
-            error=AxiconError(decentre_m=effective_axicon_decentre),
+            decentre_m=effective_axicon_decentre,
+            z_mm=float(z_mm),
+            beam_radius_mm=beam_radius_mm,
         )
-        post_axicon = np.asarray(field, dtype=np.complex128) * axicon_t
-
-        z_m = float(z_mm) * 1e-3
-        if abs(z_m) > 1e-15:
-            observed = angular_spectrum_propagate_bl(
-                post_axicon, grid, wavelength_m, z_m,
-                n_medium=1.0, bandlimit=True, include_evanescent=True,
-            )
-        else:
-            observed = post_axicon
-
-        radial_period_m = TWOPI / max(abs(float(axicon_meta["exact_kr_m_inv"])), EPS)
-        sampling_per_radial_period = radial_period_m / max(float(grid["dx"]), EPS)
-        warnings: list[str] = []
-        if sampling_per_radial_period < 3.0:
-            warnings.append(
-                f"Axicon radial phase period is sampled by only {sampling_per_radial_period:.2f} pixels; "
-                "use Validation quality before interpreting fine structure."
-            )
-        warnings.append(
-            "4F order selection is an ideal selected-order surrogate because the physical pinhole "
-            "axial position/full relay geometry are not yet bench-bound."
-        )
-        warnings.append(
-            "The reported '20° Thorlabs axicon' is not yet mapped to the model base-angle convention; "
-            f"using {geometry.axicon_model_base_angle_deg:g}° ({geometry.axicon_model_angle_source})."
-        )
+        axicon_meta = stage_meta["axicon_model"]
+        warnings: list[str] = [
+            "4F relay modelled from the operator-reported 300 mm spacings: unit magnification and a "
+            "180-degree image rotation. Order selection is ideal unless a stop diameter is entered; "
+            "lens aberrations and the stop's centring are not modelled.",
+        ]
 
         metadata = {
             "scenario_id": scenario.scenario_id,
@@ -338,6 +344,10 @@ class ExperimentalVirtualBenchEngine(VirtualBenchEngine):
             "slm1_to_slm2_source": geometry.slm1_to_slm2_source,
             "lens_to_lens_separation_mm": geometry.lens_to_lens_separation_mm,
             "pinhole_axial_position_mm": geometry.pinhole_axial_position_mm,
+            "relay_magnification": geometry.relay_magnification,
+            "relay_image_rotation_deg": 180.0 if geometry.relay_inverts_image else 0.0,
+            "fourier_aperture_diameter_mm": geometry.fourier_aperture_diameter_mm,
+            "objective_demagnification": geometry.objective_demagnification,
             "axicon_reported_label": geometry.axicon_reported_label,
             "axicon_model": axicon_meta,
             "beam_model": beam_meta,
@@ -345,6 +355,7 @@ class ExperimentalVirtualBenchEngine(VirtualBenchEngine):
             "alignment_command": asdict(alignment),
             "warnings": warnings,
             "hidden_truth_exposed": False,
+            **stage_meta,
         }
         return np.asarray(observed, dtype=np.complex128), metadata
 
@@ -428,9 +439,9 @@ def estimated_blind_cycle_frames(
 
 @dataclass
 class AutoConvergeResult:
-    initial_objective: float
-    final_objective: float
-    improvement_fraction: float
+    initial_objective: float | None
+    final_objective: float | None
+    improvement_fraction: float | None
     cycles: list[dict[str, Any]]
     total_frames: int
     stop_reason: str
@@ -528,18 +539,34 @@ class AutoConvergeRunner:
                 )
 
             runner = BlindCorrectionRunner(self.controller, metric_engine=self.metric_engine)
-            result: BlindCorrectionResult = runner.run(
-                expanded_z,
-                targets=target_names,
-                parameters=mode_parameters,
-                probe_amplitude_waves=probe,
-                passes=1,
-                seed=int(seed) + cycle_index * 101,
-                frame_callback=frame_callback,
-                progress_callback=progress_callback,
-                cancelled=cancelled,
-            )
-            total_frames += frames_per_cycle
+            cycle_frames = 0
+
+            def count_frame(frame: Any) -> None:
+                nonlocal cycle_frames
+                cycle_frames += 1
+                if frame_callback is not None:
+                    frame_callback(frame)
+
+            try:
+                result: BlindCorrectionResult = runner.run(
+                    expanded_z,
+                    targets=target_names,
+                    parameters=mode_parameters,
+                    probe_amplitude_waves=probe,
+                    passes=1,
+                    seed=int(seed) + cycle_index * 101,
+                    frame_callback=count_frame,
+                    progress_callback=progress_callback,
+                    cancelled=cancelled,
+                )
+            except InterruptedError:
+                # Cancellation can precede the first baseline readout. In that
+                # case there is no objective to report and no trial to accept.
+                total_frames += cycle_frames
+                stop_reason = "cancelled"
+                was_cancelled = True
+                break
+            total_frames += cycle_frames
             if initial_objective is None:
                 initial_objective = float(result.initial_objective)
             previous = float(result.initial_objective)
@@ -582,6 +609,17 @@ class AutoConvergeRunner:
                 break
 
         if initial_objective is None or current_objective is None:
+            if was_cancelled:
+                return AutoConvergeResult(
+                    initial_objective=None,
+                    final_objective=None,
+                    improvement_fraction=None,
+                    cycles=cycles,
+                    total_frames=total_frames,
+                    stop_reason="cancelled",
+                    converged=False,
+                    cancelled=True,
+                )
             raise RuntimeError("Auto-converge stopped before completing a correction cycle.")
 
         overall = (initial_objective - current_objective) / max(abs(initial_objective), EPS)

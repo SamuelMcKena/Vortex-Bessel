@@ -46,3 +46,7 @@ py-modules = [
 
 [tool.setuptools.packages.find]
 include = ["vbb_study*"]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "lab_gui"]
+testpaths = ["tests", "lab_gui/tests"]

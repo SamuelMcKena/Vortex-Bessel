@@ -1,0 +1,34 @@
+[
+  {
+    "input_radius_mm": 1.0,
+    "z_mm": 10.0,
+    "peak_counts": 1085.1699887237548,
+    "total_counts": 1531019.526809937,
+    "counts_per_model_intensity": 7.371,
+    "input_amplitude_scale": 2.0
+  },
+  {
+    "input_radius_mm": 1.0,
+    "z_mm": 32.0,
+    "peak_counts": 6.2849116097688675,
+    "total_counts": 1531019.5129929911,
+    "counts_per_model_intensity": 7.371,
+    "input_amplitude_scale": 2.0
+  },
+  {
+    "input_radius_mm": 3.0,
+    "z_mm": 10.0,
+    "peak_counts": 371.5068185691834,
+    "total_counts": 1530488.087193384,
+    "counts_per_model_intensity": 7.371,
+    "input_amplitude_scale": 0.6666666666666666
+  },
+  {
+    "input_radius_mm": 3.0,
+    "z_mm": 32.0,
+    "peak_counts": 326.64436461639406,
+    "total_counts": 1530488.0901220073,
+    "counts_per_model_intensity": 7.371,
+    "input_amplitude_scale": 0.6666666666666666
+  }
+]

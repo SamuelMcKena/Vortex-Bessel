@@ -10,6 +10,8 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
+    QGridLayout,
+    QSizePolicy,
     QFileDialog,
     QFrame,
     QHBoxLayout,
@@ -27,7 +29,7 @@ from slm_lab_control.presets import load_preset, save_preset
 
 from ..controller import LabController
 from ..state import ExperimentState
-from .controls import NoWheelSpinBox, blocked_signals
+from .controls import NoWheelSpinBox, blocked_signals, make_shrinkable
 
 
 def phase_pixmap(array: np.ndarray, width: int = 360, height: int = 190) -> QPixmap:
@@ -73,21 +75,25 @@ class SlmQuickCard(QFrame):
 
         self.preview = QLabel("Generate phase to preview")
         self.preview.setAlignment(Qt.AlignCenter)
-        self.preview.setMinimumHeight(145)
+        self.preview.setMinimumHeight(78)
+        # Bounded so two quick cards share one screen column; the thumbnail is a
+        # confirmation of what is configured, not the working view of the mask.
+        self.preview.setMaximumHeight(104)
+        self.preview.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
         self.preview.setObjectName("ImageWell")
         root.addWidget(self.preview, 1)
 
-        controls = QHBoxLayout()
+        controls = QGridLayout()
         self.vortex = QCheckBox("Vortex")
         self.charge = NoWheelSpinBox()
         self.charge.setRange(-250, 250)
         self.charge.setKeyboardTracking(False)
-        self.correction = QCheckBox("Retrieved correction")
-        controls.addWidget(self.vortex)
-        controls.addWidget(QLabel("ℓ"))
-        controls.addWidget(self.charge)
-        controls.addWidget(self.correction)
-        controls.addStretch(1)
+        self.correction = QCheckBox("Retrieved map")
+        self.correction.setToolTip("Include the retrieved / inverse correction phase layer.")
+        controls.addWidget(self.vortex, 0, 0)
+        controls.addWidget(QLabel("ℓ"), 0, 1)
+        controls.addWidget(self.charge, 0, 2)
+        controls.addWidget(self.correction, 1, 0, 1, 3)
         root.addLayout(controls)
 
         self.layers = QLabel("Active: none")
@@ -99,19 +105,22 @@ class SlmQuickCard(QFrame):
         root.addWidget(self.layers)
         root.addWidget(self.cast_state)
 
-        actions = QHBoxLayout()
-        for label, handler, object_name in (
+        actions = QGridLayout()
+        for index, (label, handler, object_name) in enumerate((
             ("Connect", self._connect, "Quiet"),
             ("Cast", self._cast, "Accent"),
             ("Blank", self._blank, "Danger"),
-            ("Preset", self.preset_requested.emit, "Quiet"),
+            # clicked(bool) would be forwarded into the zero-argument
+            # preset_requested signal, so adapt it rather than connecting .emit.
+            ("Preset", lambda: self.preset_requested.emit(), "Quiet"),
             ("Details", lambda: self.details_requested.emit(self.name), "Quiet"),
-        ):
+        )):
             button = QPushButton(label)
             button.setObjectName(object_name)
             button.clicked.connect(handler)
-            actions.addWidget(button)
+            actions.addWidget(button, index // 3, index % 3)
         root.addLayout(actions)
+        make_shrinkable(self)
 
         self.vortex.toggled.connect(self._apply_quick_state)
         self.charge.editingFinished.connect(self._apply_quick_state)
@@ -162,7 +171,7 @@ class SlmQuickCard(QFrame):
         self.cast_state.style().polish(self.cast_state)
         bundle = self.controller.last_bundle
         if bundle is not None and bundle.hashes.get(self.name) == slm.complete_phase_sha256:
-            self.preview.setPixmap(phase_pixmap(bundle.results[self.name].gray_uint8))
+            self.preview.setPixmap(phase_pixmap(bundle.results[self.name].gray_uint8, 250, 86))
 
     def _connect(self) -> None:
         try:
@@ -208,7 +217,8 @@ class SlmDetailView(QWidget):
         self.status.setObjectName("Muted")
         self.status.setWordWrap(True)
         header.addWidget(self.status, 1)
-        for label, handler, object_name in (
+        buttons = QGridLayout()
+        for index, (label, handler, object_name) in enumerate((
             ("Connect SLMs", self._connect, "Quiet"),
             ("Generate", self._generate, "Quiet"),
             (f"Cast {self.name}", self._cast, "Accent"),
@@ -216,11 +226,12 @@ class SlmDetailView(QWidget):
             ("Load preset…", self._load_preset, "Quiet"),
             ("Save preset…", self._save_preset, "Quiet"),
             ("Reset phase", self._reset_phase, "Danger"),
-        ):
+        )):
             button = QPushButton(label)
             button.setObjectName(object_name)
             button.clicked.connect(handler)
-            header.addWidget(button)
+            buttons.addWidget(button, index // 4, index % 4)
+        header.addLayout(buttons)
         root.addLayout(header)
         body = QHBoxLayout()
         scroll = QScrollArea()
@@ -234,7 +245,8 @@ class SlmDetailView(QWidget):
         title.setObjectName("Section")
         self.preview = QLabel("Generate phase to preview")
         self.preview.setAlignment(Qt.AlignCenter)
-        self.preview.setMinimumSize(360, 260)
+        self.preview.setMinimumSize(200, 150)
+        self.preview.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
         self.preview.setObjectName("ImageWell")
         self.hashes = QLabel()
         self.hashes.setObjectName("Muted")

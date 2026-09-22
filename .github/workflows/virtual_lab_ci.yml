@@ -52,4 +52,30 @@ jobs:
 
       - name: Run unified GUI and Virtual Lab regression tests
         run: |
-          python -m pytest lab_gui/tests -q
+          python -m pytest lab_gui/tests tests/test_fu_oscillating_vector_bessel.py -q
+
+      - name: Package tested Virtual Lab source and guides
+        uses: actions/upload-artifact@v4
+        with:
+          name: virtual-lab-full-system
+          path: |
+            lab_gui/
+            vbb_study/
+            tools/test_beamage_pipe.py
+            requirements-lab.txt
+            README_FIRST.txt
+            VIRTUAL_BRIGHTNESS_AND_SMALL_BEAMS.md
+            docs/VIRTUAL_LAB_SYNC_20260922.md
+            START_LAB_CONTROL_V2_1.bat
+            SPYDER_RUN_LAB_CONTROL_V2_1.py
+            INSTALL_OR_REPAIR_DEPENDENCIES.bat
+            LAB_PC_DIAGNOSTICS.py
+            RUN_DIAGNOSTICS.bat
+            TEST_BEAMAGE_PIPE.bat
+            outputs/validation/axicon_radius_response_20260917/
+            outputs/validation/fixed_camera_20260917/
+            figures/virtual_lab/
+            !**/__pycache__/**
+            !lab_gui/outputs/**
+            !lab_gui/logs/**
+            !lab_gui/presets/**

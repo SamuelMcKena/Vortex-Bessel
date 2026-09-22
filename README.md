@@ -2,6 +2,27 @@
 
 Clean, consolidated research code for numerical and experimental structured-beam work.
 
+## Latest Virtual Lab GUI — synced 22 September 2026
+
+The updated personal-device GUI is on **`feature/virtual-lab-blind-correction`**.
+This branch also includes the September 22 `lab/measurement-correction-workflow`
+update; the physical Beamage/HEDS workflow remains available.
+
+From this repository's root (Python 3.13):
+
+```powershell
+python -m pip install -r requirements-lab.txt
+python lab_gui/run_lab_control.py
+```
+
+Select **VIRTUAL LAB** for simulated devices. Use the in-app **How to use this**
+guide for live viewing, manual SLM masks, faults, captures and iterative correction.
+See [brightness and small-beam controls](VIRTUAL_BRIGHTNESS_AND_SMALL_BEAMS.md),
+[the full quick start](README_FIRST.txt), and [sync scope / validation](docs/VIRTUAL_LAB_SYNC_20260922.md).
+Historical validation figures and phase-mask previews are included, not raw camera
+captures or machine-specific settings. The GUI's model views are not a claim of
+validated correction on the real bench.
+
 This repository is intended to be the **day-to-day source of truth**: one current package, one organised notebook tree and one normal runner, rather than searching through dated Publication_Study backups and old phase branches for whichever implementation was newest.
 
 It is built from the Phase 2K mathematical/physics-audited codebase and includes the current measured q=20 axicon-aberration correction work.

@@ -97,7 +97,7 @@ def test_auto_converge_executes_verified_slm_only_cycle_on_small_virtual_bench(t
     store = ExperimentStore(state)
     camera = DummyCameraProvider(store.snapshot, shape_yx=(48, 48))
     engine = ExperimentalVirtualBenchEngine(
-        VirtualLabGeometry(preview_grid_n=48, validation_grid_n=64),
+        VirtualLabGeometry(preview_grid_n=48, validation_grid_n=64, axicon_k_perp_m_inv=None),
         quality="preview",
     )
     controller = ModeAwareLabController(
@@ -132,6 +132,63 @@ def test_auto_converge_executes_verified_slm_only_cycle_on_small_virtual_bench(t
     assert controller.virtual_engine.alignment_command.axicon_y_um == 0.0
 
 
+def test_auto_converge_cancel_before_baseline_has_no_invented_metrics(tmp_path) -> None:
+    state = ExperimentState.from_app_config(AppConfig())
+    store = ExperimentStore(state)
+    engine = ExperimentalVirtualBenchEngine(
+        VirtualLabGeometry(preview_grid_n=48, validation_grid_n=64, axicon_k_perp_m_inv=None), quality="preview"
+    )
+    controller = ModeAwareLabController(
+        store, tmp_path, camera_provider=DummyCameraProvider(store.snapshot, shape_yx=(48, 48)),
+        virtual_engine=engine,
+    )
+    controller.set_operating_mode(OperatingMode.VIRTUAL_LAB)
+    result = AutoConvergeRunner(controller).run(
+        (1.0, 2.0), targets=("SLM2",), parameters=("defocus",),
+        max_cycles=1, max_frames=100, cancelled=lambda: True,
+    )
+    assert result.cancelled
+    assert result.stop_reason == "cancelled"
+    assert result.total_frames == 0
+    assert result.initial_objective is None
+    assert result.final_objective is None
+    assert result.to_dict()["improvement_fraction"] is None
+
+
+def test_auto_converge_cancel_during_probe_restores_unverified_slm_trial(tmp_path) -> None:
+    state = ExperimentState.from_app_config(AppConfig())
+    store = ExperimentStore(state)
+    engine = ExperimentalVirtualBenchEngine(
+        VirtualLabGeometry(preview_grid_n=48, validation_grid_n=64, axicon_k_perp_m_inv=None), quality="preview"
+    )
+    controller = ModeAwareLabController(
+        store, tmp_path, camera_provider=DummyCameraProvider(store.snapshot, shape_yx=(48, 48)),
+        virtual_engine=engine,
+    )
+    controller.set_operating_mode(OperatingMode.VIRTUAL_LAB)
+    original = store.snapshot().slm2.phase.z20_amp_waves
+    stop = {"requested": False}
+
+    def request_cancel_after_first_candidate(event) -> None:
+        if event.get("kind") == "candidate" and event.get("role") == "CANDIDATE":
+            stop["requested"] = True
+
+    result = AutoConvergeRunner(controller).run(
+        (1.0, 2.0), targets=("SLM2",), parameters=("defocus",),
+        max_cycles=1, max_frames=100,
+        progress_callback=request_cancel_after_first_candidate,
+        cancelled=lambda: stop["requested"],
+    )
+    final = store.snapshot()
+    assert stop["requested"]
+    assert result.cancelled
+    assert result.stop_reason == "cancelled"
+    assert 0 < result.total_frames < estimated_blind_cycle_frames(2, 1, 1, 1)
+    assert final.slm2.phase.z20_amp_waves == pytest.approx(original)
+    assert final.slm2.accepted_correction_id is None
+    assert final.slm2.last_cast_sha256 == engine.cast_hash("SLM2")
+
+
 def test_extended_gui_exposes_fault_builder_measurement_budget_and_autoconverge() -> None:
     qt = app()
     window = VirtualLabExperimentWindow()
@@ -142,7 +199,7 @@ def test_extended_gui_exposes_fault_builder_measurement_budget_and_autoconverge(
         assert window.perturb_axicon_enabled.isChecked()
         assert window.measure_z_count.value() == 6
         assert window.measure_repeats.value() == 1
-        assert window.auto_converge_button.text() == "Start auto-converge SLM-only"
+        assert window.auto_converge_button.text() == "Auto-converge (SLM only)"
         assert window.correction_checks["tip_x"].isChecked()
         assert window.correction_checks["tip_y"].isChecked()
         assert "frames" in window.frame_budget_preview.toPlainText().lower()
