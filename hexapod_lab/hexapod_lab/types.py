@@ -61,10 +61,34 @@ class HexapodSnapshot:
 
 @dataclass(frozen=True, slots=True)
 class LaserSnapshot:
+    """State of the process-beam Pockels-cell command path.
+
+    ``gate_enabled=True`` means the software has requested the Pockels cell OPEN
+    (process beam enabled). It does *not* mean the PHAROS laser source itself is
+    powered on.
+    """
+
     timestamp_s: float
     gate_enabled: bool
     connected: bool = True
     provider: str = "virtual"
     connector_name: str = "LX13"
     readback_known: bool = True
+    metadata: Mapping[str, Any] = field(default_factory=dict)
+
+    @property
+    def pockels_open(self) -> bool:
+        return self.gate_enabled
+
+
+@dataclass(frozen=True, slots=True)
+class AttenuatorSnapshot:
+    """Normalized attenuator state expressed as requested transmission percent."""
+
+    timestamp_s: float
+    transmission_percent: float
+    connected: bool = True
+    provider: str = "virtual"
+    readback_known: bool = True
+    device_name: str = "Virtual attenuator"
     metadata: Mapping[str, Any] = field(default_factory=dict)
