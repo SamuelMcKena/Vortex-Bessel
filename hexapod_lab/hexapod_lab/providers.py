@@ -296,6 +296,11 @@ class HXPDigitalLaserGate(LaserGateProvider):
             raise RuntimeError("LX13/HXP wiring is not marked verified in hardware configuration")
         if not self.config.gpio_name or self.config.mask <= 0:
             raise ValueError("real LX13 gating requires a GPIO name and non-zero mask")
+        if self.config.enabled_value == self.config.disabled_value:
+            raise ValueError(
+                "Pockels OPEN and CLOSED digital values are identical; "
+                "verify the LX13/HXP mapping before arming"
+            )
         if not self.client.connected:
             raise ConnectionError("HXP must be connected before real LX13 gating can be enabled")
         self._connected = True
