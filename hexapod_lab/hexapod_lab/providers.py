@@ -41,6 +41,9 @@ class HexapodProvider(ABC):
     def tick(self, dt_s: float) -> None:
         """Advance providers that need a host-side simulation clock."""
 
+    def is_busy(self) -> bool:
+        return self.snapshot().state == MotionState.MOVING
+
 
 class VirtualHexapodProvider(HexapodProvider):
     name = "virtual"
@@ -111,6 +114,10 @@ class VirtualHexapodProvider(HexapodProvider):
             if f >= 1.0:
                 self._actual = self._target
                 self._state = MotionState.IDLE
+
+    def is_busy(self) -> bool:
+        with self._lock:
+            return self._state == MotionState.MOVING
 
     def snapshot(self) -> HexapodSnapshot:
         with self._lock:
@@ -187,6 +194,9 @@ class HXPProvider(HexapodProvider):
 
     def home(self) -> None:
         self._start_blocking_call(lambda: self.client.home(self.config.group))
+
+    def is_busy(self) -> bool:
+        return self._move_thread is not None and self._move_thread.is_alive()
 
     def snapshot(self) -> HexapodSnapshot:
         if not self._connected:
