@@ -99,6 +99,7 @@ python tools\check_axicon_tip_benchmark.py
 | Review vector/Jones-field beam theory and cases | `notebooks/vector/01_vector_beam_theory_atlas.ipynb` |
 | Compare ideal and lab-realistic vector propagation | `notebooks/vector/02_vector_ideal_vs_lab_case1.ipynb` |
 | Study vector hardware routes | `notebooks/vector/03_vector_hardware_routes.ipynb` |
+| Simulate Fu et al. sequential two-SLM Bessel beams and polarizer lobe rotation | `tools/render_fu_oscillating_vector_bessel.py`, `docs/FU_OSCILLATING_VECTOR_BESSEL.md` |
 | Study the vector/hexagonal arm | `notebooks/vector/04_vector_arm_hexagon.ipynb` |
 | Validate the vector refractive reference implementation | `tools/check_phase2h_vector_refractive_reference.py` |
 | Re-render the governed Phase 2H vector evidence | `tools/render_phase2h_canonical_evidence.py` and related `render_phase2h_*` tools |

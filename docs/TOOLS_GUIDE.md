@@ -23,6 +23,8 @@ The measured inverse/correction workflow itself is not in `tools/`; it lives und
 
 ## Presentation/figure regeneration
 
+- `tools/render_fu_oscillating_vector_bessel.py` — regenerate the sequential two-SLM, HWP/QWP, and analyzer z-scan prediction, including an HA2-off control, native phase designs and provenance manifest. See `docs/FU_OSCILLATING_VECTOR_BESSEL.md`.
+
 - `tools/build_phase2i_presentation_figures.py` — presentation figure suite from the Phase 2I evidence path.
 - `tools/build_phase2j_ideal_beam_profile_figure.py` — high-resolution ideal beam-family figure.
 - `tools/build_phase2j_presentation_suite.py` — refined presentation figure set.
