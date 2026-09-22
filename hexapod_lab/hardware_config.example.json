@@ -1,0 +1,16 @@
+{
+  "hxp": {
+    "host": "192.168.33.3",
+    "port": 5001,
+    "group": "HEXAPOD",
+    "coordinate_system": "Work"
+  },
+  "laser": {
+    "connector": "PHAROS LX13",
+    "gpio_name": "",
+    "mask": 0,
+    "enabled_value": 0,
+    "disabled_value": 0,
+    "wiring_verified": false
+  }
+}
