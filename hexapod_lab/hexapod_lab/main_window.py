@@ -739,9 +739,9 @@ class MainWindow(QtWidgets.QMainWindow):
         hxp.addRow("Move frame", self.hxp_coords)
         hxp_buttons = QtWidgets.QHBoxLayout()
         cb = QtWidgets.QPushButton("Connect HXP")
-        cb.clicked.connect(self._connect_stage)
+        cb.clicked.connect(self._connect_real_hxp)
         db = QtWidgets.QPushButton("Disconnect")
-        db.clicked.connect(self._disconnect_stage)
+        db.clicked.connect(self._disconnect_real_hxp)
         hxp_buttons.addWidget(cb)
         hxp_buttons.addWidget(db)
         hxp.addRow(hxp_buttons)
@@ -1286,6 +1286,14 @@ class MainWindow(QtWidgets.QMainWindow):
             if not self.virtual_stage.snapshot().connected:
                 self.virtual_stage.connect()
             self._last_stage_snapshot = self.virtual_stage.snapshot()
+        elif (
+            self.real_stage is not None
+            and self.real_stage.client.connected
+        ):
+            try:
+                self._last_stage_snapshot = self.real_stage.snapshot()
+            except Exception:
+                pass
         else:
             self._last_stage_snapshot = HexapodSnapshot(
                 timestamp_s=time.time(),
@@ -1298,16 +1306,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self._update_recipe_preflight_view()
 
     def _connect_stage(self) -> None:
-        try:
-            if self.stage_mode.currentIndex() == 0:
-                self.virtual_stage.connect()
-                self._last_stage_snapshot = self.virtual_stage.snapshot()
-                self.statusBar().showMessage(
-                    "Virtual hexapod connected",
-                    4000,
-                )
-                return
+        if self.stage_mode.currentIndex() == 0:
+            self.virtual_stage.connect()
+            self._last_stage_snapshot = self.virtual_stage.snapshot()
+            self.statusBar().showMessage(
+                "Virtual hexapod connected",
+                4000,
+            )
+            return
+        self._connect_real_hxp()
 
+    def _connect_real_hxp(self) -> None:
+        try:
             cfg = HXPProviderConfig(
                 host=self.hxp_host.text().strip(),
                 port=self.hxp_port.value(),
@@ -1318,14 +1328,26 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QApplication.setOverrideCursor(
                 QtCore.Qt.CursorShape.WaitCursor
             )
+
+            # A real Pockels provider owns HXP I/O sockets. Tear it down before
+            # replacing/reconnecting the HXP client so no stale client survives.
+            if self.real_laser is not None:
+                try:
+                    self.real_laser.disconnect()
+                except Exception:
+                    pass
+                self.real_laser = None
+
             if self.real_stage is not None:
                 try:
                     self.real_stage.disconnect()
                 except Exception:
                     pass
+
             self.real_stage = HXPProvider(cfg)
             self.real_stage.connect()
-            self._last_stage_snapshot = self.real_stage.snapshot()
+            if self.stage_mode.currentIndex() == 1:
+                self._last_stage_snapshot = self.real_stage.snapshot()
             self._diag(
                 f"Connected HXP {cfg.host}:{cfg.port}; "
                 f"group={cfg.group}, frame={cfg.coordinate_system}"
@@ -1345,14 +1367,28 @@ class MainWindow(QtWidgets.QMainWindow):
         self._update_recipe_preflight_view()
 
     def _disconnect_stage(self) -> None:
+        if self.stage_mode.currentIndex() == 0:
+            self.virtual_stage.disconnect()
+            self.statusBar().showMessage(
+                "Virtual stage disconnected",
+                4000,
+            )
+            return
+        self._disconnect_real_hxp()
+
+    def _disconnect_real_hxp(self) -> None:
         try:
             if self.real_laser is not None:
-                self.real_laser.safe_off()
-            if self.stage_mode.currentIndex() == 0:
-                self.virtual_stage.disconnect()
-            elif self.real_stage is not None:
+                try:
+                    self.real_laser.disconnect()
+                finally:
+                    self.real_laser = None
+            if self.real_stage is not None:
                 self.real_stage.disconnect()
-            self.statusBar().showMessage("Stage disconnected", 4000)
+            self.statusBar().showMessage(
+                "Real HXP disconnected; real Pockels provider disarmed",
+                5000,
+            )
         except Exception as exc:
             self.statusBar().showMessage(
                 f"Disconnect warning: {exc}",
