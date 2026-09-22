@@ -5,6 +5,8 @@
 .pytest-tmp-*/
 outputs/pytest_cache/
 outputs/pytest_runtime/
+/.pytest_fu_local/
+/outputs/figures/digital_twin/fu_oscillating_vector_bessel/
 __pycache__/
 *.pyc
 /*.ipynb
