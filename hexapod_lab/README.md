@@ -1,23 +1,128 @@
 # Hexapod + Laser Lab
 
-Standalone first-pass controller/sandbox for the Newport HXP Stewart platform and the PHAROS external laser-gate path discussed as **LX13**. It is deliberately separate from `lab_gui/` so the stage/laser workflow can be developed and hardware-tested before it is merged into the unified lab controller.
+Standalone controller/digital twin for the Newport HXP Stewart platform and the
+PHAROS process-beam control path discussed as **LX13**. It remains deliberately
+separate from `lab_gui/` while the motion/beam/attenuator workflow is validated.
 
-## What is implemented
+The operator UI is now split into three tabs:
 
-### Virtual hexapod
+- **CONTROL** — ordinary manual stage, Pockels-cell and attenuator control.
+- **SCRIPT BUILDER** — experiment sequence construction, preflight and execution.
+- **SETUP + DIAGNOSTICS** — HXP network configuration, LX13 GPIO mapping,
+  attenuator hardware binding, CAD loading and diagnostics.
 
-- six HXP-style coordinates: `X Y Z U V W`
-- HXP Bryant/Tait-Bryan `ZYX` rotation convention
-- absolute and incremental motion
-- configurable dummy translation/rotation speed
-- smooth simulated motion rather than teleporting between poses
-- current / target state
-- per-leg Stewart-platform lengths
-- abort and home-to-zero
+A global header is visible on every tab with stage/beam/attenuator state plus
+**CLOSE BEAM** and **STOP MOTION + CLOSE BEAM**.
 
-### Real Newport HXP foundation
+See [UX_FUNCTIONALITY_AUDIT.md](UX_FUNCTIONALITY_AUDIT.md) for the self-audit and
+the design changes made after reviewing the first GUI pass.
 
-A small direct TCP client is included instead of depending on a proprietary Python package. The supplied Newport HXP documentation specifies TCP/IP control on port `5001` and the commands used here:
+## Manual control
+
+The Control tab provides:
+
+- Virtual or real Newport HXP selection;
+- live XYZUVW readout;
+- absolute target moves;
+- XYZUVW jogging with separate linear/angular step sizes;
+- home and software abort;
+- six calculated actuator/strut lengths;
+- exact STEP-based articulated digital twin;
+- fixed lab laser that terminates at the moving sample surface;
+- sample-local laser-written path;
+- 2D movement map on a metric grid;
+- selectable **laser path on sample** or **HXP XY carriage path**;
+- adjustable map span;
+- process-beam Pockels control;
+- normalized attenuator control.
+
+### Process beam / Pockels cell
+
+The operator controls are intentionally explicit:
+
+- **LASER ON — OPEN POCKELS CELL**
+- **LASER OFF — CLOSE POCKELS CELL**
+
+This means enabling/disabling the process beam. It does **not** power-cycle the
+PHAROS laser source.
+
+Two providers exist:
+
+- `VirtualLaserGate` — dummy Pockels/LX13 state;
+- `HXPDigitalLaserGate` — verified HXP digital output mapped to the PHAROS LX13
+  path.
+
+Real beam opening additionally requires **ARM MANUAL REAL-BEAM CONTROL**. Closing
+the beam never requires the arm state.
+
+The real provider intentionally contains no guessed GPIO name, pin, active level
+or electrical mapping. It cannot arm until the operator explicitly marks the
+wiring verified and provides a non-zero GPIO mask with distinct OPEN/CLOSED
+values.
+
+### Attenuator
+
+The GUI now includes attenuator control from 0–100 % requested transmission:
+
+- slider + numeric setpoint;
+- 0/25/50/75/100 % presets;
+- explicit **SET ATTENUATOR** action;
+- header/readout state;
+- scriptable attenuator setpoints.
+
+The user-facing quantity is deliberately normalized transmission percent. A
+device-specific provider can later convert this through the measured calibration
+to waveplate/motor angle, analogue voltage or another native quantity.
+
+The actual physical attenuator model/controller/protocol has not yet been
+identified, so the real attenuator provider is intentionally **unconfigured and
+refuses commands**. No protocol or calibration is fabricated.
+
+## Script Builder
+
+Script construction no longer occupies the general-control screen.
+
+Supported blocks are:
+
+- absolute HXP pose;
+- relative HXP move;
+- **LASER ON / POCKELS OPEN**;
+- **LASER OFF / POCKELS CLOSED**;
+- attenuator transmission setpoint;
+- wait.
+
+Rows can be drag-reordered and recipes save/load as JSON. Recipe version 2 is
+written; legacy v0.1 `laser_gate` steps load as Pockels-cell steps.
+
+Preflight checks include:
+
+- malformed motion steps;
+- Pockels cell left OPEN at the end;
+- duplicate Pockels state commands;
+- attenuator range;
+- attenuation changes while the Pockels cell is open;
+- selected real HXP not connected;
+- selected real LX13 provider not armed;
+- real attenuator requested without a configured driver;
+- mixed real/virtual execution providers.
+
+Scripts start by requesting the Pockels cell CLOSED. Completion, failure and stop
+also request closure. Any script that touches real hardware requires
+**ARM REAL SCRIPT EXECUTION**.
+
+Manual motion, beam-open, attenuation and provider switching are disabled while a
+script runs; beam-close and stop remain available.
+
+## Newport HXP
+
+The real provider uses direct HXP TCP/API connections on the configured address
+(default port `5001`). Three sockets are used:
+
+- **control** — blocking motion/home/initialization commands;
+- **poll** — actual/setpoint/target/status queries;
+- **I/O** — abort and digital I/O.
+
+Implemented API calls include:
 
 - `GroupPositionCurrentGet`
 - `GroupPositionSetpointGet`
@@ -31,25 +136,18 @@ A small direct TCP client is included instead of depending on a proprietary Pyth
 - `GroupHomeSearch`
 - `GPIODigitalGet`
 - `GPIODigitalSet`
-- `GatheringConfigurationSet`
-- `GatheringRun` / `GatheringStop`
+- gathering configuration/run/stop foundations.
 
-The HXP uses blocking sockets, so the controller opens independent **control**, **poll**, and **I/O/abort** connections. That means the GUI can continue to poll the measured Cartesian position while a move command is executing, and `ABORT` / laser-gate commands are not queued behind the blocking motion socket.
+The real-HXP path is software implemented but still requires physical controller
+validation before production laser processing.
 
-The real-HXP path is software implemented but **not yet validated against the lab controller**. Treat the first hardware session as an interface-validation session, not as production processing.
+## STEP digital twin
 
-## 3D Stewart-platform digital twin
+`assets/cad_profile.json` was extracted from the supplied
+`Stewart Platform.STEP` and describes the 41-solid Stewart-platform assembly.
 
-The geometry profile in `assets/cad_profile.json` was extracted from the supplied `Stewart Platform.STEP`:
-
-- SolidWorks STEP AP214
-- 41 solids
-- 500 mm square lower plate
-- 500 mm square upper carriage
-- six repeating actuator assemblies
-- home spherical-joint separation approximately `384.315535 mm`
-
-The supplied CAD happens to use **CAD Y as vertical**, while the HXP documentation defines **HXP Z as vertical**. The software keeps that registration explicit:
+The CAD uses Y as its vertical axis while the HXP convention uses Z, so the
+registration remains explicit:
 
 ```text
 HXP X  -> CAD X
@@ -57,71 +155,22 @@ HXP Y  -> CAD Z
 HXP Z  -> CAD Y
 ```
 
-The lightweight viewer therefore works without the STEP file and is already driven from the actual dimensions/joint centres extracted from it.
+With CadQuery installed, **Load STEP…** tessellates and articulates the actual
+assembly:
 
-### Exact CAD articulation
+- fixed base;
+- moving six-DOF upper carriage;
+- actuator bodies pivoting about lower joints;
+- telescoping rods following moving upper joints;
+- upper/lower joint pieces moving with their correct parent.
 
-Install `requirements-cad.txt`, then click **Load Stewart Platform.STEP…**.
+The laser graphic is not drawn through the mechanism. It runs from above and
+terminates exactly on the moving sample top surface. Written-path points are
+stored in sample-local coordinates so the trace stays attached to the sample.
 
-The loader:
+## Installation
 
-1. imports the STEP assembly with CadQuery;
-2. tessellates its solids into a local cache;
-3. recognizes the six actuator groups from the supplied 41-solid assembly profile;
-4. keeps the base fixed;
-5. applies the carriage's true six-DOF transform to the upper plate;
-6. rotates each actuator body around its lower spherical joint;
-7. moves/rotates each piston/rod from the moving upper joint, producing a telescoping visual motion;
-8. moves the upper joint/mount with the carriage;
-9. keeps the lower mounts attached to the base.
-
-So this is not a canned CAD animation. The same `Pose6D` that drives the virtual stage or comes back from the real HXP drives the CAD rig.
-
-The exact supplied STEP SHA-256 is recorded in the profile and `assets/README.md` so another CAD export cannot silently be treated as the calibrated geometry.
-
-## Fixed laser / sample visualization
-
-A fixed laboratory beam axis is drawn down the centre of the platform. The sample proxy moves with the carriage. On every update the software computes the beam intersection with the moving carriage/sample plane.
-
-Two traces are kept:
-
-- **travel trace** — everywhere the beam/sample intersection travelled;
-- **processing trace** — only positions visited while the laser gate was ON.
-
-This is intended to make script mistakes visually obvious before a physical run, e.g. a return move accidentally occurring with the gate enabled.
-
-## PHAROS LX13 laser gate
-
-There are two laser providers:
-
-- `VirtualLaserGate` — safe dummy state for sequence testing;
-- `HXPDigitalLaserGate` — maps a verified HXP digital output to the PHAROS LX13 external-control path.
-
-The real provider intentionally contains **no guessed LX13 pin number, TTL level, active-high/active-low assumption, GPIO name, or mask**. Those values must be entered from the lab's actual PHAROS/HXP wiring documentation and the operator must explicitly confirm that the electrical interface has been checked.
-
-When the real gate is armed it is immediately commanded OFF. Stop/abort/close operations also request gate OFF.
-
-The GUI is **not** a laser safety system. The physical interlock, shutter/emission chain and emergency stop remain authoritative.
-
-## Recipe builder
-
-The bottom panel is a first accessible sequence builder. Rows can be drag-reordered and currently support:
-
-- absolute move
-- incremental move
-- laser gate ON
-- laser gate OFF
-- wait
-
-Recipes are plain JSON and can be saved/loaded.
-
-Preflight currently validates step payloads and rejects a recipe that finishes with the laser gate ON. Real recipe execution additionally requires an explicit **ARM REAL RECIPE EXECUTION** checkbox.
-
-This is intentionally the first stage of the visual block system. Later blocks can add line/arc trajectories, sweeps, loops, acquisition, SLM changes and controller-native synchronized trajectories without changing the provider architecture.
-
-## Install
-
-For the normal dummy/real controller with the lightweight CAD-derived rig:
+Basic controller:
 
 ```powershell
 cd hexapod_lab
@@ -131,60 +180,70 @@ python -m pip install -r requirements.txt
 python run_hexapod_lab.py
 ```
 
-For exact STEP rendering:
+Exact STEP rendering:
 
 ```powershell
 python -m pip install -r requirements-cad.txt
 python run_hexapod_lab.py
 ```
 
-If CadQuery is easier through the lab's Anaconda installation, install it in that environment and run `run_hexapod_lab.py` from the same Spyder/Anaconda interpreter.
+The Windows launcher `START_HEXAPOD_LAB.bat` is also included.
 
-There is also `START_HEXAPOD_LAB.bat` for the Windows lab PC.
+## First real-hardware validation
 
-## First lab validation checklist
+Start with the process beam safely disabled.
 
-Do **not** start with the laser enabled. A sensible validation order is:
+1. Validate virtual XYZUVW motion and exact CAD articulation.
+2. Connect the HXP and compare live pose/status with the Newport GUI.
+3. Make small single-axis motions and verify coordinate/sign convention.
+4. Verify the software abort on a low-risk motion.
+5. Confirm the actual PHAROS LX13 pinout, logic level and electrical
+   compatibility.
+6. Enter the verified GPIO mapping and test CLOSED first with the process beam
+   safely intercepted.
+7. Only then test OPEN/CLOSED Pockels commands.
+8. Identify the physical attenuator/controller and add its device-specific
+   provider/calibration before enabling real attenuation commands.
+9. Keep real script execution unarmed until all applicable checks pass.
 
-1. Run Virtual mode and verify X/Y/Z/U/V/W directions visually.
-2. Load the exact STEP and check all six leg articulations over small virtual poses.
-3. Connect the HXP with the laser gate still set to Virtual.
-4. Read current pose/status only; compare against the Newport web GUI.
-5. Make very small single-axis moves with the physical workspace clear.
-6. Verify GUI actual/setpoint/target values and CAD direction against physical motion.
-7. Verify `ABORT` from the independent HXP I/O socket.
-8. Only after the PHAROS LX13 pinout/logic/electrical levels are documented, fill in GPIO/mask/ON/OFF values and validate the external gate with the processing beam safely intercepted.
-9. Keep recipe real-execution disarmed until the above passes.
+## Safety boundary
 
-## Tests
+The GUI is not a safety PLC, hardware interlock or emergency-stop system. The
+physical PHAROS interlock/shutter chain and hardware E-stop remain authoritative.
 
-Core tests do not need Qt/VTK:
+The global **STOP MOTION + CLOSE BEAM** button is a software abort plus a Pockels
+closure request; it is intentionally not labelled as an emergency stop.
+
+## Tests / CI
+
+Core tests cover:
+
+- extracted Stewart-platform geometry;
+- HXP/CAD axis registration;
+- Bryant rotation math;
+- articulated leg anchors;
+- virtual stage motion and busy state;
+- fail-closed Pockels behavior;
+- virtual attenuator behavior;
+- Pockels/attenuator recipe safety;
+- legacy recipe compatibility.
+
+Run locally with:
 
 ```powershell
 python -m pip install pytest numpy
 pytest -q
 ```
 
-Current tests cover:
+A dedicated GitHub Actions workflow also compile-checks the package and runs the
+core tests for changes under `hexapod_lab/`.
 
-- extracted Stewart-platform home geometry;
-- HXP-Z to CAD-Y registration;
-- Bryant rotation orthonormality;
-- body/rod anchoring under articulated poses;
-- virtual-stage motion;
-- fail-closed virtual laser behavior;
-- recipe gate-off preflight.
+## Remaining hardware-bound work
 
-## Current scope / next steps
-
-Good next increments after first hardware validation:
-
-- ingest the HXP controller's own hexapod geometry/configuration file and compare its kinematics against the STEP-derived rig;
-- live actuator/strut readout from `HEXAPOD.1 ... HEXAPOD.6` in addition to Cartesian `HEXAPOD.X ... HEXAPOD.W`;
-- high-rate HXP gathering for measured trajectories;
-- controller-native line/arc/rotation trajectories;
-- synchronized pulse/gathering support using HXP event/trajectory functions;
-- measured lab-to-HXP transform for a physically calibrated laser axis instead of the current centreline default;
-- editable sample dimensions/fixture offset;
-- richer block recipe editor with loops/sweeps;
-- then migrate the mature providers/viewer/recipe engine into the existing unified lab GUI.
+- validate the HXP TCP layer on the actual controller;
+- bind/verify PHAROS LX13 electrical mapping;
+- add physical Pockels readback if the installed interface exposes it;
+- add the real attenuator provider and calibration once hardware is identified;
+- add controller-native high-rate synchronized trajectories/events;
+- measure the lab-to-HXP/sample transform for a physically calibrated beam axis;
+- later integrate the mature providers and UI into the unified lab controller.
