@@ -1043,7 +1043,6 @@ class MainWindow(QtWidgets.QMainWindow):
             "Physical interlock and hardware E-stop are active",
         ):
             cb = QtWidgets.QCheckBox(label)
-            cb.setWordWrap(True)
             self.commission_checks.append(cb)
             verify_layout.addWidget(cb)
 
@@ -1091,7 +1090,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.raw_analog_arm = QtWidgets.QCheckBox(
             "I confirm this GPIO is the present analogue power/attenuation path"
         )
-        self.raw_analog_arm.setWordWrap(True)
         analog_layout.addRow("HXP analogue GPIO", self.raw_analog_gpio)
         analog_layout.addRow("Raw legacy value", self.raw_analog_value)
         analog_layout.addRow(self.raw_analog_arm)
@@ -1230,7 +1228,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.wiring_verified = QtWidgets.QCheckBox(
             "I verified LX13 pinout, active level and HXP electrical compatibility"
         )
-        self.wiring_verified.setWordWrap(True)
         pockels.addRow(self.wiring_verified)
         pockels_buttons = QtWidgets.QHBoxLayout()
         arm = QtWidgets.QPushButton("Connect / arm provider")
