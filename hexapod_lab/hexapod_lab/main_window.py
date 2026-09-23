@@ -7,6 +7,11 @@ import time
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from .hardware_profiles import (
+    LegacyHardwareProfile,
+    PockelsCandidate,
+    load_legacy_hardware_profile,
+)
 from .kinematics import RigKinematics, RigProfile
 from .movement_map import MovementMap2D
 from .providers import (
@@ -23,6 +28,7 @@ from .providers import (
     VirtualLaserGate,
 )
 from .recipe import Recipe, RecipeStep, StepKind, preflight_recipe
+from .sweeps import RasterSweepSpec, build_raster_sweep
 from .types import (
     AttenuatorSnapshot,
     HexapodSnapshot,
@@ -38,6 +44,7 @@ APP_ROOT = PACKAGE_DIR.parent
 ASSETS_DIR = APP_ROOT / "assets"
 DEFAULT_PROFILE = ASSETS_DIR / "cad_profile.json"
 DEFAULT_CONFIG = APP_ROOT / "hardware_config.example.json"
+LEGACY_EVIDENCE = ASSETS_DIR / "legacy_hardware_evidence.json"
 
 
 class RecipeList(QtWidgets.QListWidget):
@@ -69,6 +76,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.profile = RigProfile.from_json(DEFAULT_PROFILE)
         self.kinematics = RigKinematics(self.profile)
+        self.legacy_profile: LegacyHardwareProfile = (
+            load_legacy_hardware_profile(LEGACY_EVIDENCE)
+        )
+        self._selected_legacy_candidate_key = "labview_v3"
 
         self.virtual_stage = VirtualHexapodProvider()
         self.virtual_stage.connect()
@@ -99,9 +110,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self._recipe_step_issued = False
         self._wait_until = 0.0
 
+        # Manual "LINE Move_While Write" mirrors the recovered LabVIEW workflow.
+        self._manual_write_line_active = False
+        self._manual_write_line_started = False
+        self._manual_write_line_description = ""
+
         self._build_ui()
         self._apply_style()
         self._load_default_config()
+        self._apply_mock_profile()
         self._update_recipe_preflight_view()
 
         self.timer = QtCore.QTimer(self)
@@ -126,6 +143,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.setDocumentMode(True)
         self.tabs.addTab(self._build_manual_tab(), "CONTROL")
         self.tabs.addTab(self._build_script_tab(), "SCRIPT BUILDER")
+        self.tabs.addTab(self._build_commissioning_tab(), "COMMISSIONING")
         self.tabs.addTab(self._build_setup_tab(), "SETUP + DIAGNOSTICS")
         root.addWidget(self.tabs, 1)
 
@@ -145,6 +163,31 @@ class MainWindow(QtWidgets.QMainWindow):
         header.addLayout(title_box)
 
         header.addStretch(1)
+
+        mode_label = QtWidgets.QLabel("Lab mode")
+        mode_label.setObjectName("headerLabel")
+        header.addWidget(mode_label)
+        self.lab_mode = QtWidgets.QComboBox()
+        self.lab_mode.addItems(["MOCK LAB", "REAL LAB"])
+        self.lab_mode.setMinimumWidth(105)
+        self.lab_mode.currentIndexChanged.connect(self._lab_mode_changed)
+        header.addWidget(self.lab_mode)
+
+        self.mode_chip = QtWidgets.QLabel("MOCK • SAFE")
+        self.mode_chip.setObjectName("chipSafe")
+        header.addWidget(self.mode_chip)
+
+        profile_label = QtWidgets.QLabel("Legacy profile")
+        profile_label.setObjectName("headerLabel")
+        header.addWidget(profile_label)
+        self.legacy_profile_combo = QtWidgets.QComboBox()
+        for candidate in self.legacy_profile.pockels_candidates:
+            self.legacy_profile_combo.addItem(candidate.label, candidate.key)
+        self.legacy_profile_combo.currentIndexChanged.connect(
+            self._legacy_profile_changed
+        )
+        self.legacy_profile_combo.setMinimumWidth(240)
+        header.addWidget(self.legacy_profile_combo)
 
         stage_label = QtWidgets.QLabel("Stage")
         stage_label.setObjectName("headerLabel")
