@@ -754,15 +754,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
         hxp_box = QtWidgets.QGroupBox("NEWPORT HXP")
         hxp = QtWidgets.QFormLayout(hxp_box)
-        self.hxp_host = QtWidgets.QLineEdit("192.168.33.3")
+        self.hxp_host = QtWidgets.QLineEdit("192.168.0.254")
         self.hxp_port = QtWidgets.QSpinBox()
         self.hxp_port.setRange(1, 65535)
         self.hxp_port.setValue(5001)
+        self.hxp_timeout = QtWidgets.QDoubleSpinBox()
+        self.hxp_timeout.setRange(0.1, 60.0)
+        self.hxp_timeout.setDecimals(1)
+        self.hxp_timeout.setValue(10.0)
+        self.hxp_timeout.setSuffix(" s")
         self.hxp_group = QtWidgets.QLineEdit("HEXAPOD")
         self.hxp_coords = QtWidgets.QComboBox()
         self.hxp_coords.addItems(["Work", "Tool"])
         hxp.addRow("IP address", self.hxp_host)
         hxp.addRow("Port", self.hxp_port)
+        hxp.addRow("Timeout", self.hxp_timeout)
         hxp.addRow("Group", self.hxp_group)
         hxp.addRow("Move frame", self.hxp_coords)
         hxp_buttons = QtWidgets.QHBoxLayout()
@@ -1166,6 +1172,7 @@ class MainWindow(QtWidgets.QMainWindow):
             "hxp": {
                 "host": self.hxp_host.text().strip(),
                 "port": self.hxp_port.value(),
+                "timeout_s": self.hxp_timeout.value(),
                 "group": self.hxp_group.text().strip() or "HEXAPOD",
                 "coordinate_system": self.hxp_coords.currentText(),
             },
@@ -1197,6 +1204,14 @@ class MainWindow(QtWidgets.QMainWindow):
         hxp = cfg.get("hxp", {})
         self.hxp_host.setText(str(hxp.get("host", self.hxp_host.text())))
         self.hxp_port.setValue(int(hxp.get("port", self.hxp_port.value())))
+        self.hxp_timeout.setValue(
+            float(
+                hxp.get(
+                    "timeout_s",
+                    float(hxp.get("timeout_ms", 10000)) / 1000.0,
+                )
+            )
+        )
         self.hxp_group.setText(
             str(hxp.get("group", self.hxp_group.text()))
         )
@@ -1351,7 +1366,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 port=self.hxp_port.value(),
                 group=self.hxp_group.text().strip() or "HEXAPOD",
                 coordinate_system=self.hxp_coords.currentText(),
-                timeout_s=2.0,
+                timeout_s=self.hxp_timeout.value(),
             )
             QtWidgets.QApplication.setOverrideCursor(
                 QtCore.Qt.CursorShape.WaitCursor
