@@ -50,3 +50,24 @@ def test_virtual_attenuator_rejects_out_of_range():
         pass
     else:
         raise AssertionError("negative transmission setpoint was accepted")
+
+
+def test_virtual_target_velocity_line_move():
+    stage = VirtualHexapodProvider()
+    stage.connect()
+    stage.move_line_incremental_with_target_velocity(
+        3.0,
+        4.0,
+        0.0,
+        5.0,
+    )
+    assert stage.is_busy() is True
+    # 3-4-5 line at 5 mm/s should take 1 s in the virtual model.
+    for _ in range(49):
+        stage.tick(0.02)
+    assert stage.is_busy() is True
+    stage.tick(0.03)
+    snap = stage.snapshot()
+    assert stage.is_busy() is False
+    assert abs(snap.actual.x - 3.0) < 1e-9
+    assert abs(snap.actual.y - 4.0) < 1e-9
