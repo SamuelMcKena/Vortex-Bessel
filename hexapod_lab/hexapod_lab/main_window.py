@@ -1054,6 +1054,48 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         verify_layout.addWidget(clear_verified)
         left_layout.addWidget(verify_box)
+
+        analog_box = QtWidgets.QGroupBox(
+            "LEGACY ANALOGUE POWER / ATTENUATION PATH"
+        )
+        analog_layout = QtWidgets.QFormLayout(analog_box)
+        self.raw_analog_gpio = QtWidgets.QLineEdit(
+            self.legacy_profile.analog_monitor_gpio
+        )
+        self.raw_analog_value = QtWidgets.QDoubleSpinBox()
+        self.raw_analog_value.setRange(1.0, 5.0)
+        self.raw_analog_value.setDecimals(3)
+        self.raw_analog_value.setValue(1.0)
+        self.raw_analog_value.setToolTip(
+            "The supplied TCL scripts only establish historical raw values "
+            "1 through 5. This is NOT calibrated transmission or pulse energy."
+        )
+        self.raw_analog_arm = QtWidgets.QCheckBox(
+            "I confirm this GPIO is the present analogue power/attenuation path"
+        )
+        self.raw_analog_arm.setWordWrap(True)
+        analog_layout.addRow("HXP analogue GPIO", self.raw_analog_gpio)
+        analog_layout.addRow("Raw legacy value", self.raw_analog_value)
+        analog_layout.addRow(self.raw_analog_arm)
+        raw_buttons = QtWidgets.QHBoxLayout()
+        read_raw = QtWidgets.QPushButton("READ RAW")
+        read_raw.clicked.connect(self._read_raw_analog)
+        write_raw = QtWidgets.QPushButton("WRITE RAW 1–5")
+        write_raw.setObjectName("danger")
+        write_raw.clicked.connect(self._write_raw_analog)
+        raw_buttons.addWidget(read_raw)
+        raw_buttons.addWidget(write_raw)
+        analog_layout.addRow(raw_buttons)
+        raw_note = QtWidgets.QLabel(
+            "This commissioning control intentionally stays in RAW units. "
+            "The normal Control-tab attenuator remains disabled in REAL LAB "
+            "until a measured mapping from raw command to optical transmission "
+            "or pulse energy is supplied."
+        )
+        raw_note.setWordWrap(True)
+        raw_note.setObjectName("muted")
+        analog_layout.addRow(raw_note)
+        left_layout.addWidget(analog_box)
         left_layout.addStretch(1)
 
         right = QtWidgets.QWidget()
@@ -1842,6 +1884,100 @@ class MainWindow(QtWidgets.QMainWindow):
             lines = [f"RESULT: FAIL — {exc}"]
         self._selftest_future = None
         self.commission_log.appendPlainText("\n".join(lines))
+
+    def _read_raw_analog(self) -> None:
+        gpio = self.raw_analog_gpio.text().strip()
+        if not gpio:
+            return
+        if self.lab_mode.currentIndex() == 0:
+            self.commission_log.appendPlainText(
+                f"MOCK raw analogue {gpio}: "
+                f"{self.raw_analog_value.value():.3f} (simulated)"
+            )
+            return
+        if self.real_stage is None or not self.real_stage.client.connected:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "HXP not connected",
+                "Connect the real HXP before reading an analogue GPIO.",
+            )
+            return
+        try:
+            value = self.real_stage.client.analog_get(gpio)
+            self.commission_log.appendPlainText(
+                f"READ {gpio} = {value:.6g}"
+            )
+        except Exception as exc:
+            self.commission_log.appendPlainText(
+                f"READ {gpio} FAILED: {exc}"
+            )
+
+    def _write_raw_analog(self) -> None:
+        if self.lab_mode.currentIndex() != 1:
+            QtWidgets.QMessageBox.information(
+                self,
+                "REAL LAB required",
+                "Raw analogue writes are only available in REAL LAB commissioning.",
+            )
+            return
+        if not self.raw_analog_arm.isChecked():
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Raw analogue path not confirmed",
+                "Confirm that the selected GPIO is the present power/attenuation "
+                "path before issuing a raw command.",
+            )
+            return
+        if self.real_stage is None or not self.real_stage.client.connected:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "HXP not connected",
+                "Connect the real HXP first.",
+            )
+            return
+        if self._laser_snapshot().pockels_open:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Close process beam first",
+                "Raw analogue commissioning writes are blocked while the "
+                "Pockels cell is OPEN.",
+            )
+            return
+        if self.real_stage.is_busy():
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Stage moving",
+                "Wait for stage motion to finish before changing the raw analogue output.",
+            )
+            return
+
+        gpio = self.raw_analog_gpio.text().strip()
+        value = self.raw_analog_value.value()
+        answer = QtWidgets.QMessageBox.warning(
+            self,
+            "Write uncalibrated analogue value?",
+            f"Write raw value {value:.3f} to {gpio}?\n\n"
+            "This is a commissioning command taken from the legacy software "
+            "pattern; it is not calibrated optical transmission or pulse energy.",
+            QtWidgets.QMessageBox.StandardButton.Yes
+            | QtWidgets.QMessageBox.StandardButton.No,
+            QtWidgets.QMessageBox.StandardButton.No,
+        )
+        if answer != QtWidgets.QMessageBox.StandardButton.Yes:
+            return
+
+        try:
+            self.real_stage.client.analog_set(gpio, value)
+            readback = self.real_stage.client.analog_get(gpio)
+            self.commission_log.appendPlainText(
+                f"WRITE {gpio} <- {value:.6g}; readback={readback:.6g}"
+            )
+        except Exception as exc:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Analogue write failed",
+                str(exc),
+            )
 
     def _mark_current_mapping_verified(self) -> None:
         if self.lab_mode.currentIndex() != 1:
