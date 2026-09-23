@@ -120,6 +120,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._apply_style()
         self._load_default_config()
         self._apply_mock_profile()
+        self._autoload_step_if_present()
         self._update_recipe_preflight_view()
 
         self.timer = QtCore.QTimer(self)
@@ -2696,6 +2697,29 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
     # --------------------------------------------------------------- CAD
+    def _autoload_step_if_present(self) -> None:
+        candidates = (
+            APP_ROOT / "Stewart Platform.STEP",
+            APP_ROOT / "Stewart Platform.step",
+            ASSETS_DIR / "Stewart Platform.STEP",
+            APP_ROOT.parent / "Stewart Platform.STEP",
+        )
+        step_path = next((p for p in candidates if p.is_file()), None)
+        if step_path is None:
+            return
+        try:
+            self.viewer.load_step(str(step_path))
+            label = f"Exact STEP CAD • {step_path.name} • AUTO"
+            self.cad_status.setText(label)
+            self.setup_cad_status.setText(label)
+        except Exception as exc:
+            message = (
+                f"STEP found ({step_path.name}) but exact CAD was not loaded: {exc}"
+            )
+            self.cad_status.setText("CAD-derived rig • STEP load unavailable")
+            self.setup_cad_status.setText(message)
+            self.statusBar().showMessage(message, 9000)
+
     def _load_step_dialog(self) -> None:
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self,
