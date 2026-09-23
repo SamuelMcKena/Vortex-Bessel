@@ -191,6 +191,22 @@ class MainWindow(QtWidgets.QMainWindow):
         self.legacy_profile_combo.setMinimumWidth(240)
         header.addWidget(self.legacy_profile_combo)
 
+        mock_speed_label = QtWidgets.QLabel("Mock speed")
+        mock_speed_label.setObjectName("headerLabel")
+        header.addWidget(mock_speed_label)
+        self.mock_time_scale = QtWidgets.QDoubleSpinBox()
+        self.mock_time_scale.setRange(0.1, 50.0)
+        self.mock_time_scale.setDecimals(1)
+        self.mock_time_scale.setSingleStep(0.5)
+        self.mock_time_scale.setValue(1.0)
+        self.mock_time_scale.setPrefix("×")
+        self.mock_time_scale.setToolTip(
+            "Accelerates the virtual simulation clock only. "
+            "It never changes real HXP motion."
+        )
+        self.mock_time_scale.setMaximumWidth(85)
+        header.addWidget(self.mock_time_scale)
+
         stage_label = QtWidgets.QLabel("Stage")
         stage_label.setObjectName("headerLabel")
         header.addWidget(stage_label)
@@ -2158,6 +2174,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 "mock" if self.lab_mode.currentIndex() == 0 else "real"
             ),
             "legacy_profile_key": self._selected_legacy_candidate_key,
+            "mock_time_scale": self.mock_time_scale.value(),
             "hxp": {
                 "host": self.hxp_host.text().strip(),
                 "port": self.hxp_port.value(),
@@ -2196,6 +2213,9 @@ class MainWindow(QtWidgets.QMainWindow):
         idx = self.legacy_profile_combo.findData(profile_key)
         if idx >= 0:
             self.legacy_profile_combo.setCurrentIndex(idx)
+        self.mock_time_scale.setValue(
+            float(cfg.get("mock_time_scale", 1.0))
+        )
 
         hxp = cfg.get("hxp", {})
         self.hxp_host.setText(str(hxp.get("host", self.hxp_host.text())))
@@ -3254,7 +3274,9 @@ class MainWindow(QtWidgets.QMainWindow):
             ):
                 self._poll_future = None
             if self.virtual_stage.snapshot().connected:
-                self.virtual_stage.tick(dt)
+                self.virtual_stage.tick(
+                    dt * self.mock_time_scale.value()
+                )
                 self._last_stage_snapshot = (
                     self.virtual_stage.snapshot()
                 )
@@ -3524,7 +3546,12 @@ class MainWindow(QtWidgets.QMainWindow):
         # Global MOCK/REAL mode owns provider selection. The subordinate
         # provider boxes are read-only indicators in ordinary operation.
         self.lab_mode.setEnabled(provider_switch_safe)
-        self.legacy_profile_combo.setEnabled(provider_switch_safe)
+        self.legacy_profile_combo.setEnabled(
+            provider_switch_safe and self.lab_mode.currentIndex() == 0
+        )
+        self.mock_time_scale.setEnabled(
+            self.lab_mode.currentIndex() == 0
+        )
         self.stage_mode.setEnabled(False)
         self.laser_mode.setEnabled(False)
         self.attenuator_mode.setEnabled(False)
