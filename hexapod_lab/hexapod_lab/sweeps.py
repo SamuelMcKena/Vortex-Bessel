@@ -95,7 +95,9 @@ def build_raster_sweep(spec: RasterSweepSpec) -> tuple[Recipe, RasterSweepSummar
 
     for series_index, attenuation in enumerate(attenuations):
         if spec.include_attenuator_steps:
-            steps.append(RecipeStep.pockels_cell(False))
+            # Recipe execution starts fail-closed and every preceding row closes
+            # before its return move, so an extra CLOSED block here would only
+            # create noisy duplicate-state preflight warnings.
             steps.append(RecipeStep.attenuator_set(attenuation))
 
         for line_index, velocity in enumerate(velocities):
@@ -132,8 +134,8 @@ def build_raster_sweep(spec: RasterSweepSpec) -> tuple[Recipe, RasterSweepSummar
                 / spec.return_velocity_mm_s
             )
 
-    # A known-safe final command is explicit even though every row already closes.
-    steps.append(RecipeStep.pockels_cell(False))
+    # Every row closes before its return move, so the generated recipe naturally
+    # ends CLOSED without a redundant final state command.
     recipe = Recipe(name=spec.name, steps=steps)
     summary = RasterSweepSummary(
         series_count=len(attenuations),
