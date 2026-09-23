@@ -337,6 +337,77 @@ class MainWindow(QtWidgets.QMainWindow):
         jog_layout.addLayout(jog_grid)
         layout.addWidget(jog_box)
 
+        quick_box = QtWidgets.QGroupBox("QUICK LINE / WRITING MOVE")
+        quick_layout = QtWidgets.QVBoxLayout(quick_box)
+        quick_note = QtWidgets.QLabel(
+            "Mirrors the recovered LabVIEW LINE Move / LINE Move_While Write "
+            "workflow using native HXP Line + target velocity."
+        )
+        quick_note.setObjectName("muted")
+        quick_note.setWordWrap(True)
+        quick_layout.addWidget(quick_note)
+
+        quick_form = QtWidgets.QFormLayout()
+        self.quick_dx = QtWidgets.QDoubleSpinBox()
+        self.quick_dx.setRange(-1000.0, 1000.0)
+        self.quick_dx.setDecimals(4)
+        self.quick_dx.setValue(-7.0)
+        self.quick_dx.setSuffix(" mm")
+        self.quick_dy = QtWidgets.QDoubleSpinBox()
+        self.quick_dy.setRange(-1000.0, 1000.0)
+        self.quick_dy.setDecimals(4)
+        self.quick_dy.setValue(0.0)
+        self.quick_dy.setSuffix(" mm")
+        self.quick_dz = QtWidgets.QDoubleSpinBox()
+        self.quick_dz.setRange(-1000.0, 1000.0)
+        self.quick_dz.setDecimals(4)
+        self.quick_dz.setValue(0.0)
+        self.quick_dz.setSuffix(" mm")
+        self.quick_velocity = QtWidgets.QDoubleSpinBox()
+        self.quick_velocity.setRange(0.001, 100.0)
+        self.quick_velocity.setDecimals(3)
+        self.quick_velocity.setValue(1.0)
+        self.quick_velocity.setSuffix(" mm/s")
+        self.quick_row_pitch = QtWidgets.QDoubleSpinBox()
+        self.quick_row_pitch.setRange(-100.0, 100.0)
+        self.quick_row_pitch.setDecimals(4)
+        self.quick_row_pitch.setValue(0.02)
+        self.quick_row_pitch.setSuffix(" mm")
+        quick_form.addRow("dX", self.quick_dx)
+        quick_form.addRow("dY", self.quick_dy)
+        quick_form.addRow("dZ", self.quick_dz)
+        quick_form.addRow("Velocity", self.quick_velocity)
+        quick_form.addRow("Return row pitch", self.quick_row_pitch)
+        quick_layout.addLayout(quick_form)
+
+        quick_buttons = QtWidgets.QGridLayout()
+        self.quick_move_btn = QtWidgets.QPushButton("MOVE LINE")
+        self.quick_move_btn.clicked.connect(
+            lambda: self._start_quick_line(write=False)
+        )
+        self.quick_write_btn = QtWidgets.QPushButton(
+            "WRITE LINE\nPOCKELS OPEN DURING MOVE"
+        )
+        self.quick_write_btn.setObjectName("beamOnSmall")
+        self.quick_write_btn.clicked.connect(
+            lambda: self._start_quick_line(write=True)
+        )
+        self.quick_return_btn = QtWidgets.QPushButton(
+            "RETURN + ROW\nBEAM CLOSED"
+        )
+        self.quick_return_btn.setObjectName("safeAction")
+        self.quick_return_btn.clicked.connect(self._quick_return_row)
+        quick_buttons.addWidget(self.quick_move_btn, 0, 0)
+        quick_buttons.addWidget(self.quick_write_btn, 0, 1)
+        quick_buttons.addWidget(self.quick_return_btn, 1, 0, 1, 2)
+        quick_layout.addLayout(quick_buttons)
+
+        self.quick_line_status = QtWidgets.QLabel("Ready")
+        self.quick_line_status.setObjectName("statusPill")
+        self.quick_line_status.setWordWrap(True)
+        quick_layout.addWidget(self.quick_line_status)
+        layout.addWidget(quick_box)
+
         actions = QtWidgets.QGroupBox("STAGE ACTIONS")
         actions_layout = QtWidgets.QHBoxLayout(actions)
         self.home_btn = QtWidgets.QPushButton("HOME")
