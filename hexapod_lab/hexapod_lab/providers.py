@@ -317,9 +317,39 @@ class LaserGateProvider(ABC):
 class VirtualLaserGate(LaserGateProvider):
     name = "virtual-lx13"
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        profile_label: str = "Generic virtual LX13",
+        gpio_name: str = "",
+        mask: int = 0,
+        open_value: int | None = None,
+        closed_value: int | None = None,
+    ) -> None:
         self._connected = False
         self._enabled = False
+        self.profile_label = str(profile_label)
+        self.gpio_name = str(gpio_name)
+        self.mask = int(mask)
+        self.open_value = open_value
+        self.closed_value = closed_value
+
+    def configure_profile(
+        self,
+        *,
+        profile_label: str,
+        gpio_name: str,
+        mask: int,
+        open_value: int | None,
+        closed_value: int | None,
+    ) -> None:
+        # Mock-only metadata. Logical OPEN/CLOSED remains deterministic even
+        # when a historical profile has unresolved physical polarity.
+        self.profile_label = str(profile_label)
+        self.gpio_name = str(gpio_name)
+        self.mask = int(mask)
+        self.open_value = open_value
+        self.closed_value = closed_value
 
     def connect(self) -> None:
         self._connected = True
@@ -335,7 +365,25 @@ class VirtualLaserGate(LaserGateProvider):
         self._enabled = bool(enabled)
 
     def snapshot(self) -> LaserSnapshot:
-        return LaserSnapshot(timestamp_s=time.time(), gate_enabled=self._enabled, connected=self._connected, provider=self.name, connector_name="LX13 (simulated)", readback_known=True)
+        raw_value = self.open_value if self._enabled else self.closed_value
+        return LaserSnapshot(
+            timestamp_s=time.time(),
+            gate_enabled=self._enabled,
+            connected=self._connected,
+            provider=self.name,
+            connector_name=f"LX13 mock • {self.profile_label}",
+            readback_known=True,
+            metadata={
+                "profile_label": self.profile_label,
+                "gpio_name": self.gpio_name,
+                "mask": self.mask,
+                "raw_value": raw_value,
+                "polarity_known": (
+                    self.open_value is not None
+                    and self.closed_value is not None
+                ),
+            },
+        )
 
 
 @dataclass(frozen=True, slots=True)
