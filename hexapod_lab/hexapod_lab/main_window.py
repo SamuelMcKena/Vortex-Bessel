@@ -606,13 +606,30 @@ class MainWindow(QtWidgets.QMainWindow):
         state_box = QtWidgets.QGroupBox("LIVE POSITION")
         state_layout = QtWidgets.QVBoxLayout(state_box)
         self.state_labels: dict[str, QtWidgets.QLabel] = {}
+        self.target_labels: dict[str, QtWidgets.QLabel] = {}
+        self.error_labels: dict[str, QtWidgets.QLabel] = {}
         grid = QtWidgets.QGridLayout()
-        for i, axis in enumerate("XYZUVW"):
+        grid.addWidget(QtWidgets.QLabel(""), 0, 0)
+        grid.addWidget(QtWidgets.QLabel("Actual"), 0, 1)
+        grid.addWidget(QtWidgets.QLabel("Target"), 0, 2)
+        grid.addWidget(QtWidgets.QLabel("Δ"), 0, 3)
+        for i, axis in enumerate("XYZUVW", start=1):
             grid.addWidget(QtWidgets.QLabel(axis), i, 0)
-            lab = QtWidgets.QLabel("0.0000")
-            lab.setObjectName("mono")
-            self.state_labels[axis] = lab
-            grid.addWidget(lab, i, 1)
+
+            actual = QtWidgets.QLabel("0.0000")
+            actual.setObjectName("mono")
+            self.state_labels[axis] = actual
+            grid.addWidget(actual, i, 1)
+
+            target = QtWidgets.QLabel("0.0000")
+            target.setObjectName("mono")
+            self.target_labels[axis] = target
+            grid.addWidget(target, i, 2)
+
+            error = QtWidgets.QLabel("0.0000")
+            error.setObjectName("mono")
+            self.error_labels[axis] = error
+            grid.addWidget(error, i, 3)
         state_layout.addLayout(grid)
         self.motion_status = QtWidgets.QLabel("IDLE")
         self.motion_status.setObjectName("statusPill")
@@ -3298,13 +3315,21 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.mode_chip.setText("REAL • DISARMED")
                 self._set_object_style(self.mode_chip, "chipWarn")
 
-        for axis, value in zip(
+        target_pose = snap.target or snap.setpoint or snap.actual
+        for axis, actual_value, target_value in zip(
             "XYZUVW",
             snap.actual.as_tuple(),
+            target_pose.as_tuple(),
         ):
             unit = " mm" if axis in "XYZ" else " °"
             self.state_labels[axis].setText(
-                f"{value:+.4f}{unit}"
+                f"{actual_value:+.4f}{unit}"
+            )
+            self.target_labels[axis].setText(
+                f"{target_value:+.4f}{unit}"
+            )
+            self.error_labels[axis].setText(
+                f"{target_value - actual_value:+.4f}"
             )
 
         self.motion_status.setText(
