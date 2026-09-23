@@ -66,3 +66,24 @@ def test_attenuator_rejects_out_of_range():
         pass
     else:
         raise AssertionError("out-of-range attenuator setpoint was accepted")
+
+
+def test_line_velocity_recipe_step():
+    step = RecipeStep.move_line_velocity(
+        -7.0,
+        0.02,
+        0.0,
+        1.5,
+    )
+    assert step.kind.value == "move_line_velocity"
+    assert step.payload["delta_xyz_mm"] == [-7.0, 0.02, 0.0]
+    assert step.payload["velocity_mm_s"] == 1.5
+    issues = preflight_recipe(
+        Recipe(
+            steps=[
+                step,
+                RecipeStep.pockels_cell(False),
+            ]
+        )
+    )
+    assert not [issue for issue in issues if issue.severity == "error"]
