@@ -54,5 +54,7 @@ def test_real_pockels_provider_rejects_readback_mismatch():
         gate.set_gate(True)
     except RuntimeError as exc:
         assert "readback" in str(exc).lower()
+        assert client.writes[-1] == ("GPIO4.DO", 1, 0)
+        assert gate.snapshot().pockels_open is False
     else:
         raise AssertionError("readback mismatch was not rejected")
