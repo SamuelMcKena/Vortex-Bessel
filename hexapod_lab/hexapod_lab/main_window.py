@@ -540,7 +540,11 @@ class MainWindow(QtWidgets.QMainWindow):
         move_layout = QtWidgets.QVBoxLayout(move_box)
         self.script_move_kind = QtWidgets.QComboBox()
         self.script_move_kind.addItems(
-            ["Absolute pose", "Relative move"]
+            [
+                "Absolute pose",
+                "Relative move",
+                "Line move at target velocity",
+            ]
         )
         move_layout.addWidget(self.script_move_kind)
         pose_grid = QtWidgets.QGridLayout()
@@ -553,6 +557,21 @@ class MainWindow(QtWidgets.QMainWindow):
             pose_grid.addWidget(QtWidgets.QLabel(axis), r, c)
             pose_grid.addWidget(box, r, c + 1)
         move_layout.addLayout(pose_grid)
+
+        speed_row = QtWidgets.QFormLayout()
+        self.script_line_velocity = QtWidgets.QDoubleSpinBox()
+        self.script_line_velocity.setRange(0.001, 100.0)
+        self.script_line_velocity.setDecimals(3)
+        self.script_line_velocity.setValue(1.0)
+        self.script_line_velocity.setSuffix(" mm/s")
+        self.script_line_velocity.setToolTip(
+            "Used only for 'Line move at target velocity'. "
+            "This maps to the legacy HXP "
+            "HexapodMoveIncrementalControlWithTargetVelocity command."
+        )
+        speed_row.addRow("Line velocity", self.script_line_velocity)
+        move_layout.addLayout(speed_row)
+
         row = QtWidgets.QHBoxLayout()
         add_move = QtWidgets.QPushButton("+ ADD MOVE")
         add_move.setObjectName("primary")
@@ -1725,13 +1744,23 @@ class MainWindow(QtWidgets.QMainWindow):
                 for axis in "XYZUVW"
             )
         )
-        if self.script_move_kind.currentIndex() == 0:
+        kind = self.script_move_kind.currentIndex()
+        if kind == 0:
             self._append_recipe_step(
                 RecipeStep.move_absolute(pose)
             )
-        else:
+        elif kind == 1:
             self._append_recipe_step(
                 RecipeStep.move_incremental(pose)
+            )
+        else:
+            self._append_recipe_step(
+                RecipeStep.move_line_velocity(
+                    pose.x,
+                    pose.y,
+                    pose.z,
+                    self.script_line_velocity.value(),
+                )
             )
 
     def _script_pose_from_live(self) -> None:
@@ -1800,6 +1829,7 @@ class MainWindow(QtWidgets.QMainWindow):
             & {
                 StepKind.MOVE_ABSOLUTE,
                 StepKind.MOVE_INCREMENTAL,
+                StepKind.MOVE_LINE_VELOCITY,
             }
         )
         uses_pockels = StepKind.POCKELS_CELL in kinds
@@ -1877,6 +1907,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 in {
                     StepKind.MOVE_ABSOLUTE,
                     StepKind.MOVE_INCREMENTAL,
+                    StepKind.MOVE_LINE_VELOCITY,
                 }
                 and self.stage_mode.currentIndex() == 1
             ):
@@ -2039,6 +2070,23 @@ class MainWindow(QtWidgets.QMainWindow):
                 if not self._recipe_step_issued:
                     stage.move_incremental(
                         Pose6D.from_iterable(step.payload["delta"])
+                    )
+                    self._recipe_step_issued = True
+                elif not stage.is_busy():
+                    self._advance_recipe()
+
+            elif step.kind == StepKind.MOVE_LINE_VELOCITY:
+                stage = self._stage_provider()
+                if not self._recipe_step_issued:
+                    dx, dy, dz = (
+                        float(v)
+                        for v in step.payload["delta_xyz_mm"]
+                    )
+                    stage.move_line_incremental_with_target_velocity(
+                        dx,
+                        dy,
+                        dz,
+                        float(step.payload["velocity_mm_s"]),
                     )
                     self._recipe_step_issued = True
                 elif not stage.is_busy():
