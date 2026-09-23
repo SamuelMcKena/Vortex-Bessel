@@ -207,15 +207,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mock_time_scale.setMaximumWidth(85)
         header.addWidget(self.mock_time_scale)
 
+        # Internal stage-provider selector is retained for routing/config
+        # compatibility, but ordinary users operate through the single MOCK/REAL
+        # lab-mode selector above. Hiding the duplicate selector keeps the header
+        # unambiguous.
         stage_label = QtWidgets.QLabel("Stage")
         stage_label.setObjectName("headerLabel")
+        stage_label.setVisible(False)
         header.addWidget(stage_label)
         self.stage_mode = QtWidgets.QComboBox()
         self.stage_mode.addItems(["Virtual", "Real Newport HXP"])
-        self.stage_mode.setMinimumWidth(150)
         self.stage_mode.currentIndexChanged.connect(
             self._stage_mode_changed
         )
+        self.stage_mode.setVisible(False)
         header.addWidget(self.stage_mode)
 
         self.stage_chip = QtWidgets.QLabel("STAGE IDLE")
