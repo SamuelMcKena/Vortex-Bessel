@@ -452,10 +452,22 @@ class HXPDigitalLaserGate(LaserGateProvider):
             self._last_raw_readback = int(raw)
             self._readback_known = True
             if (raw & self.config.mask) != (value & self.config.mask):
+                # An OPEN-command mismatch is treated as an uncertain beam
+                # state. Immediately request the configured CLOSED value before
+                # surfacing the error.
+                if enabled:
+                    try:
+                        self.client.digital_set(
+                            self.config.gpio_name,
+                            self.config.mask,
+                            self.config.disabled_value,
+                        )
+                    finally:
+                        self._enabled = False
                 raise RuntimeError(
                     "HXP digital output readback does not match the requested "
                     f"Pockels state: raw={raw}, mask={self.config.mask}, "
-                    f"requested={value}"
+                    f"requested={value}; CLOSED was requested"
                 )
         except RuntimeError:
             raise
