@@ -1548,6 +1548,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self._apply_mock_profile()
             self.mode_chip.setText("MOCK • SAFE")
             self._set_object_style(self.mode_chip, "chipSafe")
+            if hasattr(self, "mock_scenario"):
+                self._mock_scenario_changed(
+                    self.mock_scenario.currentIndex()
+                )
             self.statusBar().showMessage(
                 "MOCK LAB — no real hardware commands can be issued",
                 5000,
@@ -1999,6 +2003,10 @@ class MainWindow(QtWidgets.QMainWindow):
     # ---------------------------------------------------------- configuration
     def _config_dict(self) -> dict:
         return {
+            "operating_mode": (
+                "mock" if self.lab_mode.currentIndex() == 0 else "real"
+            ),
+            "legacy_profile_key": self._selected_legacy_candidate_key,
             "hxp": {
                 "host": self.hxp_host.text().strip(),
                 "port": self.hxp_port.value(),
@@ -2031,6 +2039,13 @@ class MainWindow(QtWidgets.QMainWindow):
         }
 
     def _load_config_dict(self, cfg: dict) -> None:
+        profile_key = str(
+            cfg.get("legacy_profile_key", self._selected_legacy_candidate_key)
+        )
+        idx = self.legacy_profile_combo.findData(profile_key)
+        if idx >= 0:
+            self.legacy_profile_combo.setCurrentIndex(idx)
+
         hxp = cfg.get("hxp", {})
         self.hxp_host.setText(str(hxp.get("host", self.hxp_host.text())))
         self.hxp_port.setValue(int(hxp.get("port", self.hxp_port.value())))
@@ -2092,6 +2107,12 @@ class MainWindow(QtWidgets.QMainWindow):
             self.virtual_attenuator.set_transmission_percent(
                 self.attenuator_spin.value()
             )
+
+        operating_mode = str(cfg.get("operating_mode", "mock")).lower()
+        target_mode = 1 if operating_mode == "real" else 0
+        self.lab_mode.setCurrentIndex(target_mode)
+        # setCurrentIndex does not emit when already at the requested index.
+        self._lab_mode_changed(target_mode)
 
     def _load_default_config(self) -> None:
         if not DEFAULT_CONFIG.is_file():
@@ -2332,6 +2353,8 @@ class MainWindow(QtWidgets.QMainWindow):
             )
 
     def _abort_all(self) -> None:
+        self._manual_write_line_active = False
+        self._manual_write_line_started = False
         self._close_all_pockels()
         try:
             self._stage_provider().abort()
@@ -3252,7 +3275,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.viewer.beam_hit_sample_xy,
         )
 
-        operator_free = not self._recipe_running
+        operator_free = (
+            not self._recipe_running
+            and not self._manual_write_line_active
+        )
         stage_ready = snap.connected
         motion_ready = stage_ready and operator_free
         self.move_abs_btn.setEnabled(motion_ready)
@@ -3271,6 +3297,19 @@ class MainWindow(QtWidgets.QMainWindow):
         # Closing the process beam remains available even while a script runs.
         self.laser_off_btn.setEnabled(laser_ready)
 
+        quick_stage_ready = (
+            stage_ready
+            and not self._recipe_running
+            and snap.state != MotionState.MOVING
+        )
+        self.quick_move_btn.setEnabled(quick_stage_ready)
+        self.quick_return_btn.setEnabled(quick_stage_ready)
+        self.quick_write_btn.setEnabled(
+            quick_stage_ready
+            and laser_ready
+            and real_manual_ok
+        )
+
         att_ready = attenuator.connected
         self.set_attenuator_btn.setEnabled(
             att_ready and operator_free
@@ -3281,9 +3320,13 @@ class MainWindow(QtWidgets.QMainWindow):
             not self._recipe_running
             and snap.state != MotionState.MOVING
         )
-        self.stage_mode.setEnabled(provider_switch_safe)
-        self.laser_mode.setEnabled(not self._recipe_running)
-        self.attenuator_mode.setEnabled(not self._recipe_running)
+        # Global MOCK/REAL mode owns provider selection. The subordinate
+        # provider boxes are read-only indicators in ordinary operation.
+        self.lab_mode.setEnabled(provider_switch_safe)
+        self.legacy_profile_combo.setEnabled(provider_switch_safe)
+        self.stage_mode.setEnabled(False)
+        self.laser_mode.setEnabled(False)
+        self.attenuator_mode.setEnabled(False)
         self.connect_stage_btn.setEnabled(not self._recipe_running)
         self.disconnect_stage_btn.setEnabled(not self._recipe_running)
         self.real_script_arm.setEnabled(not self._recipe_running)
@@ -3296,7 +3339,9 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self._last_tick_monotonic = now
         self._poll_stage(now, dt)
+        self._manual_write_line_tick()
         self._recipe_tick()
+        self._commission_selftest_tick()
         self._update_readouts()
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
