@@ -62,6 +62,42 @@ jobs:
           assert window.lab_mode.currentText() == "MOCK LAB"
           assert window.stage_mode.currentText() == "Virtual"
           assert window.legacy_profile_combo.count() >= 2
+
+          # Mock profile routing.
+          tcl_index = window.legacy_profile_combo.findData("tcl_legacy")
+          assert tcl_index >= 0
+          window.legacy_profile_combo.setCurrentIndex(tcl_index)
+          assert window.virtual_laser.snapshot().metadata["gpio_name"] == "GPIO4.DO"
+
+          # Manual write-line lifecycle: OPEN only during the virtual move,
+          # then automatically CLOSED when the motion completes.
+          window.quick_dx.setValue(-0.01)
+          window.quick_dy.setValue(0.0)
+          window.quick_dz.setValue(0.0)
+          window.quick_velocity.setValue(10.0)
+          window._start_quick_line(write=True)
+          assert window.virtual_laser.snapshot().pockels_open is True
+          window.virtual_stage.tick(1.0)
+          window._manual_write_line_tick()
+          assert window.virtual_laser.snapshot().pockels_open is False
+
+          # Sweep generator populates the script builder.
+          window.sweep_v_start.setValue(1.0)
+          window.sweep_v_stop.setValue(1.0)
+          window.sweep_v_step.setValue(0.1)
+          window._generate_sweep_recipe()
+          assert len(window.recipe.steps) > 0
+
+          # Global mode owns provider routing.
+          window.lab_mode.setCurrentIndex(1)
+          assert window.stage_mode.currentText() == "Real Newport HXP"
+          assert window.laser_mode.currentIndex() == 1
+          window.lab_mode.setCurrentIndex(0)
+          assert window.stage_mode.currentText() == "Virtual"
+
+          window._run_read_only_self_test()
+          assert "MOCK LAB" in window.commission_log.toPlainText()
+
           window.close()
           app.processEvents()
           print("GUI smoke test passed")
