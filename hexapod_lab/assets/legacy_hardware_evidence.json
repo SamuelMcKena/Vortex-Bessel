@@ -1,0 +1,75 @@
+{
+  "source": {
+    "description": "Evidence extracted from the uploaded legacy TCL scripts and LabVIEW VI resource heaps.",
+    "confidence_note": "These profiles record historical software behavior. They do not prove that the present physical wiring to PHAROS LX13 is unchanged."
+  },
+  "hxp_legacy_labview": {
+    "host": "192.168.0.254",
+    "port": 5001,
+    "timeout_ms": 10000,
+    "group": "HEXAPOD",
+    "coordinate_system": "Work",
+    "evidence": "The same address, port and timeout constants occur throughout the uploaded HXP LabVIEW VIs."
+  },
+  "labview_front_panel_v3": {
+    "pockels_candidate": {
+      "gpio_name": "GPIO3.DO",
+      "mask": 1,
+      "observed_values": [0, 1],
+      "polarity_verified": false,
+      "evidence": "HEXAPOD_FRONT_PANEL_v3.vi contains the comment 'Pockels Cell control and Control During Writing motion' and repeated GPIODigitalSet nodes on GPIO3.DO with mask 1 and values 0/1.",
+      "note": "The VI establishes the channel and two states, but the extracted heap evidence alone does not prove which state physically opens the present PHAROS Pockels path."
+    },
+    "gate_state_marker": {
+      "gpio_name": "GPIO1.DO",
+      "mask": 4,
+      "low_value": 0,
+      "high_value": 4,
+      "readback_gpio": "GPIO1.DO",
+      "motion_start_action": "GPIO1.DO.DOToggle",
+      "motion_end_action": "GPIO1.DO.DOToggle",
+      "evidence": "GPIO set to 0.vi and GPIO set to 4.vi use GPIO1.DO mask 4 values 0/4; GPIO Monitoring.vi reads GPIO1.DO and labels it 'Gate Open?'; MoveStartEvent.vi and MoveEndEvent.vi configure GPIO1.DO.DOToggle for HEXAPOD.1.SGamma.MotionStart/MotionEnd.",
+      "interpretation": "This strongly resembles a writing/gate-state marker used for plotting/recording and motion-event synchronization."
+    },
+    "gpio4_observation": {
+      "gpio_name": "GPIO4.DO",
+      "observed_mask": 4,
+      "observed_value": 1,
+      "role_verified": false,
+      "evidence": "HEXAPOD_FRONT_PANEL_v3.vi contains a GPIODigitalSet node on GPIO4.DO near the writing-line logic.",
+      "note": "Do not assign a physical role from this observation alone."
+    },
+    "power_control": {
+      "analog_read_gpio": "GPIO2.DAC1",
+      "serial_resource": "COM7",
+      "front_panel_controls": ["Power Setpoint", "Power Control"],
+      "evidence": "HEXAPOD_FRONT_PANEL_v3.vi contains GPIOAnalogGet on GPIO2.DAC1, two VISA Configure Serial Port nodes with COM7, and Power Setpoint/Power Control front-panel controls.",
+      "protocol_verified": false,
+      "note": "The actual COM7 device command protocol is not recoverable with high confidence from the extracted strings alone."
+    }
+  },
+  "tcl_processing_scripts": {
+    "beam_control": {
+      "gpio_name": "GPIO4.DO",
+      "mask": 1,
+      "write_value": 1,
+      "non_write_value": 0,
+      "evidence": "Power_Speed_Sweep.tcl, powerino.tcl and density.tcl repeatedly set GPIO4.DO 1 1 before the writing line and GPIO4.DO 1 0 afterwards."
+    },
+    "power_control": {
+      "primary_gpio": "GPIO2.DAC1",
+      "observed_values": [1, 2, 3, 4, 5],
+      "alternate_observation": "Pulse_Sweep.tcl contains GPIOAnalogSet GPIO4.AO 5.",
+      "calibration_verified": false
+    },
+    "writing_motion": {
+      "api": "HexapodMoveIncrementalControlWithTargetVelocity",
+      "group": "HEXAPOD",
+      "coordinate_system": "Work",
+      "trajectory_type": "Line",
+      "common_write_dx_mm": -7.0,
+      "common_return_dx_mm": 7.0,
+      "common_row_pitch_mm": 0.02
+    }
+  }
+}

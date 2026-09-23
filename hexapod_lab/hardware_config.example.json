@@ -1,0 +1,26 @@
+{
+  "operating_mode": "mock",
+  "legacy_profile_key": "labview_v3",
+  "mock_time_scale": 1,
+  "hxp": {
+    "host": "192.168.0.254",
+    "port": 5001,
+    "group": "HEXAPOD",
+    "coordinate_system": "Work",
+    "timeout_s": 10
+  },
+  "pockels": {
+    "connector": "PHAROS LX13",
+    "provider": "virtual",
+    "gpio_name": "",
+    "mask": 0,
+    "open_value": 0,
+    "closed_value": 0,
+    "wiring_verified": false
+  },
+  "attenuator": {
+    "provider": "virtual",
+    "model": "",
+    "transmission_percent": 0
+  }
+}

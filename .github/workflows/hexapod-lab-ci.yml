@@ -1,0 +1,116 @@
+name: Hexapod Lab CI
+
+on:
+  push:
+    branches:
+      - "feature/hexapod-laser-standalone"
+  pull_request:
+    paths:
+      - "hexapod_lab/**"
+      - ".github/workflows/hexapod-lab-ci.yml"
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: hexapod_lab
+    env:
+      PYTHONPATH: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile Python sources
+        run: python -m compileall -q .
+      - name: Install core test dependencies
+        run: python -m pip install -U pip pytest numpy
+      - name: Run core tests
+        run: pytest -q
+
+  ui-smoke:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: hexapod_lab
+    env:
+      PYTHONPATH: .
+      QT_QPA_PLATFORM: offscreen
+      PYVISTA_OFF_SCREEN: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install headless Qt / OpenGL runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libgl1 libxkbcommon-x11-0
+      - name: Install GUI dependencies
+        run: |
+          python -m pip install -U pip
+          python -m pip install -r requirements.txt
+      - name: Headless GUI construction smoke test
+        run: |
+          python - <<'PY'
+          from PySide6 import QtWidgets
+          from hexapod_lab.main_window import MainWindow
+          app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+          window = MainWindow()
+          assert window.tabs.count() == 4
+          assert window.lab_mode.currentText() == "MOCK LAB"
+          assert window.stage_mode.currentText() == "Virtual"
+          assert window.legacy_profile_combo.count() >= 2
+
+          # Mock profile routing.
+          tcl_index = window.legacy_profile_combo.findData("tcl_legacy")
+          assert tcl_index >= 0
+          window.legacy_profile_combo.setCurrentIndex(tcl_index)
+          assert window.virtual_laser.snapshot().metadata["gpio_name"] == "GPIO4.DO"
+
+          # Manual write-line lifecycle: OPEN only during the virtual move,
+          # then automatically CLOSED when the motion completes.
+          window.quick_dx.setValue(-0.01)
+          window.quick_dy.setValue(0.0)
+          window.quick_dz.setValue(0.0)
+          window.quick_velocity.setValue(10.0)
+          window._start_quick_line(write=True)
+          assert window.virtual_laser.snapshot().pockels_open is True
+          window.virtual_stage.tick(1.0)
+          window._manual_write_line_tick()
+          assert window.virtual_laser.snapshot().pockels_open is False
+
+          # Sweep generator populates the script builder.
+          window.sweep_v_start.setValue(1.0)
+          window.sweep_v_stop.setValue(1.0)
+          window.sweep_v_step.setValue(0.1)
+          window._generate_sweep_recipe()
+          assert len(window.recipe.steps) > 0
+
+          # Global mode owns provider routing.
+          window.lab_mode.setCurrentIndex(1)
+          assert window.stage_mode.currentText() == "Real Newport HXP"
+          assert window.laser_mode.currentIndex() == 1
+          window.lab_mode.setCurrentIndex(0)
+          assert window.stage_mode.currentText() == "Virtual"
+
+          window._run_read_only_self_test()
+          assert "MOCK LAB" in window.commission_log.toPlainText()
+
+          window.close()
+          app.processEvents()
+          print("GUI smoke test passed")
+          PY
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload standalone hexapod app
+        uses: actions/upload-artifact@v4
+        with:
+          name: hexapod-lab-source
+          path: hexapod_lab
+          if-no-files-found: error
+          retention-days: 7
