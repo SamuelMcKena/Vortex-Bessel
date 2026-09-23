@@ -411,6 +411,8 @@ class HXPDigitalLaserGate(LaserGateProvider):
         self.config = config
         self._connected = False
         self._enabled = False
+        self._last_raw_readback: int | None = None
+        self._readback_known = False
 
     def connect(self) -> None:
         if not self.config.wiring_verified:
@@ -425,7 +427,13 @@ class HXPDigitalLaserGate(LaserGateProvider):
         if not self.client.connected:
             raise ConnectionError("HXP must be connected before real LX13 gating can be enabled")
         self._connected = True
-        self.set_gate(False)
+        try:
+            # Fail closed on connection and verify the HXP output register if
+            # the controller permits readback.
+            self.set_gate(False)
+        except Exception:
+            self._connected = False
+            raise
 
     def disconnect(self) -> None:
         self.safe_off()
@@ -436,10 +444,44 @@ class HXPDigitalLaserGate(LaserGateProvider):
             raise ConnectionError("real LX13 gate is not connected/armed")
         value = self.config.enabled_value if enabled else self.config.disabled_value
         self.client.digital_set(self.config.gpio_name, self.config.mask, value)
+
+        self._readback_known = False
+        self._last_raw_readback = None
+        try:
+            raw = self.client.digital_get(self.config.gpio_name)
+            self._last_raw_readback = int(raw)
+            self._readback_known = True
+            if (raw & self.config.mask) != (value & self.config.mask):
+                raise RuntimeError(
+                    "HXP digital output readback does not match the requested "
+                    f"Pockels state: raw={raw}, mask={self.config.mask}, "
+                    f"requested={value}"
+                )
+        except RuntimeError:
+            raise
+        except Exception:
+            # Some installations may not expose useful DO readback. The command
+            # state remains available but is labelled as such in the GUI.
+            self._readback_known = False
+
         self._enabled = bool(enabled)
 
     def snapshot(self) -> LaserSnapshot:
-        return LaserSnapshot(timestamp_s=time.time(), gate_enabled=self._enabled, connected=self._connected, provider=self.name, connector_name=self.config.connector_name, readback_known=False, metadata={"gpio_name": self.config.gpio_name, "mask": self.config.mask})
+        return LaserSnapshot(
+            timestamp_s=time.time(),
+            gate_enabled=self._enabled,
+            connected=self._connected,
+            provider=self.name,
+            connector_name=self.config.connector_name,
+            readback_known=self._readback_known,
+            metadata={
+                "gpio_name": self.config.gpio_name,
+                "mask": self.config.mask,
+                "raw_readback": self._last_raw_readback,
+                "open_value": self.config.enabled_value,
+                "closed_value": self.config.disabled_value,
+            },
+        )
 
 
 class AttenuatorProvider(ABC):
