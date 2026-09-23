@@ -1,9 +1,10 @@
 {
   "hxp": {
-    "host": "192.168.33.3",
+    "host": "192.168.0.254",
     "port": 5001,
     "group": "HEXAPOD",
-    "coordinate_system": "Work"
+    "coordinate_system": "Work",
+    "timeout_s": 10
   },
   "pockels": {
     "connector": "PHAROS LX13",
@@ -17,6 +18,6 @@
   "attenuator": {
     "provider": "virtual",
     "model": "",
-    "transmission_percent": 0.0
+    "transmission_percent": 0
   }
 }
