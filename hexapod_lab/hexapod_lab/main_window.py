@@ -102,6 +102,7 @@ class MainWindow(QtWidgets.QMainWindow):
             thread_name_prefix="hxp-poll",
         )
         self._poll_future: Future | None = None
+        self._selftest_future: Future | None = None
         self._last_real_poll = 0.0
 
         self.recipe = Recipe()
@@ -1480,6 +1481,471 @@ class MainWindow(QtWidgets.QMainWindow):
                 border-radius:7px;
             }
             """
+        )
+
+    # ---------------------------------------------------------- lab modes
+    def _selected_candidate(self) -> PockelsCandidate:
+        key = self.legacy_profile_combo.currentData()
+        if not key:
+            key = self._selected_legacy_candidate_key
+        return self.legacy_profile.candidate(str(key))
+
+    def _legacy_profile_changed(self, _index: int) -> None:
+        key = self.legacy_profile_combo.currentData()
+        if key:
+            self._selected_legacy_candidate_key = str(key)
+        if hasattr(self, "commission_profile"):
+            idx = self.commission_profile.findData(
+                self._selected_legacy_candidate_key
+            )
+            if idx >= 0 and self.commission_profile.currentIndex() != idx:
+                self.commission_profile.blockSignals(True)
+                self.commission_profile.setCurrentIndex(idx)
+                self.commission_profile.blockSignals(False)
+                self._commission_candidate_changed(idx)
+        self._apply_mock_profile()
+
+    def _apply_mock_profile(self) -> None:
+        if not hasattr(self, "legacy_profile_combo"):
+            return
+        candidate = self._selected_candidate()
+
+        # When polarity is unresolved, the virtual provider still has a logical
+        # OPEN/CLOSED state but does not pretend a raw GPIO value is known.
+        self.virtual_laser.configure_profile(
+            profile_label=candidate.label,
+            gpio_name=candidate.gpio_name,
+            mask=candidate.mask,
+            open_value=candidate.open_value,
+            closed_value=candidate.closed_value,
+        )
+        if hasattr(self, "mode_chip") and self.lab_mode.currentIndex() == 0:
+            self.mode_chip.setText(
+                "MOCK • " + candidate.key.replace("_", " ").upper()
+            )
+        if hasattr(self, "commission_evidence_text"):
+            self._commission_candidate_changed(
+                self.commission_profile.currentIndex()
+            )
+
+    def _lab_mode_changed(self, index: int) -> None:
+        if not hasattr(self, "laser_mode"):
+            return
+        self._close_all_pockels()
+        self.real_script_arm.setChecked(False)
+        self.manual_beam_arm.setChecked(False)
+
+        if int(index) == 0:
+            self.stage_mode.setCurrentIndex(0)
+            self.laser_mode.setCurrentIndex(0)
+            self.attenuator_mode.setCurrentIndex(0)
+            if not self.virtual_stage.snapshot().connected:
+                self.virtual_stage.connect()
+            if not self.virtual_laser.snapshot().connected:
+                self.virtual_laser.connect()
+            if not self.virtual_attenuator.snapshot().connected:
+                self.virtual_attenuator.connect()
+            self._apply_mock_profile()
+            self.mode_chip.setText("MOCK • SAFE")
+            self._set_object_style(self.mode_chip, "chipSafe")
+            self.statusBar().showMessage(
+                "MOCK LAB — no real hardware commands can be issued",
+                5000,
+            )
+        else:
+            self.stage_mode.setCurrentIndex(1)
+            self.laser_mode.setCurrentIndex(1)
+            self.attenuator_mode.setCurrentIndex(1)
+            self.mode_chip.setText("REAL LAB • DISARMED")
+            self._set_object_style(self.mode_chip, "chipWarn")
+            self.statusBar().showMessage(
+                "REAL LAB selected — connect/commission providers before use",
+                7000,
+            )
+        self._update_recipe_preflight_view()
+
+    # ------------------------------------------------------ quick line moves
+    def _start_quick_line(self, *, write: bool) -> None:
+        if self._recipe_running or self._manual_write_line_active:
+            QtWidgets.QMessageBox.information(
+                self,
+                "Controller busy",
+                "Stop the active script/writing move before starting another line.",
+            )
+            return
+
+        dx = self.quick_dx.value()
+        dy = self.quick_dy.value()
+        dz = self.quick_dz.value()
+        velocity = self.quick_velocity.value()
+
+        try:
+            stage = self._stage_provider()
+            if stage.is_busy():
+                raise RuntimeError("stage is already moving")
+
+            if write:
+                if (
+                    self.laser_mode.currentIndex() == 1
+                    and not self.manual_beam_arm.isChecked()
+                ):
+                    raise RuntimeError(
+                        "Arm manual real-beam control before a real writing move"
+                    )
+                self._laser_provider().set_gate(True)
+
+            stage.move_line_incremental_with_target_velocity(
+                dx,
+                dy,
+                dz,
+                velocity,
+            )
+            if write:
+                self._manual_write_line_active = True
+                self._manual_write_line_started = True
+                self._manual_write_line_description = (
+                    f"dX={dx:.3f}, dY={dy:.3f}, dZ={dz:.3f} mm "
+                    f"@ {velocity:.3f} mm/s"
+                )
+                self.quick_line_status.setText(
+                    "WRITING • Pockels OPEN • "
+                    + self._manual_write_line_description
+                )
+            else:
+                self.quick_line_status.setText(
+                    f"LINE MOVE • dX={dx:.3f}, dY={dy:.3f}, "
+                    f"dZ={dz:.3f} mm @ {velocity:.3f} mm/s"
+                )
+        except Exception as exc:
+            if write:
+                self._close_all_pockels()
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Line move failed",
+                str(exc),
+            )
+
+    def _quick_return_row(self) -> None:
+        if self._recipe_running or self._manual_write_line_active:
+            QtWidgets.QMessageBox.information(
+                self,
+                "Controller busy",
+                "Finish/stop the active operation first.",
+            )
+            return
+        self._close_all_pockels()
+        try:
+            stage = self._stage_provider()
+            if stage.is_busy():
+                raise RuntimeError("stage is already moving")
+            dx = -self.quick_dx.value()
+            dy = self.quick_row_pitch.value()
+            stage.move_line_incremental_with_target_velocity(
+                dx,
+                dy,
+                0.0,
+                self.quick_velocity.value(),
+            )
+            self.quick_line_status.setText(
+                f"RETURN • dX={dx:.3f} mm • row dY={dy:.4f} mm • beam CLOSED"
+            )
+        except Exception as exc:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Return move failed",
+                str(exc),
+            )
+
+    def _manual_write_line_tick(self) -> None:
+        if not self._manual_write_line_active:
+            return
+        try:
+            busy = self._stage_provider().is_busy()
+        except Exception as exc:
+            self._manual_write_line_active = False
+            self._close_all_pockels()
+            self.quick_line_status.setText(
+                f"FAILED • beam close requested • {exc}"
+            )
+            return
+
+        if self._manual_write_line_started and not busy:
+            self._manual_write_line_active = False
+            self._manual_write_line_started = False
+            self._close_all_pockels()
+            self.quick_line_status.setText(
+                "COMPLETE • Pockels CLOSED • "
+                + self._manual_write_line_description
+            )
+
+    # ---------------------------------------------------------- commissioning
+    def _commission_candidate_changed(self, _index: int) -> None:
+        if not hasattr(self, "commission_profile"):
+            return
+        key = self.commission_profile.currentData()
+        if not key:
+            return
+        candidate = self.legacy_profile.candidate(str(key))
+        polarity = (
+            f"OPEN={candidate.open_value}, CLOSED={candidate.closed_value}"
+            if candidate.polarity_known
+            else "states 0/1 observed; OPEN/CLOSED polarity unresolved"
+        )
+        self.commission_evidence_text.setText(
+            f"{candidate.label}\n"
+            f"GPIO: {candidate.gpio_name} • mask {candidate.mask} • {polarity}\n"
+            f"Confidence: {candidate.confidence}\n"
+            "Loading this candidate never marks the present wiring verified."
+        )
+
+    def _apply_commission_candidate_to_setup(self) -> None:
+        key = self.commission_profile.currentData()
+        if not key:
+            return
+        candidate = self.legacy_profile.candidate(str(key))
+        idx = self.legacy_profile_combo.findData(candidate.key)
+        if idx >= 0:
+            self.legacy_profile_combo.setCurrentIndex(idx)
+
+        self.gpio_name.setText(candidate.gpio_name)
+        self.gpio_mask.setValue(candidate.mask)
+        if candidate.polarity_known:
+            self.gpio_open.setValue(int(candidate.open_value))
+            self.gpio_closed.setValue(int(candidate.closed_value))
+        else:
+            # The files prove the two states are 0 and 1 but not their physical
+            # polarity on the current wiring. Populate a visible draft pair only;
+            # verification remains false and real provider arming remains blocked.
+            self.gpio_open.setValue(1)
+            self.gpio_closed.setValue(0)
+
+        self.wiring_verified.setChecked(False)
+        for cb in self.commission_checks:
+            cb.setChecked(False)
+        self.commission_log.appendPlainText(
+            "Loaded candidate into Setup WITHOUT verification: "
+            + candidate.label
+        )
+        if not candidate.polarity_known:
+            self.commission_log.appendPlainText(
+                "  NOTE: OPEN=1/CLOSED=0 is only a draft orientation for "
+                "the LabVIEW-v3 0/1 states. Confirm physical polarity first."
+            )
+
+    def _mock_scenario_changed(self, index: int) -> None:
+        if not hasattr(self, "lab_mode") or self.lab_mode.currentIndex() != 0:
+            return
+
+        # Re-establish nominal state first, then inject one failure.
+        self.virtual_stage.connect()
+        self.virtual_laser.connect()
+        self.virtual_attenuator.connect()
+        self._apply_mock_profile()
+
+        if index == 1:
+            self.virtual_stage.disconnect()
+        elif index == 2:
+            self.virtual_laser.disconnect()
+        elif index == 3:
+            self.virtual_attenuator.disconnect()
+
+        if hasattr(self, "commission_log"):
+            self.commission_log.appendPlainText(
+                "MOCK scenario: " + self.mock_scenario.currentText()
+            )
+
+    def _run_read_only_self_test(self) -> None:
+        if self._selftest_future is not None and not self._selftest_future.done():
+            return
+
+        self.commission_log.appendPlainText(
+            "\n=== READ-ONLY SELF TEST ==="
+        )
+
+        if self.lab_mode.currentIndex() == 0:
+            candidate = self._selected_candidate()
+            snap = self.virtual_stage.snapshot()
+            laser = self.virtual_laser.snapshot()
+            attenuator = self.virtual_attenuator.snapshot()
+            self.commission_log.appendPlainText(
+                "MODE: MOCK LAB\n"
+                f"Stage connected: {snap.connected}\n"
+                f"Pose: {snap.actual.as_tuple()}\n"
+                f"Mock Pockels profile: {candidate.label}\n"
+                f"Mock logical Pockels open: {laser.pockels_open}\n"
+                f"Mock GPIO metadata: {dict(laser.metadata)}\n"
+                f"Mock attenuator connected: {attenuator.connected}\n"
+                f"Mock attenuation: {attenuator.transmission_percent:.1f} %\n"
+                "RESULT: mock read-only checks complete"
+            )
+            return
+
+        if self.real_stage is None or not self.real_stage.client.connected:
+            self.commission_log.appendPlainText(
+                "RESULT: FAIL — real HXP is not connected"
+            )
+            return
+
+        client = self.real_stage.client
+        group = self.hxp_group.text().strip() or "HEXAPOD"
+
+        def worker() -> list[str]:
+            lines = [
+                "MODE: REAL LAB",
+                f"HXP: {self.hxp_host.text().strip()}:{self.hxp_port.value()}",
+                f"Firmware: {client.firmware_version()}",
+            ]
+            pose = client.current_pose(group)
+            lines.append(
+                "Pose: "
+                + ", ".join(
+                    f"{axis}={value:.6f}"
+                    for axis, value in zip("XYZUVW", pose.as_tuple())
+                )
+            )
+            for gpio in ("GPIO1.DO", "GPIO3.DO", "GPIO4.DO"):
+                try:
+                    lines.append(
+                        f"{gpio}: {client.digital_get(gpio)}"
+                    )
+                except Exception as exc:
+                    lines.append(f"{gpio}: READ FAILED ({exc})")
+            try:
+                lines.append(
+                    "GPIO2.DAC1: "
+                    f"{client.analog_get('GPIO2.DAC1'):.6g}"
+                )
+            except Exception as exc:
+                lines.append(
+                    f"GPIO2.DAC1: READ FAILED ({exc})"
+                )
+            lines.append(
+                "RESULT: read-only test complete — no motion/GPIO writes issued"
+            )
+            return lines
+
+        self._selftest_future = self._poll_pool.submit(worker)
+        self.commission_log.appendPlainText(
+            "Reading firmware / pose / legacy GPIO channels…"
+        )
+
+    def _commission_selftest_tick(self) -> None:
+        if self._selftest_future is None or not self._selftest_future.done():
+            return
+        try:
+            lines = self._selftest_future.result()
+        except Exception as exc:
+            lines = [f"RESULT: FAIL — {exc}"]
+        self._selftest_future = None
+        self.commission_log.appendPlainText("\n".join(lines))
+
+    def _mark_current_mapping_verified(self) -> None:
+        if self.lab_mode.currentIndex() != 1:
+            QtWidgets.QMessageBox.information(
+                self,
+                "Select REAL LAB",
+                "Physical mapping verification is only meaningful in REAL LAB mode.",
+            )
+            return
+        if not all(cb.isChecked() for cb in self.commission_checks):
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Commissioning incomplete",
+                "Complete every physical commissioning checkbox before marking "
+                "the current Pockels mapping verified.",
+            )
+            return
+        if not self.gpio_name.text().strip() or self.gpio_mask.value() <= 0:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Invalid mapping",
+                "Enter a GPIO name and non-zero mask first.",
+            )
+            return
+        if self.gpio_open.value() == self.gpio_closed.value():
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Invalid mapping",
+                "OPEN and CLOSED values must be different.",
+            )
+            return
+
+        self.wiring_verified.setChecked(True)
+        self.commission_log.appendPlainText(
+            "CURRENT MAPPING MARKED VERIFIED by operator: "
+            f"{self.gpio_name.text().strip()} mask={self.gpio_mask.value()} "
+            f"OPEN={self.gpio_open.value()} CLOSED={self.gpio_closed.value()}"
+        )
+        self.statusBar().showMessage(
+            "Pockels mapping marked verified; provider still must be explicitly armed",
+            7000,
+        )
+
+    def _clear_hardware_verification(self) -> None:
+        self._close_all_pockels()
+        if self.real_laser is not None:
+            try:
+                self.real_laser.disconnect()
+            except Exception:
+                pass
+            self.real_laser = None
+        self.wiring_verified.setChecked(False)
+        for cb in self.commission_checks:
+            cb.setChecked(False)
+        self.commission_log.appendPlainText(
+            "Hardware verification cleared; real Pockels provider disarmed"
+        )
+
+    # ------------------------------------------------------------ sweep tool
+    def _generate_sweep_recipe(self) -> None:
+        try:
+            spec = RasterSweepSpec(
+                name="Raster writing sweep",
+                write_dx_mm=self.sweep_write_dx.value(),
+                row_pitch_mm=self.sweep_row_pitch.value(),
+                series_spacing_mm=self.sweep_series_spacing.value(),
+                velocity_start_mm_s=self.sweep_v_start.value(),
+                velocity_stop_mm_s=self.sweep_v_stop.value(),
+                velocity_step_mm_s=self.sweep_v_step.value(),
+                attenuation_start_percent=self.sweep_att_start.value(),
+                attenuation_stop_percent=self.sweep_att_stop.value(),
+                attenuation_step_percent=self.sweep_att_step.value(),
+                include_attenuator_steps=self.sweep_use_attenuation.isChecked(),
+                return_velocity_mm_s=self.sweep_return_velocity.value(),
+            )
+            recipe, summary = build_raster_sweep(spec)
+        except Exception as exc:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Sweep definition invalid",
+                str(exc),
+            )
+            return
+
+        if self.recipe_list.count() > 0:
+            answer = QtWidgets.QMessageBox.question(
+                self,
+                "Replace current recipe?",
+                "Generating the sweep will replace the current recipe.",
+                QtWidgets.QMessageBox.StandardButton.Yes
+                | QtWidgets.QMessageBox.StandardButton.No,
+                QtWidgets.QMessageBox.StandardButton.No,
+            )
+            if answer != QtWidgets.QMessageBox.StandardButton.Yes:
+                return
+
+        self.recipe = recipe
+        self.recipe_name.setText(recipe.name)
+        self._refresh_recipe_list()
+        self.sweep_summary.setText(
+            f"Generated {summary.total_write_lines} writing lines across "
+            f"{summary.series_count} series • {summary.total_steps} recipe steps • "
+            f"~{summary.approximate_motion_time_s:.1f} s motion time "
+            "(excludes controller/setup overhead)."
+        )
+        self.statusBar().showMessage(
+            f"Generated sweep with {summary.total_write_lines} writing lines",
+            5000,
         )
 
     # ------------------------------------------------------------- providers
