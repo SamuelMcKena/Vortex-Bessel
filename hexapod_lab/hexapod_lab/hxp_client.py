@@ -183,6 +183,32 @@ class HXPClient:
         args = ",".join(f"{v:.12g}" for v in delta.as_tuple())
         self.control.request(f"HexapodMoveIncremental({group},{coordinate_system},{args})")
 
+    def move_line_incremental_with_target_velocity(
+        self,
+        dx_mm: float,
+        dy_mm: float,
+        dz_mm: float,
+        velocity_mm_s: float,
+        *,
+        group: str = "HEXAPOD",
+        coordinate_system: str = "Work",
+    ) -> None:
+        """Execute the HXP line move used by the legacy lab TCL scripts.
+
+        Legacy form:
+        HexapodMoveIncrementalControlWithTargetVelocity
+            HEXAPOD Work Line dX dY dZ velocity
+        """
+        velocity = float(velocity_mm_s)
+        if velocity <= 0:
+            raise ValueError("target velocity must be > 0 mm/s")
+        self.control.request(
+            "HexapodMoveIncrementalControlWithTargetVelocity("
+            f"{group},{coordinate_system},Line,"
+            f"{float(dx_mm):.12g},{float(dy_mm):.12g},"
+            f"{float(dz_mm):.12g},{velocity:.12g})"
+        )
+
     def abort(self, group: str = "HEXAPOD") -> None:
         self.io.request(f"GroupMoveAbort({group})")
 
@@ -198,6 +224,16 @@ class HXPClient:
 
     def digital_set(self, gpio_name: str, mask: int, value: int) -> None:
         self.io.request(f"GPIODigitalSet({gpio_name},{int(mask)},{int(value)})")
+
+    def analog_set(self, gpio_name: str, value: float) -> None:
+        """Set an HXP analogue output.
+
+        This exists because the legacy lab TCL uses GPIOAnalogSet for the
+        power/attenuation path. No channel or calibration is assumed here.
+        """
+        self.io.request(
+            f"GPIOAnalogSet({gpio_name},{float(value):.12g})"
+        )
 
     def gathering_configure_cartesian_current(self, group: str = "HEXAPOD") -> None:
         names = [f"{group}.{axis}.CurrentPosition" for axis in "XYZUVW"]
