@@ -947,6 +947,167 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addWidget(note)
         return panel
 
+    def _build_commissioning_tab(self) -> QtWidgets.QWidget:
+        tab = QtWidgets.QWidget()
+        layout = QtWidgets.QHBoxLayout(tab)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(8)
+
+        left = QtWidgets.QWidget()
+        left_layout = QtWidgets.QVBoxLayout(left)
+
+        evidence_box = QtWidgets.QGroupBox(
+            "RECOVERED LEGACY HARDWARE PROFILE"
+        )
+        evidence = QtWidgets.QVBoxLayout(evidence_box)
+        self.commission_profile = QtWidgets.QComboBox()
+        for candidate in self.legacy_profile.pockels_candidates:
+            self.commission_profile.addItem(
+                candidate.label,
+                candidate.key,
+            )
+        self.commission_profile.currentIndexChanged.connect(
+            self._commission_candidate_changed
+        )
+        evidence.addWidget(self.commission_profile)
+
+        self.commission_evidence_text = QtWidgets.QLabel("")
+        self.commission_evidence_text.setWordWrap(True)
+        self.commission_evidence_text.setObjectName("statusPill")
+        evidence.addWidget(self.commission_evidence_text)
+
+        use_candidate = QtWidgets.QPushButton(
+            "LOAD CANDIDATE INTO SETUP (DOES NOT ARM)"
+        )
+        use_candidate.clicked.connect(
+            self._apply_commission_candidate_to_setup
+        )
+        evidence.addWidget(use_candidate)
+        left_layout.addWidget(evidence_box)
+
+        mock_box = QtWidgets.QGroupBox("MOCK LAB TESTING")
+        mock_layout = QtWidgets.QFormLayout(mock_box)
+        self.mock_scenario = QtWidgets.QComboBox()
+        self.mock_scenario.addItems(
+            [
+                "Nominal — all virtual devices healthy",
+                "Stage disconnected",
+                "Pockels provider disconnected",
+                "Attenuator unavailable",
+            ]
+        )
+        self.mock_scenario.currentIndexChanged.connect(
+            self._mock_scenario_changed
+        )
+        mock_layout.addRow("Scenario", self.mock_scenario)
+        mock_note = QtWidgets.QLabel(
+            "Mock mode uses the same control paths, line trajectories, "
+            "Pockels state model, CAD animation and recipe engine as real mode. "
+            "These fault presets let the GUI's failure handling be tested "
+            "without touching hardware."
+        )
+        mock_note.setWordWrap(True)
+        mock_note.setObjectName("muted")
+        mock_layout.addRow(mock_note)
+        left_layout.addWidget(mock_box)
+
+        verify_box = QtWidgets.QGroupBox(
+            "REAL POCKELS COMMISSIONING CHECKLIST"
+        )
+        verify_layout = QtWidgets.QVBoxLayout(verify_box)
+        self.commission_checks: list[QtWidgets.QCheckBox] = []
+        for label in (
+            "Physical HXP output wire traced to the current LX13 interface",
+            "OPEN/CLOSED polarity confirmed on the present wiring",
+            "Electrical level / compatibility checked",
+            "Beam safely intercepted for commissioning",
+            "Physical interlock and hardware E-stop are active",
+        ):
+            cb = QtWidgets.QCheckBox(label)
+            cb.setWordWrap(True)
+            self.commission_checks.append(cb)
+            verify_layout.addWidget(cb)
+
+        verify_note = QtWidgets.QLabel(
+            "The software evidence can pre-fill a historical candidate, but "
+            "this checklist is deliberately about the present physical wiring."
+        )
+        verify_note.setWordWrap(True)
+        verify_note.setObjectName("muted")
+        verify_layout.addWidget(verify_note)
+
+        mark_verified = QtWidgets.QPushButton(
+            "MARK CURRENT MAPPING VERIFIED"
+        )
+        mark_verified.setObjectName("danger")
+        mark_verified.clicked.connect(
+            self._mark_current_mapping_verified
+        )
+        verify_layout.addWidget(mark_verified)
+
+        clear_verified = QtWidgets.QPushButton(
+            "CLEAR HARDWARE VERIFICATION"
+        )
+        clear_verified.clicked.connect(
+            self._clear_hardware_verification
+        )
+        verify_layout.addWidget(clear_verified)
+        left_layout.addWidget(verify_box)
+        left_layout.addStretch(1)
+
+        right = QtWidgets.QWidget()
+        right_layout = QtWidgets.QVBoxLayout(right)
+
+        selftest_box = QtWidgets.QGroupBox("READ-ONLY SELF TEST")
+        selftest_layout = QtWidgets.QVBoxLayout(selftest_box)
+        selftest_note = QtWidgets.QLabel(
+            "This test performs no motion and no GPIO writes. In REAL LAB it "
+            "reads firmware, pose, GPIO1.DO, GPIO3.DO, GPIO4.DO and "
+            "GPIO2.DAC1 from the connected HXP."
+        )
+        selftest_note.setWordWrap(True)
+        selftest_note.setObjectName("muted")
+        selftest_layout.addWidget(selftest_note)
+        run_selftest = QtWidgets.QPushButton(
+            "RUN READ-ONLY HARDWARE SELF TEST"
+        )
+        run_selftest.setObjectName("primary")
+        run_selftest.clicked.connect(
+            self._run_read_only_self_test
+        )
+        selftest_layout.addWidget(run_selftest)
+
+        self.commission_log = QtWidgets.QPlainTextEdit()
+        self.commission_log.setReadOnly(True)
+        self.commission_log.setMinimumHeight(420)
+        selftest_layout.addWidget(self.commission_log, 1)
+        right_layout.addWidget(selftest_box, 1)
+
+        recovered = QtWidgets.QGroupBox("WHAT THE OLD FILES ESTABLISH")
+        recovered_layout = QtWidgets.QVBoxLayout(recovered)
+        recovered_text = QtWidgets.QLabel(
+            "HXP 192.168.0.254:5001 • 10 s timeout • HEXAPOD • Work frame\n"
+            "LabVIEW v3 Pockels candidate: GPIO3.DO, mask 1, states 0/1 "
+            "(polarity unresolved)\n"
+            "TCL writing map: GPIO4.DO, mask 1, write=1, non-write=0\n"
+            "Gate/writing marker: GPIO1.DO, mask 4, states 0/4; "
+            "MotionStart/MotionEnd toggle\n"
+            "Power evidence: GPIO2.DAC1; v3 also references COM7"
+        )
+        recovered_text.setWordWrap(True)
+        recovered_text.setObjectName("statusPill")
+        recovered_layout.addWidget(recovered_text)
+        right_layout.addWidget(recovered)
+
+        split = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
+        split.addWidget(self._scroll_wrap(left))
+        split.addWidget(right)
+        split.setSizes([610, 900])
+        layout.addWidget(split)
+
+        self._commission_candidate_changed(0)
+        return tab
+
     def _build_setup_tab(self) -> QtWidgets.QWidget:
         tab = QtWidgets.QWidget()
         layout = QtWidgets.QHBoxLayout(tab)
