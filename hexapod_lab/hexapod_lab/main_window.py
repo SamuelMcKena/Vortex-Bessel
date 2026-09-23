@@ -638,7 +638,7 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.setSpacing(8)
 
         split = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
-        split.addWidget(self._build_script_palette())
+        split.addWidget(self._scroll_wrap(self._build_script_palette()))
         split.addWidget(self._build_script_sequence())
         split.addWidget(self._build_script_run_panel())
         split.setSizes([360, 760, 390])
@@ -741,6 +741,95 @@ class MainWindow(QtWidgets.QMainWindow):
         wait_layout.addWidget(self.script_wait)
         wait_layout.addWidget(add_wait)
         layout.addWidget(wait_box)
+
+        sweep_box = QtWidgets.QGroupBox("RASTER / PARAMETER SWEEP")
+        sweep_layout = QtWidgets.QFormLayout(sweep_box)
+
+        self.sweep_write_dx = QtWidgets.QDoubleSpinBox()
+        self.sweep_write_dx.setRange(-1000.0, 1000.0)
+        self.sweep_write_dx.setDecimals(3)
+        self.sweep_write_dx.setValue(-7.0)
+        self.sweep_write_dx.setSuffix(" mm")
+
+        self.sweep_row_pitch = QtWidgets.QDoubleSpinBox()
+        self.sweep_row_pitch.setRange(-100.0, 100.0)
+        self.sweep_row_pitch.setDecimals(4)
+        self.sweep_row_pitch.setValue(0.02)
+        self.sweep_row_pitch.setSuffix(" mm")
+
+        self.sweep_series_spacing = QtWidgets.QDoubleSpinBox()
+        self.sweep_series_spacing.setRange(0.0, 100.0)
+        self.sweep_series_spacing.setDecimals(4)
+        self.sweep_series_spacing.setValue(0.10)
+        self.sweep_series_spacing.setSuffix(" mm")
+
+        self.sweep_v_start = QtWidgets.QDoubleSpinBox()
+        self.sweep_v_start.setRange(0.001, 100.0)
+        self.sweep_v_start.setDecimals(3)
+        self.sweep_v_start.setValue(0.2)
+        self.sweep_v_start.setSuffix(" mm/s")
+
+        self.sweep_v_stop = QtWidgets.QDoubleSpinBox()
+        self.sweep_v_stop.setRange(0.001, 100.0)
+        self.sweep_v_stop.setDecimals(3)
+        self.sweep_v_stop.setValue(2.1)
+        self.sweep_v_stop.setSuffix(" mm/s")
+
+        self.sweep_v_step = QtWidgets.QDoubleSpinBox()
+        self.sweep_v_step.setRange(-100.0, 100.0)
+        self.sweep_v_step.setDecimals(3)
+        self.sweep_v_step.setValue(0.1)
+        self.sweep_v_step.setSuffix(" mm/s")
+
+        self.sweep_return_velocity = QtWidgets.QDoubleSpinBox()
+        self.sweep_return_velocity.setRange(0.001, 100.0)
+        self.sweep_return_velocity.setDecimals(3)
+        self.sweep_return_velocity.setValue(10.0)
+        self.sweep_return_velocity.setSuffix(" mm/s")
+
+        self.sweep_use_attenuation = QtWidgets.QCheckBox(
+            "Sweep attenuator transmission"
+        )
+        self.sweep_att_start = QtWidgets.QDoubleSpinBox()
+        self.sweep_att_start.setRange(0.0, 100.0)
+        self.sweep_att_start.setValue(25.0)
+        self.sweep_att_start.setSuffix(" %")
+        self.sweep_att_stop = QtWidgets.QDoubleSpinBox()
+        self.sweep_att_stop.setRange(0.0, 100.0)
+        self.sweep_att_stop.setValue(25.0)
+        self.sweep_att_stop.setSuffix(" %")
+        self.sweep_att_step = QtWidgets.QDoubleSpinBox()
+        self.sweep_att_step.setRange(-100.0, 100.0)
+        self.sweep_att_step.setValue(5.0)
+        self.sweep_att_step.setSuffix(" %")
+
+        sweep_layout.addRow("Write dX", self.sweep_write_dx)
+        sweep_layout.addRow("Row pitch", self.sweep_row_pitch)
+        sweep_layout.addRow("Series spacing", self.sweep_series_spacing)
+        sweep_layout.addRow("Velocity start", self.sweep_v_start)
+        sweep_layout.addRow("Velocity stop", self.sweep_v_stop)
+        sweep_layout.addRow("Velocity step", self.sweep_v_step)
+        sweep_layout.addRow("Return velocity", self.sweep_return_velocity)
+        sweep_layout.addRow(self.sweep_use_attenuation)
+        sweep_layout.addRow("Atten start", self.sweep_att_start)
+        sweep_layout.addRow("Atten stop", self.sweep_att_stop)
+        sweep_layout.addRow("Atten step", self.sweep_att_step)
+
+        self.sweep_summary = QtWidgets.QLabel(
+            "Legacy-compatible raster generator: Pockels OPEN only for "
+            "the writing line; return moves are CLOSED."
+        )
+        self.sweep_summary.setObjectName("muted")
+        self.sweep_summary.setWordWrap(True)
+        sweep_layout.addRow(self.sweep_summary)
+
+        build_sweep = QtWidgets.QPushButton(
+            "GENERATE SWEEP RECIPE"
+        )
+        build_sweep.setObjectName("primary")
+        build_sweep.clicked.connect(self._generate_sweep_recipe)
+        sweep_layout.addRow(build_sweep)
+        layout.addWidget(sweep_box)
 
         tip = QtWidgets.QLabel(
             "Build the recipe here; ordinary stage/laser control remains on "
