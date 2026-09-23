@@ -225,6 +225,16 @@ class HXPClient:
     def digital_set(self, gpio_name: str, mask: int, value: int) -> None:
         self.io.request(f"GPIODigitalSet({gpio_name},{int(mask)},{int(value)})")
 
+    def analog_get(self, gpio_name: str) -> float:
+        """Read an HXP analogue GPIO value.
+
+        The LabVIEW v3 front panel reads GPIO2.DAC1 with GPIOAnalogGet.
+        """
+        _, response = self.io.request(
+            f"GPIOAnalogGet({gpio_name},double *)"
+        )
+        return float(response.split(",", 1)[0].strip())
+
     def analog_set(self, gpio_name: str, value: float) -> None:
         """Set an HXP analogue output.
 
