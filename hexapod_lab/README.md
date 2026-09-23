@@ -14,6 +14,45 @@ The operator UI is now split into three tabs:
 A global header is visible on every tab with stage/beam/attenuator state plus
 **CLOSE BEAM** and **STOP MOTION + CLOSE BEAM**.
 
+## MOCK LAB and REAL LAB
+
+The header now has one explicit operating-mode selector rather than asking the
+operator to mentally coordinate three independent providers.
+
+### MOCK LAB
+
+MOCK LAB guarantees that ordinary Control/Script actions are routed only to the
+virtual stage, virtual Pockels provider and virtual attenuator. The digital twin,
+2D map, recipe engine and native target-velocity Line behavior remain active.
+
+The mock can be switched between the source-derived historical profiles:
+
+- **LabVIEW v3 candidate** — GPIO3.DO / mask 1, states 0/1 with physical polarity
+  deliberately unresolved;
+- **TCL legacy writing map** — GPIO4.DO / mask 1, writing=1, non-writing=0.
+
+The Commissioning tab also includes fault-injection presets for stage disconnected,
+Pockels unavailable and attenuator unavailable so GUI failure handling can be
+tested without hardware.
+
+### REAL LAB
+
+REAL LAB selects the real HXP and real Pockels paths and marks the normal
+attenuator as unbound until a calibrated real device is available. Real Pockels
+opening remains blocked until the present wiring is commissioned and explicitly
+verified.
+
+The persistent header makes the distinction visible:
+
+- `MOCK • SAFE`
+- `REAL • DISARMED`
+- `REAL • MAPPING VERIFIED`
+- `REAL • POCKELS ARMED`
+
+Provider selectors are read-only indicators during ordinary operation; the global
+MOCK/REAL mode owns routing so a script cannot quietly mix real and simulated
+hardware by accident.
+
 See [UX_FUNCTIONALITY_AUDIT.md](UX_FUNCTIONALITY_AUDIT.md) for the self-audit and
 the design changes made after reviewing the first GUI pass.
 
@@ -78,6 +117,43 @@ The actual physical attenuator model/controller/protocol has not yet been
 identified, so the real attenuator provider is intentionally **unconfigured and
 refuses commands**. No protocol or calibration is fabricated.
 
+## Quick manual writing line
+
+The Control tab now mirrors the useful part of the recovered LabVIEW front panel:
+
+- **MOVE LINE**
+- **WRITE LINE — POCKELS OPEN DURING MOVE**
+- **RETURN + ROW — BEAM CLOSED**
+
+Defaults reproduce the familiar historical geometry: a `-7 mm` writing line and
+`+0.02 mm` row pitch. The move is executed with the HXP-native
+`HexapodMoveIncrementalControlWithTargetVelocity(..., Work, Line, ...)` command
+rather than host-side timing. In a writing move the Pockels command is issued
+before the blocking HXP Line command and a close command is issued when the move
+finishes, fails or is aborted.
+
+## Commissioning
+
+The dedicated Commissioning tab is the bridge between a convincing mock and the
+physical lab.
+
+It includes:
+
+- the two hardware candidates recovered from the old TCL/LabVIEW files;
+- one-click loading of a candidate into Setup **without arming it**;
+- read-only self-test of HXP firmware, XYZUVW pose, `GPIO1.DO`, `GPIO3.DO`,
+  `GPIO4.DO` and `GPIO2.DAC1`;
+- explicit physical-wiring checklist before a real Pockels mapping can be marked
+  verified;
+- guarded raw analogue read/write for the historical `GPIO2.DAC1` path, limited
+  to the 1–5 values actually observed in the old scripts and blocked while the
+  Pockels cell is open;
+- mock fault scenarios.
+
+The raw analogue control is intentionally labelled **uncalibrated**. It is for
+commissioning the historical path, not for claiming that a value such as `3`
+means 60% transmission or a known pulse energy.
+
 ## Script Builder
 
 Script construction no longer occupies the general-control screen.
@@ -86,6 +162,7 @@ Supported blocks are:
 
 - absolute HXP pose;
 - relative HXP move;
+- native HXP **Line move at target velocity**;
 - **LASER ON / POCKELS OPEN**;
 - **LASER OFF / POCKELS CLOSED**;
 - attenuator transmission setpoint;
@@ -93,6 +170,12 @@ Supported blocks are:
 
 Rows can be drag-reordered and recipes save/load as JSON. Recipe version 2 is
 written; legacy v0.1 `laser_gate` steps load as Pockels-cell steps.
+
+A **Raster / Parameter Sweep** generator creates legacy-style line arrays without
+manually adding tens or hundreds of blocks. It supports write length, row pitch,
+series spacing, velocity range/step, return velocity and optional attenuation
+series. Every generated writing line has an explicit Pockels OPEN before the Line
+move and CLOSED before the return move.
 
 Preflight checks include:
 
