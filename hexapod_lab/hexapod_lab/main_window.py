@@ -3279,6 +3279,25 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _update_readouts(self) -> None:
         snap = self._last_stage_snapshot
+
+        if self.lab_mode.currentIndex() == 0:
+            self.mode_chip.setText("MOCK • SAFE")
+            self._set_object_style(self.mode_chip, "chipSafe")
+        else:
+            real_laser_connected = (
+                self.real_laser is not None
+                and self.real_laser.snapshot().connected
+            )
+            if real_laser_connected:
+                self.mode_chip.setText("REAL • POCKELS ARMED")
+                self._set_object_style(self.mode_chip, "chipLive")
+            elif self.wiring_verified.isChecked():
+                self.mode_chip.setText("REAL • MAPPING VERIFIED")
+                self._set_object_style(self.mode_chip, "chipWarn")
+            else:
+                self.mode_chip.setText("REAL • DISARMED")
+                self._set_object_style(self.mode_chip, "chipWarn")
+
         for axis, value in zip(
             "XYZUVW",
             snap.actual.as_tuple(),
