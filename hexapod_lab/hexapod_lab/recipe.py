@@ -12,6 +12,7 @@ from .types import Pose6D
 class StepKind(str, Enum):
     MOVE_ABSOLUTE = "move_absolute"
     MOVE_INCREMENTAL = "move_incremental"
+    MOVE_LINE_VELOCITY = "move_line_velocity"
     POCKELS_CELL = "pockels_cell"
     ATTENUATOR_SET = "attenuator_set"
     WAIT = "wait"
@@ -37,6 +38,30 @@ class RecipeStep:
             StepKind.MOVE_INCREMENTAL,
             "Move incremental",
             {"delta": list(delta.as_tuple())},
+        )
+
+    @classmethod
+    def move_line_velocity(
+        cls,
+        dx_mm: float,
+        dy_mm: float,
+        dz_mm: float,
+        velocity_mm_s: float,
+    ) -> "RecipeStep":
+        velocity = float(velocity_mm_s)
+        if velocity <= 0:
+            raise ValueError("line target velocity must be > 0 mm/s")
+        return cls(
+            StepKind.MOVE_LINE_VELOCITY,
+            "Line move at target velocity",
+            {
+                "delta_xyz_mm": [
+                    float(dx_mm),
+                    float(dy_mm),
+                    float(dz_mm),
+                ],
+                "velocity_mm_s": velocity,
+            },
         )
 
     @classmethod
@@ -84,6 +109,20 @@ class RecipeStep:
             return "REL  " + "  ".join(
                 f"d{name}={value:.3f}"
                 for name, value in zip("XYZUVW", p.as_tuple())
+            )
+        if self.kind == StepKind.MOVE_LINE_VELOCITY:
+            delta = [
+                float(v)
+                for v in self.payload.get(
+                    "delta_xyz_mm",
+                    [0.0, 0.0, 0.0],
+                )
+            ]
+            velocity = float(self.payload.get("velocity_mm_s", 0.0))
+            return (
+                "LINE  "
+                f"dX={delta[0]:.3f}  dY={delta[1]:.3f}  "
+                f"dZ={delta[2]:.3f}  @ {velocity:.3f} mm/s"
             )
         if self.kind == StepKind.POCKELS_CELL:
             return (
@@ -175,6 +214,23 @@ def preflight_recipe(recipe: Recipe) -> list[PreflightIssue]:
 
             elif step.kind == StepKind.MOVE_INCREMENTAL:
                 Pose6D.from_iterable(step.payload["delta"])
+
+            elif step.kind == StepKind.MOVE_LINE_VELOCITY:
+                delta = list(step.payload["delta_xyz_mm"])
+                if len(delta) != 3:
+                    raise ValueError(
+                        "line move requires dX, dY and dZ"
+                    )
+                [float(v) for v in delta]
+                velocity = float(step.payload["velocity_mm_s"])
+                if velocity <= 0:
+                    issues.append(
+                        PreflightIssue(
+                            "error",
+                            "line target velocity must be > 0 mm/s",
+                            i,
+                        )
+                    )
 
             elif step.kind == StepKind.POCKELS_CELL:
                 requested = bool(step.payload.get("open"))
