@@ -29,6 +29,16 @@ class HexapodProvider(ABC):
     @abstractmethod
     def move_incremental(self, delta: Pose6D) -> None: ...
 
+    def move_line_incremental_with_target_velocity(
+        self,
+        dx_mm: float,
+        dy_mm: float,
+        dz_mm: float,
+        velocity_mm_s: float,
+    ) -> None:
+        """Translation-only line move at an explicit target velocity."""
+        raise NotImplementedError
+
     @abstractmethod
     def abort(self) -> None: ...
 
@@ -89,7 +99,46 @@ class VirtualHexapodProvider(HexapodProvider):
 
     def move_incremental(self, delta: Pose6D) -> None:
         with self._lock:
-            self._plan_to(self._target.plus(delta) if self._state == MotionState.MOVING else self._actual.plus(delta))
+            self._plan_to(
+                self._target.plus(delta)
+                if self._state == MotionState.MOVING
+                else self._actual.plus(delta)
+            )
+
+    def move_line_incremental_with_target_velocity(
+        self,
+        dx_mm: float,
+        dy_mm: float,
+        dz_mm: float,
+        velocity_mm_s: float,
+    ) -> None:
+        with self._lock:
+            if not self._connected:
+                raise ConnectionError("virtual hexapod is not connected")
+            velocity = float(velocity_mm_s)
+            if velocity <= 0:
+                raise ValueError("target velocity must be > 0 mm/s")
+            base = (
+                self._target
+                if self._state == MotionState.MOVING
+                else self._actual
+            )
+            delta = Pose6D(
+                x=float(dx_mm),
+                y=float(dy_mm),
+                z=float(dz_mm),
+            )
+            target = base.plus(delta)
+            distance = math.sqrt(
+                float(dx_mm) ** 2
+                + float(dy_mm) ** 2
+                + float(dz_mm) ** 2
+            )
+            self._start = self._actual
+            self._target = target
+            self._elapsed = 0.0
+            self._duration = max(distance / velocity, 0.05)
+            self._state = MotionState.MOVING
 
     def abort(self) -> None:
         with self._lock:
@@ -184,7 +233,31 @@ class HXPProvider(HexapodProvider):
         self._start_blocking_call(lambda: self.client.move_absolute(pose, self.config.group, self.config.coordinate_system))
 
     def move_incremental(self, delta: Pose6D) -> None:
-        self._start_blocking_call(lambda: self.client.move_incremental(delta, self.config.group, self.config.coordinate_system))
+        self._start_blocking_call(
+            lambda: self.client.move_incremental(
+                delta,
+                self.config.group,
+                self.config.coordinate_system,
+            )
+        )
+
+    def move_line_incremental_with_target_velocity(
+        self,
+        dx_mm: float,
+        dy_mm: float,
+        dz_mm: float,
+        velocity_mm_s: float,
+    ) -> None:
+        self._start_blocking_call(
+            lambda: self.client.move_line_incremental_with_target_velocity(
+                dx_mm,
+                dy_mm,
+                dz_mm,
+                velocity_mm_s,
+                group=self.config.group,
+                coordinate_system=self.config.coordinate_system,
+            )
+        )
 
     def abort(self) -> None:
         self.client.abort(self.config.group)
