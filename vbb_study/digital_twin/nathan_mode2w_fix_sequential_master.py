@@ -642,21 +642,21 @@ def combined_correction_summary_rows() -> list[dict[str, Any]]:
 
 def _plot_sequential_architecture(path_png: Path, path_pdf: Path) -> tuple[Path, Path]:
     plt, patches = _mpl()
-    fig, ax = plt.subplots(figsize=(17.5, 5.8), constrained_layout=True)
-    ax.set_xlim(0, 18)
+    fig, ax = plt.subplots(figsize=(18.0, 5.8), constrained_layout=True)
+    ax.set_xlim(0, 20)
     ax.set_ylim(-1.8, 1.8)
     ax.axis("off")
     blocks = [
         (0.3, "PHAROS\n1029 nm\nGaussian\nw0=2 mm", "#dbeafe"),
-        (2.0, "POL1 / HWP\ncoherent H/V\n50/50 prep", "#fff1c7"),
-        (3.9, "SLM1\n1920x1080\nphi_H=+alpha\n+ carrier", "#d8f0df"),
-        (5.9, "swap HWP\nif same panel\norientation", "#fff1c7"),
-        (7.7, "SLM2\n1920x1080\nphi_V=-alpha+pi/2\n+ carrier", "#d8f0df"),
-        (9.9, "swap-back HWP\nif required", "#fff1c7"),
-        (11.6, "common 4F\nf=300 mm\n+1=1.929 mm\niris D~1.54 mm", "#e8e8ff"),
-        (14.0, "QWP\ncode -45 deg", "#fff1c7"),
-        (15.3, "axicon\n2 deg\nn=1.458", "#d8f0df"),
-        (16.7, "hexagonal\nBessel zone\ncamera z stage", "#eeeeee"),
+        (2.2, "POL1 / HWP\ncoherent H/V\n50/50 prep", "#fff1c7"),
+        (4.2, "SLM1\n1920x1080\nphi_H=+alpha\n+ carrier", "#d8f0df"),
+        (6.2, "swap HWP\nif same panel\norientation", "#fff1c7"),
+        (8.2, "SLM2\n1920x1080\nphi_V=-alpha+pi/2\n+ carrier", "#d8f0df"),
+        (10.2, "swap-back HWP\nif required", "#fff1c7"),
+        (12.2, "common 4F\nf=300 mm\n+1=1.929 mm\niris D~1.54 mm", "#e8e8ff"),
+        (14.7, "QWP\ncode -45 deg", "#fff1c7"),
+        (16.5, "physical axicon\n2 deg\nn=1.458", "#d8f0df"),
+        (18.3, "vector Bessel zone\ncamera on z stage", "#eeeeee"),
     ]
     for x, label, color in blocks:
         rect = patches.FancyBboxPatch((x, -0.55), 1.35, 1.1, boxstyle="round,pad=0.04,rounding_size=0.08",
@@ -667,9 +667,9 @@ def _plot_sequential_architecture(path_png: Path, path_pdf: Path) -> tuple[Path,
         x0 = blocks[idx][0] + 1.35
         x1 = blocks[idx + 1][0]
         ax.annotate("", xy=(x1, 0), xytext=(x0, 0), arrowprops={"arrowstyle": "->", "lw": 1.3, "color": "#222222"})
-    ax.text(0.3, 1.35, "MODE 2W-FIX Figure 1: sequential single-beam architecture (no PBS split, no H/V interferometer arms)",
+    ax.text(0.3, 1.35, "Accepted sequential two-SLM vector-beam architecture (no PBS split and no H/V interferometer arms)",
             fontsize=13, weight="bold", ha="left")
-    ax.text(6.2, -1.45, "Alternate valid branch: if SLM2 is mounted with orthogonal LC director, swap/swap-back HWPs may be omitted after the panel-orientation test.",
+    ax.text(10.0, -1.45, "If SLM2 is mounted with an orthogonal LC director, the swap and swap-back HWPs may be omitted after the panel-orientation test.",
             fontsize=9.5, ha="center", bbox={"facecolor": "#f8f8f8", "edgecolor": "#777777", "pad": 5})
     return _savefig(fig, path_png, path_pdf)
 

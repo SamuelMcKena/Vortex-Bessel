@@ -9865,6 +9865,12 @@ def mode2q_strict_hexagon_gate(plane: np.ndarray, grid: Mapping[str, Any]) -> di
     cls = str(metrics["symmetry_class"])
     c_delta = float(sym.get("c120_minus_c60", np.nan))
     islands = int(sym.get("ring_island_count", -1))
+    ring_radius_pixels = float(metrics["ring_radius_m"]) / float(grid["dx"])
+    # Legacy class thresholds were fitted to shapes, not a sampling study.
+    # Six corners cannot be reported as resolved from a ~4-pixel-radius ring.
+    # Keep the historical class for provenance, but gate report-facing claims.
+    min_report_radius_pixels = 12.0
+    report_sampling_ok = bool(ring_radius_pixels >= min_report_radius_pixels)
     if cls == "visual_hexagonal_field":
         strict = "visual_hexagonal_field"
     elif cls == "triangular_lobed_field":
@@ -9880,6 +9886,16 @@ def mode2q_strict_hexagon_gate(plane: np.ndarray, grid: Mapping[str, Any]) -> di
         "ring_island_count": islands,
         "c120_c60_within_tolerance": bool(np.isfinite(c_delta) and c_delta <= MODE2Q_C120_MINUS_C60_TOL),
         "passes_true_hexagon_gate": bool(strict == "visual_hexagonal_field"),
+        "report_sampling_ok": report_sampling_ok,
+        "ring_radius_pixels": ring_radius_pixels,
+        "min_report_radius_pixels": min_report_radius_pixels,
+        "report_eligible_hexagon": bool(
+            strict == "visual_hexagonal_field" and report_sampling_ok
+        ),
+        "report_claim_boundary": (
+            "shape class is a low-resolution diagnostic, not a resolved report figure"
+            if not report_sampling_ok else "sampling gate passed; validate on held-out planes"
+        ),
         "note": "order-6 lobe count alone never passes; the C3-vs-C6 rotational discriminator is decisive",
     }
 

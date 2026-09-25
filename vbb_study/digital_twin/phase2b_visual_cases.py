@@ -177,11 +177,20 @@ def _read_csv(path: Path) -> list[dict[str, str]]:
         return list(csv.DictReader(handle))
 
 
-def _scalar_seed(case_id: str, ell: int, *, grid_n: int) -> tuple[np.ndarray, Mapping[str, Any], dict[str, Any]]:
-    """Recreate the accepted PHASE 2A realistic scalar field at the axicon exit."""
+def _scalar_seed(
+    case_id: str, ell: int, *, grid_n: int,
+    variant: str = "realistic_fixed_bench_route",
+) -> tuple[np.ndarray, Mapping[str, Any], dict[str, Any]]:
+    """Recreate one PHASE 2A scalar route at the axicon exit on a shared grid.
+
+    The default preserves the historical Phase 2B call. The ideal route is a
+    matched finite-Gaussian/SLM/4F/pupil control, not an infinite analytic
+    Bessel field. Neither route is a calibrated prediction of the bench.
+    """
 
     manifest = canonical_hardware_manifest()
-    variant = "realistic_fixed_bench_route"
+    if variant not in {"ideal_optical_route", "realistic_fixed_bench_route"}:
+        raise ValueError("scalar seed supports only matched ideal and nominal-device routes")
     settings = _variant_settings(variant)
     wavelength = float(hardware_value(manifest, "wavelength_m"))
     beam_radius = float(hardware_value(manifest, "beam_radius_on_slm_m"))
@@ -207,8 +216,8 @@ def _scalar_seed(case_id: str, ell: int, *, grid_n: int) -> tuple[np.ndarray, Ma
         phase1,
         grid,
         panel,
-        quantise_phase=True,
-        apply_fill_factor=True,
+        quantise_phase=bool(settings["quantise"]),
+        apply_fill_factor=bool(settings["physical_hardware"]),
         apply_carrier=False,
         fill_factor_model=PHASE2A_CANONICAL_SLM_MODEL,
     )
@@ -217,8 +226,8 @@ def _scalar_seed(case_id: str, ell: int, *, grid_n: int) -> tuple[np.ndarray, Ma
         phase2,
         grid,
         panel,
-        quantise_phase=True,
-        apply_fill_factor=True,
+        quantise_phase=bool(settings["quantise"]),
+        apply_fill_factor=bool(settings["physical_hardware"]),
         apply_carrier=True,
         fill_factor_model=PHASE2A_CANONICAL_SLM_MODEL,
     )
@@ -248,7 +257,9 @@ def _scalar_seed(case_id: str, ell: int, *, grid_n: int) -> tuple[np.ndarray, Ma
         "radial_wavevector_m_inv": float(kr),
         "mapping_mode": "fixed_physical_optics",
         "slm_fill_factor_model": PHASE2A_CANONICAL_SLM_MODEL,
-        "source_contract": "PHASE 2A realistic_fixed_bench_route",
+        "source_contract": f"PHASE 2A {variant}",
+        "route_variant": variant,
+        "bench_calibrated": False,
     }
 
 
