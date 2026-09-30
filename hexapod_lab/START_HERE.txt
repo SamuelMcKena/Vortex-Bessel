@@ -1,8 +1,10 @@
 HEXAPOD + LASER LAB — CONTROLLER-BACKED BUILD (2026-09-30)
 
 1. Extract the entire ZIP to a normal local folder.
-2. Double-click INSTALL_AND_START.bat the first time.
+2. Double-click INSTALL_AND_START.bat the first time. It does NOT require the Windows `py` launcher and will use `python`, Anaconda/Miniconda, or an existing .venv.
 3. After setup, use START_HEXAPOD_LAB.bat for normal launches.
+4. SPYDER: open SPYDER_LAUNCH.py and press Run. It launches the GUI using the private .venv, so Spyder's own environment does not need the GUI dependencies.
+5. If the normal launcher hides an error, use START_HEXAPOD_LAB_DEBUG.bat.
 4. Start in MOCK LAB and exercise the CAD, 2D map, jogs, WRITE LINE, scripts and sweeps.
 5. REAL LAB is configured for the recovered/live HXP endpoint 192.168.0.254:5001.
 
