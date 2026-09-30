@@ -125,7 +125,6 @@ def test_preflight_rejects_non_finite_loaded_line_velocity():
     [
         RecipeStep.move_absolute(Pose6D(x=1.0)),
         RecipeStep.move_incremental(Pose6D(x=0.1)),
-        RecipeStep.move_line_velocity(0.1, 0.0, 0.0, 0.1),
     ],
 )
 def test_preflight_rejects_ordinary_motion_with_beam_open(step):
@@ -156,5 +155,22 @@ def test_preflight_warns_about_open_beam_dwell():
     assert any(
         issue.severity == "warning"
         and "stationary exposure" in issue.message
+        for issue in issues
+    )
+
+
+def test_preflight_allows_but_warns_legacy_open_line_closed_pattern():
+    recipe = Recipe(
+        steps=[
+            RecipeStep.pockels_cell(True),
+            RecipeStep.move_line_velocity(0.1, 0.0, 0.0, 0.1),
+            RecipeStep.pockels_cell(False),
+        ]
+    )
+    issues = preflight_recipe(recipe)
+    assert not [issue for issue in issues if issue.severity == "error"]
+    assert any(
+        issue.severity == "warning"
+        and "legacy OPEN" in issue.message
         for issue in issues
     )
