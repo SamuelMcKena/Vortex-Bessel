@@ -573,6 +573,7 @@ class HXPAnalogAttenuatorConfig:
     raw_max: float = 10.0
     transmission_min_percent: float = 0.0
     transmission_max_percent: float = 100.0
+    inverted: bool = True
     readback_tolerance_raw: float = 0.05
     device_name: str = "HXP GPIO2.DAC1 attenuator"
 
@@ -581,8 +582,8 @@ class HXPAnalogAttenuatorProvider(AttenuatorProvider):
     """Real attenuator path confirmed on the current lab HXP.
 
     Current lab confirmation establishes ``GPIO2.DAC1`` as the attenuator
-    command and ``4.00 == 40 % transmission``. The configured 0–10 DAC span is
-    therefore represented as a linear 0–100 % transmission command.
+    command with inverse polarity: raw 0 = 100 % transmission and raw 10 = 0 %
+    transmission. The GUI therefore uses an inverted linear 0–10 DAC mapping.
     """
 
     name = "hxp-analog-attenuator"
@@ -601,7 +602,11 @@ class HXPAnalogAttenuatorProvider(AttenuatorProvider):
         pct_span = c.transmission_max_percent - c.transmission_min_percent
         if raw_span <= 0 or pct_span <= 0:
             raise ValueError("invalid attenuator calibration span")
-        pct = c.transmission_min_percent + ((float(raw) - c.raw_min) / raw_span) * pct_span
+        fraction = (float(raw) - c.raw_min) / raw_span
+        if c.inverted:
+            pct = c.transmission_max_percent - fraction * pct_span
+        else:
+            pct = c.transmission_min_percent + fraction * pct_span
         return max(c.transmission_min_percent, min(c.transmission_max_percent, pct))
 
     def _percent_to_raw(self, percent: float) -> float:
@@ -613,7 +618,13 @@ class HXPAnalogAttenuatorProvider(AttenuatorProvider):
                 f"and {c.transmission_max_percent:g} %"
             )
         pct_span = c.transmission_max_percent - c.transmission_min_percent
-        return c.raw_min + ((percent - c.transmission_min_percent) / pct_span) * (c.raw_max - c.raw_min)
+        if pct_span <= 0:
+            raise ValueError("invalid attenuator transmission calibration span")
+        if c.inverted:
+            fraction = (c.transmission_max_percent - percent) / pct_span
+        else:
+            fraction = (percent - c.transmission_min_percent) / pct_span
+        return c.raw_min + fraction * (c.raw_max - c.raw_min)
 
     def connect(self) -> None:
         if not self.client.connected:
@@ -662,7 +673,8 @@ class HXPAnalogAttenuatorProvider(AttenuatorProvider):
                 "raw_readback": self._raw_readback,
                 "raw_min": self.config.raw_min,
                 "raw_max": self.config.raw_max,
-                "confirmed_point": "4.00 raw = 40 % transmission",
+                "mapping": "raw 0 = 100 % transmission; raw 10 = 0 % transmission",
+                "inverted": self.config.inverted,
             },
         )
 
