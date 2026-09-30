@@ -4599,31 +4599,56 @@ class MainWindow(QtWidgets.QMainWindow):
         self._disconnect_real_hxp()
 
     def _disconnect_real_hxp(self) -> None:
+        warnings: list[str] = []
         try:
+            # Fail toward a safe state before tearing down communication.
             if self.real_laser is not None:
                 try:
                     self.real_laser.disconnect()
+                    self._beam_close_failed = False
+                except Exception as exc:
+                    self._beam_close_failed = True
+                    warnings.append(f"Pockels close failed: {exc}")
                 finally:
                     self.real_laser = None
+
+            if self.real_stage is not None:
+                try:
+                    if self.real_stage.is_busy():
+                        self.real_stage.abort()
+                except Exception as exc:
+                    warnings.append(f"motion abort failed: {exc}")
+
             try:
                 self.real_attenuator.disconnect()
-            except Exception:
-                pass
+            except Exception as exc:
+                warnings.append(f"attenuator disconnect failed: {exc}")
             self.real_attenuator = UnconfiguredAttenuatorProvider()
+
             if self.real_stage is not None:
-                self.real_stage.disconnect()
+                try:
+                    self.real_stage.disconnect()
+                except Exception as exc:
+                    warnings.append(f"HXP socket close failed: {exc}")
+
             self._real_frames_match_profile = False
             self._real_poll_failures = 0
-            self.statusBar().showMessage(
-                "Real HXP disconnected; real Pockels provider disarmed",
-                5000,
-            )
-        except Exception as exc:
-            self.statusBar().showMessage(
-                f"Disconnect warning: {exc}",
-                6000,
-            )
-        self._update_recipe_preflight_view()
+            self._poll_future = None
+
+            if warnings:
+                for warning in warnings:
+                    self._diag("Disconnect warning: " + warning)
+                self.statusBar().showMessage(
+                    "HXP disconnected with warnings: " + warnings[0],
+                    10000,
+                )
+            else:
+                self.statusBar().showMessage(
+                    "Real HXP disconnected; motion stopped and Pockels close requested",
+                    5000,
+                )
+        finally:
+            self._update_recipe_preflight_view()
 
     def _ensure_pose_widget_ranges_include(
         self,
@@ -4848,7 +4873,12 @@ class MainWindow(QtWidgets.QMainWindow):
         if hasattr(self, "module_library"):
             self.module_library.setEnabled(True)
         self.recipe_progress.setText(
-            "STOPPED — close-beam command issued"
+            "STOPPED — "
+            + (
+                "BEAM CLOSE FAILED / STATE UNKNOWN"
+                if self._beam_close_failed
+                else "close-beam command issued"
+            )
         )
 
     # ------------------------------------------------------ Pockels / laser
@@ -6152,6 +6182,21 @@ class MainWindow(QtWidgets.QMainWindow):
             not real_mode
             or self._real_frames_match_profile
         )
+
+        if (
+            real_mode
+            and laser.pockels_open
+            and not self._beam_close_failed
+            and (
+                not snap.connected
+                or not readback_fresh
+                or snap.state == MotionState.FAULT
+                or not frames_ok
+            )
+        ):
+            self._abort_all()
+            laser = self._laser_snapshot()
+
         stage_ready = bool(
             snap.connected
             and snap.state == MotionState.IDLE
