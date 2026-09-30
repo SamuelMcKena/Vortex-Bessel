@@ -55,9 +55,7 @@ tested without hardware.
 ### REAL LAB
 
 REAL LAB selects the real HXP, Pockels and HXP analogue-attenuator paths.
-The current attenuator mapping is controller-backed on `GPIO2.DAC1`: raw 0–10 is
-represented as 0–100 % transmission, with the operator-confirmed point
-`4.00 = 40 % transmission`. Real Pockels opening remains blocked until the present
+The current attenuator mapping is controller-backed on `GPIO2.DAC1`: raw 0–10 is inverted: `0 = 100 % transmission` and `10 = 0 % transmission`. Real Pockels opening remains blocked until the present
 LX13 wiring is commissioned and explicitly verified.
 
 The persistent header makes the distinction visible:
@@ -202,12 +200,12 @@ It includes:
 - explicit physical-wiring checklist before a real Pockels mapping can be marked
   verified;
 - live/guarded analogue read/write for the current `GPIO2.DAC1` attenuator path,
-  using the confirmed 0–10 raw ↔ 0–100 % transmission mapping and blocking writes
+  using the confirmed inverted 0–10 raw ↔ 100–0 % transmission mapping and blocking writes
   while the Pockels cell is open;
 - mock fault scenarios.
 
 The GUI reports attenuation as transmission percent using the confirmed mapping
-`4.00 raw = 40 % transmission`. This is a transmission calibration only; it does
+`0 raw = 100 % transmission; 10 raw = 0 % transmission`. This is a transmission calibration only; it does
 not claim a calibrated pulse energy at the sample.
 
 ## Script Builder
@@ -521,7 +519,7 @@ The standalone controller now includes the configuration recovered from the actu
 - Six LTA-HX actuator configuration records are stored in `assets/hxp_controller_profile_2026-09-30.json`.
 - REAL translation-only Line / Move-While-Write commands call `HexapodMoveIncrementalControlLimitGet` immediately before motion and refuse incomplete trajectories or requested velocities above the controller-returned carriage limit.
 - General real XYZUVW moves require Cartesian user limits read directly from the connected HXP. No CAD-derived strut length is used as a real-motion safety decision.
-- `GPIO2.DAC1` is now the real attenuator provider. Current lab calibration is `4.00 = 40 % transmission`; the GUI maps DAC 0–10 linearly to 0–100 % and checks analogue readback. Real attenuation changes are blocked while the Pockels cell is OPEN.
+- `GPIO2.DAC1` is now the real attenuator provider. Current lab calibration is inverted: `0 = 100 % transmission`, `10 = 0 % transmission`; the GUI maps DAC 0–10 linearly to 100–0 % and checks analogue readback. Real attenuation changes are blocked while the Pockels cell is OPEN.
 - Pockels/LX13 control remains commissioning-locked: GPIO3.DO and GPIO4.DO remain historical candidates until the present physical route and polarity are verified.
 
 The STEP file remains fully useful for the articulated 3D visualisation and path display; it is simply separated from the real controller's motion authority.
