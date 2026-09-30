@@ -725,6 +725,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self._poll_future: Future | None = None
         self._selftest_future: Future | None = None
         self._last_real_poll = 0.0
+        self._real_poll_failures = 0
+        self._real_frames_match_profile = False
+        self._beam_close_failed = False
 
         # Measured sample extent. Nothing is assumed until the operator drives
         # the stage to real sample edges and logs them.
@@ -2231,8 +2234,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.raw_analog_value.setDecimals(3)
         self.raw_analog_value.setValue(1.0)
         self.raw_analog_value.setToolTip(
-            "Current lab mapping: GPIO2.DAC1 raw 0–10 corresponds to "
-            "0–100 % transmission; operator-confirmed point 4.00 = 40 %."
+            "Current lab mapping: GPIO2.DAC1 is inverted: "
+            "raw 0 = 100 % transmission and raw 10 = 0 %."
         )
         self.raw_analog_arm = QtWidgets.QCheckBox(
             "I confirm this GPIO is the present analogue power/attenuation path"
@@ -2691,11 +2694,30 @@ class MainWindow(QtWidgets.QMainWindow):
         *,
         velocity_mm_s: float | None = None,
     ) -> None:
+        if not all(
+            isinstance(v, (int, float)) and abs(float(v)) < float("inf")
+            for v in target.as_tuple()
+        ):
+            raise ValueError("requested pose must contain six finite values")
+
         start = self._planned_stage_pose()
 
         if self.stage_mode.currentIndex() == 1:
             if self.real_stage is None or not self.real_stage.client.connected:
                 raise RuntimeError("Real HXP is not connected")
+            if not self._real_frames_match_profile:
+                raise RuntimeError(
+                    "Real motion is blocked because the live HXP Work/Tool "
+                    "frames do not match the commissioned profile"
+                )
+            if not self._real_readback_is_fresh():
+                raise RuntimeError(
+                    "Real motion is blocked because the HXP pose/status "
+                    "readback is stale or not ready"
+                )
+            self.real_stage.client.require_ready_for_motion(
+                self.real_stage.config.group
+            )
 
             if velocity_mm_s is not None:
                 # Translation-only processing lines have an authoritative HXP
@@ -3742,9 +3764,17 @@ class MainWindow(QtWidgets.QMainWindow):
             busy = self._stage_provider().is_busy()
         except Exception as exc:
             self._manual_write_line_active = False
+            self._manual_write_line_started = False
             self._close_all_pockels()
+            try:
+                self._stage_provider().abort()
+            except Exception as abort_exc:
+                self.log_internal_error(
+                    "manual write fail-safe abort",
+                    abort_exc,
+                )
             self.quick_line_status.setText(
-                f"FAILED • beam close requested • {exc}"
+                f"FAILED • beam close + motion abort requested • {exc}"
             )
             return
 
@@ -4427,8 +4457,8 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.real_laser is not None:
                 try:
                     self.real_laser.disconnect()
-                except Exception:
-                    pass
+                except Exception as exc:
+                    self._diag(f"Pockels close/disconnect warning: {exc}")
                 self.real_laser = None
 
             if self.real_stage is not None:
@@ -4439,6 +4469,44 @@ class MainWindow(QtWidgets.QMainWindow):
 
             self.real_stage = HXPProvider(cfg)
             self.real_stage.connect()
+            self._real_poll_failures = 0
+
+            # Verify the two mutable HXP Cartesian frames against the controller
+            # backup/live commissioning snapshot. A frame changed elsewhere can
+            # make otherwise-correct sample coordinates point somewhere else.
+            try:
+                live_work = self.real_stage.client.coordinate_system_get(
+                    "Work", cfg.group
+                )
+                live_tool = self.real_stage.client.coordinate_system_get(
+                    "Tool", cfg.group
+                )
+                expected_work = Pose6D.from_iterable(
+                    self.controller_profile.work_in_world
+                )
+                expected_tool = Pose6D.from_iterable(
+                    self.controller_profile.tool_in_carriage
+                )
+                max_frame_error = max(
+                    live_work.max_abs_delta(expected_work),
+                    live_tool.max_abs_delta(expected_tool),
+                )
+                self._real_frames_match_profile = max_frame_error <= 1e-4
+                self._diag(
+                    "Live frames: Work="
+                    + str(live_work.as_tuple())
+                    + " Tool="
+                    + str(live_tool.as_tuple())
+                )
+                if not self._real_frames_match_profile:
+                    self._diag(
+                        "FRAME MISMATCH: live Work/Tool differ from the "
+                        "commissioned controller profile"
+                    )
+            except Exception as exc:
+                self._real_frames_match_profile = False
+                self._diag(f"Could not verify Work/Tool frames: {exc}")
+
             self.real_attenuator = HXPAnalogAttenuatorProvider(
                 self.real_stage.client,
                 HXPAnalogAttenuatorConfig(
@@ -4457,27 +4525,49 @@ class MainWindow(QtWidgets.QMainWindow):
             try:
                 self.real_attenuator.connect()
                 att_snap = self.real_attenuator.snapshot()
-                self.attenuator_spin.setValue(att_snap.transmission_percent)
+                self.attenuator_spin.setValue(
+                    att_snap.transmission_percent
+                )
                 self._diag(
-                    f"Attenuator readback: {att_snap.transmission_percent:.1f}% "
+                    f"Attenuator readback: "
+                    f"{att_snap.transmission_percent:.1f}% "
                     f"from {self.controller_profile.attenuator_gpio}"
                 )
             except Exception as exc:
                 self._diag(f"Attenuator readback unavailable: {exc}")
+
             if self.stage_mode.currentIndex() == 1:
                 self._last_stage_snapshot = self.real_stage.snapshot()
-                # Prevent a newly connected real stage from showing a stale
-                # zero target (e.g. Z=0 while the live stage is at Z=-14).
+                self._ensure_pose_widget_ranges_include(
+                    self._last_stage_snapshot.actual
+                )
                 self._target_from_actual()
+
             self._diag(
                 f"Connected HXP {cfg.host}:{cfg.port}; "
                 f"group={cfg.group}, frame={cfg.coordinate_system}"
             )
-            self.statusBar().showMessage(
-                f"Connected to HXP {cfg.host}:{cfg.port}",
-                5000,
-            )
+            if self._real_frames_match_profile:
+                self.statusBar().showMessage(
+                    f"Connected to HXP {cfg.host}:{cfg.port}; "
+                    "Work/Tool frames match commissioned profile",
+                    6000,
+                )
+            else:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "HXP frame verification required",
+                    "The HXP connected, but the live Work/Tool coordinate "
+                    "systems could not be confirmed against the commissioned "
+                    "profile. Real motion remains blocked until this is resolved.",
+                )
         except Exception as exc:
+            self._real_frames_match_profile = False
+            if self.real_stage is not None:
+                try:
+                    self.real_stage.disconnect()
+                except Exception:
+                    pass
             QtWidgets.QMessageBox.critical(
                 self,
                 "HXP connection failed",
@@ -4511,6 +4601,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.real_attenuator = UnconfiguredAttenuatorProvider()
             if self.real_stage is not None:
                 self.real_stage.disconnect()
+            self._real_frames_match_profile = False
+            self._real_poll_failures = 0
             self.statusBar().showMessage(
                 "Real HXP disconnected; real Pockels provider disarmed",
                 5000,
@@ -4521,6 +4613,40 @@ class MainWindow(QtWidgets.QMainWindow):
                 6000,
             )
         self._update_recipe_preflight_view()
+
+    def _ensure_pose_widget_ranges_include(
+        self,
+        pose: Pose6D,
+    ) -> None:
+        """Keep live real poses representable without blessing fake limits.
+
+        Spin-box ranges are a UI concern. Widening them to include the measured
+        live pose does not mark the workspace verified and does not change the
+        HXP's own motion limits.
+        """
+        values = pose.as_tuple()
+        for boxes_name in ("pose_boxes", "script_pose_boxes"):
+            boxes = getattr(self, boxes_name, {})
+            for index, axis in enumerate("XYZUVW"):
+                box = boxes.get(axis)
+                if box is None:
+                    continue
+                value = float(values[index])
+                margin = 1.0 if axis in "XYZ" else 0.5
+                if value < box.minimum():
+                    box.setMinimum(value - margin)
+                if value > box.maximum():
+                    box.setMaximum(value + margin)
+
+    def _real_readback_is_fresh(self, max_age_s: float = 1.0) -> bool:
+        if self.stage_mode.currentIndex() != 1:
+            return True
+        snap = self._last_stage_snapshot
+        return bool(
+            snap.connected
+            and snap.state in (MotionState.IDLE, MotionState.MOVING)
+            and (time.time() - snap.timestamp_s) <= max_age_s
+        )
 
     def _target_pose(self) -> Pose6D:
         return Pose6D(
@@ -4535,7 +4661,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.stage_mode.currentIndex() == 1:
                 current = self._planned_stage_pose()
                 rotation_unchanged = all(
-                    abs(a - b) <= 1e-9
+                    abs(a - b) <= 5e-4
                     for a, b in zip(
                         target.as_tuple()[3:],
                         current.as_tuple()[3:],
@@ -4575,10 +4701,9 @@ class MainWindow(QtWidgets.QMainWindow):
             )
 
     def _target_from_actual(self) -> None:
-        for axis, value in zip(
-            "XYZUVW",
-            self._last_stage_snapshot.actual.as_tuple(),
-        ):
+        pose = self._last_stage_snapshot.actual
+        self._ensure_pose_widget_ranges_include(pose)
+        for axis, value in zip("XYZUVW", pose.as_tuple()):
             self.pose_boxes[axis].setValue(value)
 
     def _jog(self, axis: str, sign: float) -> None:
@@ -4625,19 +4750,58 @@ class MainWindow(QtWidgets.QMainWindow):
     def _home(self) -> None:
         real = self.stage_mode.currentIndex() == 1
         if real:
-            if not self.workspace_limits.controller_verified:
+            if self.real_stage is None or not self.real_stage.client.connected:
                 QtWidgets.QMessageBox.critical(
                     self,
                     "Home blocked",
-                    "Real HXP homing is blocked until the complete workspace/"
-                    "actuator envelope is verified in Setup + Diagnostics.",
+                    "Connect the real HXP first.",
                 )
                 return
+            try:
+                status = self.real_stage.client.group_status(
+                    self.real_stage.config.group
+                )
+                try:
+                    status_text = self.real_stage.client.group_status_text(
+                        status
+                    )
+                except Exception:
+                    status_text = f"status {status}"
+            except Exception as exc:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    "Home blocked",
+                    f"Could not read HXP group state: {exc}",
+                )
+                return
+
+            if status in (11, 12):
+                QtWidgets.QMessageBox.information(
+                    self,
+                    "HXP already referenced",
+                    "The HXP is already in a referenced Ready state "
+                    f"({status}: {status_text}). No home search was sent.\n\n"
+                    "A deliberate re-home from this state requires the Newport "
+                    "kill → initialize → home sequence; that sequence is not "
+                    "exposed as a one-click action in this GUI.",
+                )
+                return
+
+            if status != 42:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    "Home blocked",
+                    "The controller is not in the expected Not Referenced "
+                    f"state for homing: {status} ({status_text}).",
+                )
+                return
+
             answer = QtWidgets.QMessageBox.warning(
                 self,
                 "Home real HXP?",
-                "A real HXP home search can move all six struts through a "
-                "substantial path. Confirm the physical setup is clear.",
+                "The group is Not Referenced. A real home search can move all "
+                "six struts through a substantial path. Confirm the physical "
+                "setup is clear and the process beam is safely blocked.",
                 QtWidgets.QMessageBox.StandardButton.Yes
                 | QtWidgets.QMessageBox.StandardButton.No,
                 QtWidgets.QMessageBox.StandardButton.No,
@@ -4780,19 +4944,39 @@ class MainWindow(QtWidgets.QMainWindow):
             )
 
     def _close_all_pockels(self) -> None:
-        # Request closure on every provider we may have touched. This prevents
-        # mode switching from leaving a previously-selected provider open.
+        # Request closure on every provider we may have touched. A failure on
+        # the real provider is never silently presented as a confirmed CLOSED
+        # state; the physical interlock/shutter remains authoritative.
+        errors: list[str] = []
         for provider in (self.virtual_laser, self.real_laser):
             if provider is None:
                 continue
             try:
                 provider.safe_off()
-            except Exception:
-                pass
-        self.statusBar().showMessage(
-            "Close-beam request issued",
-            3500,
-        )
+            except Exception as exc:
+                self.log_internal_error(
+                    f"Pockels close via {provider.name}",
+                    exc,
+                )
+                if provider is self.real_laser:
+                    errors.append(str(exc))
+
+        self._beam_close_failed = bool(errors)
+        if errors:
+            self.statusBar().showMessage(
+                "REAL POCKELS CLOSE FAILED — beam state unknown; use the "
+                "physical interlock/shutter: " + errors[0],
+                12000,
+            )
+            if hasattr(self, "beam_chip"):
+                self.beam_chip.setText("BEAM STATE UNKNOWN")
+                self._set_object_style(self.beam_chip, "chipWarn")
+        else:
+            self.statusBar().showMessage(
+                "Close-beam request issued",
+                3500,
+            )
+
 
     # ----------------------------------------------------------- attenuator
     def _attenuator_mode_changed(self, _index: int) -> None:
@@ -4826,8 +5010,16 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.attenuator_spin.value(),
                 script=False,
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            self.statusBar().showMessage(
+                f"Attenuator command failed: {exc}",
+                8000,
+            )
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Attenuator command failed",
+                str(exc),
+            )
 
     def _set_attenuator(
         self,
@@ -5068,10 +5260,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self._append_recipe_step(step)
 
     def _script_pose_from_live(self) -> None:
-        for axis, value in zip(
-            "XYZUVW",
-            self._last_stage_snapshot.actual.as_tuple(),
-        ):
+        pose = self._last_stage_snapshot.actual
+        self._ensure_pose_widget_ranges_include(pose)
+        for axis, value in zip("XYZUVW", pose.as_tuple()):
             self.script_pose_boxes[axis].setValue(value)
 
     def _recipe_add_attenuator(self) -> None:
@@ -5605,6 +5796,15 @@ class MainWindow(QtWidgets.QMainWindow):
             self.recipe_list.setEnabled(True)
             self.module_library.setEnabled(True)
             self._close_all_pockels()
+            try:
+                stage = self._stage_provider()
+                if stage.is_busy():
+                    stage.abort()
+            except Exception as abort_exc:
+                self.log_internal_error(
+                    "recipe fail-safe abort",
+                    abort_exc,
+                )
             self.recipe_progress.setText(
                 f"FAILED at step {self._recipe_index + 1}: {exc}"
             )
@@ -5727,19 +5927,41 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if self._poll_future is not None and self._poll_future.done():
             try:
-                self._last_stage_snapshot = (
-                    self._poll_future.result()
-                )
+                snap = self._poll_future.result()
+                self._last_stage_snapshot = snap
+                self._real_poll_failures = 0
+                self._ensure_pose_widget_ranges_include(snap.actual)
             except Exception as exc:
+                self._real_poll_failures += 1
+                connected = bool(
+                    self.real_stage is not None
+                    and self.real_stage.client.connected
+                )
+                self._last_stage_snapshot = HexapodSnapshot(
+                    timestamp_s=time.time(),
+                    actual=self._last_stage_snapshot.actual,
+                    setpoint=self._last_stage_snapshot.setpoint,
+                    target=self._last_stage_snapshot.target,
+                    state=(
+                        MotionState.FAULT
+                        if connected
+                        else MotionState.DISCONNECTED
+                    ),
+                    connected=connected,
+                    provider="hxp-real",
+                    status_text=f"POLL ERROR: {exc}",
+                )
                 self.statusBar().showMessage(
                     f"HXP polling error: {exc}",
-                    5000,
+                    7000,
                 )
             self._poll_future = None
 
         if (
             self._poll_future is None
             and now - self._last_real_poll >= 0.15
+            and self.real_stage is not None
+            and self.real_stage.client.connected
         ):
             self._last_real_poll = now
             self._poll_future = self._poll_pool.submit(
