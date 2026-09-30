@@ -2713,10 +2713,13 @@ class MainWindow(QtWidgets.QMainWindow):
                         coordinate_system=self.real_stage.config.coordinate_system,
                     )
                 )
-                if trajectory_percent < 99.999:
+                # HXP reports the executable trajectory as a FRACTION
+                # in [0, 1], not a percentage in [0, 100]. Newport's own
+                # examples use 1.0 for a fully executable trajectory.
+                if trajectory_percent < 0.999999:
                     raise RuntimeError(
                         "HXP rejected the complete Line trajectory: "
-                        f"only {trajectory_percent:.3f}% is executable"
+                        f"only {trajectory_percent * 100.0:.3f}% is executable"
                     )
                 if float(velocity_mm_s) > max_velocity + 1e-9:
                     raise RuntimeError(
