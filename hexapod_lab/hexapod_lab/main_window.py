@@ -3680,6 +3680,15 @@ class MainWindow(QtWidgets.QMainWindow):
             if write:
                 if (
                     self.laser_mode.currentIndex() == 1
+                    and self._beam_close_failed
+                ):
+                    raise RuntimeError(
+                        "A previous Pockels CLOSE failed; real writing is blocked "
+                        "until the beam state is physically made safe and the "
+                        "provider is recommissioned"
+                    )
+                if (
+                    self.laser_mode.currentIndex() == 1
                     and not self.manual_beam_arm.isChecked()
                 ):
                     raise RuntimeError(
@@ -4983,6 +4992,34 @@ class MainWindow(QtWidgets.QMainWindow):
         script: bool = False,
     ) -> None:
         try:
+            if open_ and self.laser_mode.currentIndex() == 1:
+                if self._beam_close_failed:
+                    raise RuntimeError(
+                        "A previous real Pockels CLOSE command failed; the beam "
+                        "state is unknown. Use the physical interlock/shutter and "
+                        "recommission the provider before another OPEN request."
+                    )
+                if (
+                    self.real_stage is None
+                    or not self.real_stage.client.connected
+                ):
+                    raise RuntimeError(
+                        "Real HXP is not connected; Pockels OPEN is blocked"
+                    )
+                if not self._real_frames_match_profile:
+                    raise RuntimeError(
+                        "Live HXP Work/Tool frames are not verified; Pockels OPEN "
+                        "is blocked"
+                    )
+                if not self._real_readback_is_fresh():
+                    raise RuntimeError(
+                        "HXP pose/status readback is stale or not ready; "
+                        "Pockels OPEN is blocked"
+                    )
+                self.real_stage.client.require_ready_for_motion(
+                    self.real_stage.config.group
+                )
+
             if (
                 open_
                 and self.laser_mode.currentIndex() == 1
@@ -5696,6 +5733,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Known safe beam state before the first recipe step.
         self._close_all_pockels()
+        if self._beam_close_failed:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Script blocked — beam state unknown",
+                "The initial real Pockels CLOSE request failed. Use the physical "
+                "interlock/shutter, resolve the GPIO path, and reconnect the "
+                "Pockels provider before running a script.",
+            )
+            return
         self._recipe_running = True
         self.recipe_list.setEnabled(False)
         self.module_library.setEnabled(False)
@@ -5712,19 +5758,14 @@ class MainWindow(QtWidgets.QMainWindow):
     def _stop_recipe(self) -> None:
         if not self._recipe_running:
             return
-        self._recipe_running = False
-        self._recipe_write_block_open = False
-        self.recipe_list.setEnabled(True)
-        self.module_library.setEnabled(True)
-        self._close_all_pockels()
-        try:
-            stage = self._stage_provider()
-            if stage.is_busy():
-                stage.abort()
-        except Exception:
-            pass
+        self._abort_all()
         self.recipe_progress.setText(
-            "Stopped — close-beam command issued"
+            "Stopped by operator — "
+            + (
+                "BEAM STATE UNKNOWN"
+                if self._beam_close_failed
+                else "Pockels close + motion abort requested"
+            )
         )
 
     def _advance_recipe(self) -> None:
@@ -6318,8 +6359,15 @@ class MainWindow(QtWidgets.QMainWindow):
             self.laser_mode.currentIndex() == 0
             or self.manual_beam_arm.isChecked()
         )
+        beam_open_truth_ok = (
+            self.laser_mode.currentIndex() == 0
+            or stage_ready
+        )
         self.laser_on_btn.setEnabled(
-            laser_ready and real_manual_ok and operator_free
+            laser_ready
+            and real_manual_ok
+            and operator_free
+            and beam_open_truth_ok
         )
         # Closing the process beam remains available even while a script runs.
         self.laser_off_btn.setEnabled(laser.connected)
