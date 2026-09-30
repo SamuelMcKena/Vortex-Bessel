@@ -54,10 +54,11 @@ tested without hardware.
 
 ### REAL LAB
 
-REAL LAB selects the real HXP and real Pockels paths and marks the normal
-attenuator as unbound until a calibrated real device is available. Real Pockels
-opening remains blocked until the present wiring is commissioned and explicitly
-verified.
+REAL LAB selects the real HXP, Pockels and HXP analogue-attenuator paths.
+The current attenuator mapping is controller-backed on `GPIO2.DAC1`: raw 0–10 is
+represented as 0–100 % transmission, with the operator-confirmed point
+`4.00 = 40 % transmission`. Real Pockels opening remains blocked until the present
+LX13 wiring is commissioned and explicitly verified.
 
 The persistent header makes the distinction visible:
 
@@ -200,14 +201,14 @@ It includes:
   `GPIO4.DO` and `GPIO2.DAC1`;
 - explicit physical-wiring checklist before a real Pockels mapping can be marked
   verified;
-- guarded raw analogue read/write for the historical `GPIO2.DAC1` path, limited
-  to the 1–5 values actually observed in the old scripts and blocked while the
-  Pockels cell is open;
+- live/guarded analogue read/write for the current `GPIO2.DAC1` attenuator path,
+  using the confirmed 0–10 raw ↔ 0–100 % transmission mapping and blocking writes
+  while the Pockels cell is open;
 - mock fault scenarios.
 
-The raw analogue control is intentionally labelled **uncalibrated**. It is for
-commissioning the historical path, not for claiming that a value such as `3`
-means 60% transmission or a known pulse energy.
+The GUI reports attenuation as transmission percent using the confirmed mapping
+`4.00 raw = 40 % transmission`. This is a transmission calibration only; it does
+not claim a calibrated pulse energy at the sample.
 
 ## Script Builder
 
@@ -502,12 +503,12 @@ core tests for changes under `hexapod_lab/`.
 
 ## Remaining hardware-bound work
 
-- validate the HXP TCP layer on the actual controller;
-- bind/verify PHAROS LX13 electrical mapping;
-- add physical Pockels readback if the installed interface exposes it;
-- add the real attenuator provider and calibration once hardware is identified;
-- add controller-native high-rate synchronized trajectories/events;
+- commission/verify the present PHAROS LX13 electrical route and Pockels polarity;
+- add physical Pockels readback if the installed interface exposes a distinct
+  hardware readback rather than only the HXP output register;
 - measure the lab-to-HXP/sample transform for a physically calibrated beam axis;
+- validate any future high-rate synchronized trajectory/event mode before using it
+  for processing beyond the existing native target-velocity Line workflow;
 - later integrate the mature providers and UI into the unified lab controller.
 
 ## 2026-09-30 controller-backed REAL LAB update
