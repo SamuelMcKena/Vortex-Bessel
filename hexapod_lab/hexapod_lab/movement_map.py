@@ -131,7 +131,8 @@ class MovementMap2D(QtWidgets.QWidget):
         self._show_travel = True
         self._show_written = True
         self._show_sample = True
-        self._hover_px: QtCore.QPointF | None = None        self._calibration = SampleCalibration()
+        self._hover_px: QtCore.QPointF | None = None
+        self._calibration = SampleCalibration()
         self._paint_failed = False
 
     # ------------------------------------------------------------- setters
