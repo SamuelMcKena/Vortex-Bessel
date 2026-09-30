@@ -283,16 +283,43 @@ def preflight_recipe(recipe: Recipe) -> list[PreflightIssue]:
     for i, step in enumerate(recipe.steps):
         try:
             if step.kind == StepKind.MOVE_ABSOLUTE:
+                if pockels_open:
+                    issues.append(
+                        PreflightIssue(
+                            "error",
+                            "ordinary motion while the Pockels cell is OPEN is "
+                            "not allowed; use MOVE WHILE WRITE or close the beam first",
+                            i,
+                        )
+                    )
                 pose = Pose6D.from_iterable(step.payload["pose"])
                 if not all(math.isfinite(v) for v in pose.as_tuple()):
                     raise ValueError("absolute pose values must be finite")
 
             elif step.kind == StepKind.MOVE_INCREMENTAL:
+                if pockels_open:
+                    issues.append(
+                        PreflightIssue(
+                            "error",
+                            "ordinary motion while the Pockels cell is OPEN is "
+                            "not allowed; use MOVE WHILE WRITE or close the beam first",
+                            i,
+                        )
+                    )
                 delta_pose = Pose6D.from_iterable(step.payload["delta"])
                 if not all(math.isfinite(v) for v in delta_pose.as_tuple()):
                     raise ValueError("incremental move values must be finite")
 
             elif step.kind == StepKind.MOVE_LINE_VELOCITY:
+                if pockels_open:
+                    issues.append(
+                        PreflightIssue(
+                            "error",
+                            "ordinary Line motion while the Pockels cell is OPEN is "
+                            "not allowed; use MOVE WHILE WRITE or close the beam first",
+                            i,
+                        )
+                    )
                 delta = list(step.payload["delta_xyz_mm"])
                 if len(delta) != 3:
                     raise ValueError(
@@ -381,13 +408,23 @@ def preflight_recipe(recipe: Recipe) -> list[PreflightIssue]:
                 if pockels_open:
                     issues.append(
                         PreflightIssue(
-                            "warning",
-                            "attenuator is changed while the Pockels cell is OPEN",
+                            "error",
+                            "attenuator changes while the Pockels cell is OPEN are "
+                            "blocked; close the beam before changing transmission",
                             i,
                         )
                     )
 
             elif step.kind == StepKind.WAIT:
+                if pockels_open:
+                    issues.append(
+                        PreflightIssue(
+                            "warning",
+                            "WAIT occurs while the Pockels cell is OPEN; this creates "
+                            "a stationary exposure/dwell",
+                            i,
+                        )
+                    )
                 seconds = float(step.payload.get("seconds", 0.0))
                 if not math.isfinite(seconds):
                     raise ValueError("wait time must be finite")
