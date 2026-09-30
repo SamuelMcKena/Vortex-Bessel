@@ -292,7 +292,10 @@ Implemented API calls include:
 - `GroupPositionTargetGet`
 - `GroupStatusGet`
 - `GroupStatusStringGet`
-- `PositionerUserTravelLimitsGet`
+- `PositionerUserTravelLimitsGet` (physical `HEXAPOD.1`…`.6` only on this controller)
+- `HexapodMoveIncrementalControlLimitGet`
+- `HexapodMoveIncrementalControlWithTargetVelocity`
+- `HexapodCoordinateSystemGet`
 - `HexapodMoveAbsolute`
 - `HexapodMoveIncremental`
 - `GroupMoveAbort`
@@ -307,20 +310,24 @@ validation before production laser processing.
 
 ### Workspace and actuator envelope
 
-Every manual move, jog, writing line, raster and recipe uses the same coupled
-workspace validator. It checks XYZUVW bounds, all six CAD-derived strut lengths,
-strut direction change and sampled intermediate poses. The supplied controller
-manual gives a generic example with home at `Z=0`, 28 mm total Z travel and the
-best multi-axis range near `Z=14`; the legacy TCL files establish 7 mm lines,
-0.02 mm row spacing and 0.2–2.1 mm/s writing speeds. These are evidence-backed
-commissioning defaults, not a model-specific certification.
+MOCK LAB keeps the CAD-derived coupled validator so the digital twin can reject
+obviously impossible simulated poses. REAL LAB does **not** use that decorative
+STEP geometry as a motion authority.
 
-Real motion and homing remain blocked until the complete envelope is explicitly
-verified in Setup + Diagnostics. Once connected, **Read strut limits from HXP**
-reads `HEXAPOD.1` through `.6`, obtains their user travel limits and aligns those
-controller coordinates with the CAD strut lengths at the measured pose. The
-operator must still verify the Cartesian and joint limits before marking the
-complete envelope verified.
+On the live controller, `PositionerUserTravelLimitsGet` is valid for the six
+physical positioners `HEXAPOD.1` through `HEXAPOD.6`. The virtual Cartesian
+channels `HEXAPOD.X` through `HEXAPOD.W` do not expose that API. The GUI
+therefore reads the six live actuator limits for diagnostics, while real XYZ
+Line/jog/XYZ-target moves are preflighted with
+`HexapodMoveIncrementalControlLimitGet`. The returned executable-trajectory
+quantity is a fraction in `[0,1]`; `1.0` means the complete requested
+trajectory is executable.
+
+The Cartesian values shown in Setup are a labelled nominal reference only unless
+the operator explicitly verifies a complete six-axis envelope. Real U/V/W
+general motion remains commissioning-locked until that external-clearance /
+coupled-motion envelope is deliberately validated. Homing is handled from the
+controller group state rather than from the decorative CAD envelope.
 
 ## STEP digital twin
 
@@ -523,3 +530,20 @@ The standalone controller now includes the configuration recovered from the actu
 - Pockels/LX13 control remains commissioning-locked: GPIO3.DO and GPIO4.DO remain historical candidates until the present physical route and polarity are verified.
 
 The STEP file remains fully useful for the articulated 3D visualisation and path display; it is simply separated from the real controller's motion authority.
+
+
+### 2026-09-30 live-controller hardening pass
+
+The real-HXP path now additionally:
+
+- verifies the live Work and Tool frames against the commissioned controller profile before real motion or beam opening;
+- treats HXP group states 11/12 as referenced Ready states and other connected states as non-ready;
+- disables real motion on stale/failed pose polling instead of continuing from an old readback;
+- sizes the TCP response timeout to long synchronous HXP Line moves, so a normal 35 s writing line cannot be mistaken for a 10 s network failure;
+- closes the affected TCP stream after transport/protocol failures so stale replies cannot be consumed by the next command;
+- interprets the HXP Line executable-trajectory return correctly as a 0–1 fraction;
+- makes software STOP global across the virtual and real stage providers and requests Pockels CLOSED first;
+- blocks real Pockels OPEN if stage/frame/readback truth is not healthy;
+- treats a failed real Pockels CLOSE as an unknown beam state rather than displaying CLOSED;
+- rejects ordinary absolute/relative motion while a recipe has the Pockels explicitly OPEN; the historical OPEN → Line → CLOSED pattern is retained with a warning, while new recipes should use MOVE WHILE WRITE;
+- uses long timeouts for initialization/homing and prevents a one-click re-home while the HXP is already referenced.
