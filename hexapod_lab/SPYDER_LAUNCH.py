@@ -9,6 +9,7 @@ Run INSTALL_AND_START.bat once if .venv does not exist yet.
 from __future__ import annotations
 
 from pathlib import Path
+import os
 import subprocess
 import sys
 
@@ -24,8 +25,11 @@ if not VENV_PYTHON.is_file():
     )
 
 print(f"Launching Hexapod Lab with: {VENV_PYTHON}")
+env = os.environ.copy()
+env["QT_API"] = "pyside6"
 subprocess.Popen(
     [str(VENV_PYTHON), str(APP)],
     cwd=str(ROOT),
+    env=env,
 )
 print("Hexapod Lab launched in its private environment.")
