@@ -61,7 +61,7 @@ Those are commissioning measurements, not missing GUI architecture.
 
 ## Controller-backed status (2026-09-30)
 
-**Ready now:** MOCK LAB, exact STEP visualisation, recipe development, native target-velocity Line simulation, live HXP connection/readback, controller-derived Cartesian-limit import, native HXP Line feasibility preflight, and real GPIO2.DAC1 attenuator read/write with `4.00 = 40 % transmission`.
+**Ready now:** MOCK LAB, exact STEP visualisation, recipe development, native target-velocity Line simulation, live HXP connection/readback, controller-derived Cartesian-limit import, native HXP Line feasibility preflight, and real GPIO2.DAC1 attenuator read/write with the confirmed inverse endpoints `0 = 100 %` and `10 = 0 % transmission`.
 
 **Still intentionally locked:** real Pockels opening until the present GPIO-to-LX13 physical path and OPEN/CLOSED polarity are electrically confirmed.
 
