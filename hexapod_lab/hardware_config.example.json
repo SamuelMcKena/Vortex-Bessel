@@ -3,7 +3,7 @@
   "legacy_profile_key": "labview_v3",
   "mock_time_scale": 1,
   "workspace_limits": {
-    "source": "provisional CAD/HXP-manual envelope; replace with verified controller/manual values",
+    "source": "MOCK/display CAD envelope only; REAL XYZ motion uses native HXP Line preflight and live actuator diagnostics",
     "controller_verified": false,
     "axes": {
       "X": [
