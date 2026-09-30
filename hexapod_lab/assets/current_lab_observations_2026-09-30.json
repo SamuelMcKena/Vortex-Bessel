@@ -1,0 +1,65 @@
+{
+  "observation_date": "2026-09-30",
+  "source": "User-supplied lab photographs and screenshots",
+  "controller": {
+    "front_label": "Newport Motion Controller / Driver - Model HXP",
+    "historical_ip_confirmed": "192.168.0.254",
+    "tcp_port_confirmed": 5001,
+    "lab_pc_source_address": "192.168.0.100",
+    "tcp_test_succeeded": true
+  },
+  "work_coordinate_snapshot": {
+    "group": "HEXAPOD",
+    "group_state": 12,
+    "actual_pose": {
+      "X_mm": 0.0,
+      "Y_mm": 0.0,
+      "Z_mm": -13.999998,
+      "U_deg": -0.000001,
+      "V_deg": 0.0,
+      "W_deg": 0.0
+    },
+    "coordinate_systems": {
+      "Tool_in_Carriage": [0.0, 0.0, 25.0, 0.0, 0.0, 0.0],
+      "Base_in_World": [0.0, 0.0, 25.0, 0.0, 0.0, 0.0],
+      "Work_in_World": [0.0, 0.0, 209.0, 0.0, 0.0, 0.0]
+    }
+  },
+  "io_snapshot": {
+    "digital": {
+      "GPIO1.DO_bits_1_to_8": [0, 0, 1, 0, 0, 0, 0, 0],
+      "GPIO1.DO_raw_interpretation": 4,
+      "GPIO3.DO_bits_1_to_8": [0, 0, 0, 0, 0, 0, 0, 0],
+      "GPIO4.DO_bits_1_to_16": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    "analog": {
+      "GPIO2.ADC1": 0.0009,
+      "GPIO2.ADC2": 0.0025,
+      "GPIO2.ADC3": -0.0003,
+      "GPIO2.ADC4": 0.0062,
+      "GPIO2.DAC1": 10.0,
+      "GPIO2.DAC2": 0.0,
+      "GPIO2.DAC3": -0.0001,
+      "GPIO2.DAC4": 0.0003
+    },
+    "interpretation": [
+      "GPIO1.DO is live at raw value 4, matching the legacy LabVIEW GPIO1.DO mask-4 state-marker evidence.",
+      "GPIO3.DO and GPIO4.DO were both low in this single snapshot; this does not establish Pockels polarity.",
+      "GPIO2.DAC1 was 10.0000 in the live controller snapshot, so the old TCL 1-5 values must not be treated as the complete present-day analogue output range or as calibrated optical power."
+    ]
+  },
+  "physical_observations": {
+    "pharos_LX13_populated": true,
+    "hxp_GPIO3_physically_populated": true,
+    "hxp_controller_model_label": "HXP",
+    "mechanical_hexapod_model_identified": false,
+    "visible_actuator_serial_example": "S/N BF8 3700",
+    "emergency_stop_present": true,
+    "notes": [
+      "The LX13 connector is visibly populated on the PHAROS.",
+      "A D-sub cable is visibly plugged into HXP GPIO3, which is consistent with the later LabVIEW-v3 GPIO3.DO Pockels candidate.",
+      "The photographs do not provide an unambiguous continuous cable trace proving that the populated HXP GPIO3 cable is the same cable reaching PHAROS LX13.",
+      "The front label 'Model HXP' identifies the controller chassis, not the mechanical hexapod stage model."
+    ]
+  }
+}
