@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 import socket
 import threading
 from typing import Iterable
@@ -65,41 +66,89 @@ class HXPConnection:
                 except OSError:
                     pass
 
-    def request(self, command: str, *, raise_on_error: bool = True) -> tuple[int, str]:
+    def request(
+        self,
+        command: str,
+        *,
+        raise_on_error: bool = True,
+        response_timeout_s: float | None = None,
+    ) -> tuple[int, str]:
+        """Send one synchronous HXP API command and read through EndOfAPI.
+
+        response_timeout_s overrides the normal socket timeout for commands
+        that legitimately block until a long motion or homing operation has
+        completed. A transport timeout or malformed reply invalidates the TCP
+        stream, so the socket is closed rather than risking a stale reply being
+        mistaken for the next command.
+        """
         with self._lock:
             if self._sock is None:
                 raise ConnectionError("HXP socket is not connected")
+            sock = self._sock
+            timeout = (
+                self.config.timeout_s
+                if response_timeout_s is None
+                else float(response_timeout_s)
+            )
+            if not math.isfinite(timeout) or timeout <= 0:
+                raise ValueError(
+                    "HXP response timeout must be finite and positive"
+                )
             payload = command.encode("ascii", errors="strict")
-            self._sock.sendall(payload)
-            chunks: list[bytes] = []
-            total = 0
-            while True:
-                chunk = self._sock.recv(4096)
-                if not chunk:
-                    raise ConnectionError("HXP closed the socket before EndOfAPI")
-                chunks.append(chunk)
-                total += len(chunk)
-                if total > 8 * 1024 * 1024:
-                    raise HXPProtocolError("HXP response exceeded 8 MiB safety limit")
-                if b",EndOfAPI" in b"".join(chunks[-2:]):
-                    break
-
-            raw = b"".join(chunks).decode("ascii", errors="replace")
-            marker = raw.find(",EndOfAPI")
-            if marker < 0:
-                raise HXPProtocolError(f"Malformed HXP reply: {raw[:200]!r}")
-            body = raw[:marker]
-            if "," in body:
-                code_text, response = body.split(",", 1)
-            else:
-                code_text, response = body, ""
             try:
-                code = int(code_text.strip())
-            except ValueError as exc:
-                raise HXPProtocolError(f"Malformed HXP error code: {code_text!r}") from exc
-            if code != 0 and raise_on_error:
-                raise HXPError(code, command, response)
-            return code, response.strip()
+                sock.settimeout(timeout)
+                sock.sendall(payload)
+                chunks: list[bytes] = []
+                total = 0
+                while True:
+                    chunk = sock.recv(4096)
+                    if not chunk:
+                        raise ConnectionError(
+                            "HXP closed the socket before EndOfAPI"
+                        )
+                    chunks.append(chunk)
+                    total += len(chunk)
+                    if total > 8 * 1024 * 1024:
+                        raise HXPProtocolError(
+                            "HXP response exceeded 8 MiB safety limit"
+                        )
+                    if b",EndOfAPI" in b"".join(chunks[-2:]):
+                        break
+
+                raw = b"".join(chunks).decode("ascii", errors="replace")
+                marker = raw.find(",EndOfAPI")
+                if marker < 0:
+                    raise HXPProtocolError(
+                        f"Malformed HXP reply: {raw[:200]!r}"
+                    )
+                body = raw[:marker]
+                if "," in body:
+                    code_text, response = body.split(",", 1)
+                else:
+                    code_text, response = body, ""
+                try:
+                    code = int(code_text.strip())
+                except ValueError as exc:
+                    raise HXPProtocolError(
+                        f"Malformed HXP error code: {code_text!r}"
+                    ) from exc
+                if code != 0 and raise_on_error:
+                    raise HXPError(code, command, response)
+                return code, response.strip()
+            except socket.timeout as exc:
+                self.close()
+                raise TimeoutError(
+                    f"HXP command timed out after {timeout:.1f} s: {command}"
+                ) from exc
+            except (ConnectionError, HXPProtocolError, OSError):
+                self.close()
+                raise
+            finally:
+                if self._sock is sock:
+                    try:
+                        sock.settimeout(self.config.timeout_s)
+                    except OSError:
+                        self.close()
 
 
 class HXPClient:
@@ -132,13 +181,36 @@ class HXPClient:
 
     @staticmethod
     def _float_list(response: str, count: int) -> list[float]:
-        fields = [item.strip() for item in response.split(",") if item.strip() != ""]
+        fields = [
+            item.strip()
+            for item in response.split(",")
+            if item.strip() != ""
+        ]
         if len(fields) < count:
-            raise HXPProtocolError(f"Expected {count} numeric values, got {len(fields)}: {response!r}")
+            raise HXPProtocolError(
+                f"Expected {count} numeric values, got {len(fields)}: {response!r}"
+            )
         try:
-            return [float(v) for v in fields[:count]]
+            values = [float(v) for v in fields[:count]]
         except ValueError as exc:
-            raise HXPProtocolError(f"Non-numeric HXP response: {response!r}") from exc
+            raise HXPProtocolError(
+                f"Non-numeric HXP response: {response!r}"
+            ) from exc
+        if not all(math.isfinite(v) for v in values):
+            raise HXPProtocolError(
+                f"Non-finite HXP response: {response!r}"
+            )
+        return values
+
+    @staticmethod
+    def _finite_values(
+        label: str,
+        values: Iterable[float],
+    ) -> tuple[float, ...]:
+        out = tuple(float(v) for v in values)
+        if not all(math.isfinite(v) for v in out):
+            raise ValueError(f"{label} values must be finite")
+        return out
 
     @staticmethod
     def _outputs(type_name: str, count: int) -> str:
@@ -181,8 +253,10 @@ class HXPClient:
     ) -> tuple[float, float]:
         """Read the configured HXP user travel limits for one positioner.
 
-        This is deliberately read-only. Hexapod Cartesian positioners are
-        normally addressed as ``HEXAPOD.X`` through ``HEXAPOD.W``.
+        This is deliberately read-only. On the lab controller this API applies
+        to physical positioners such as HEXAPOD.1 through HEXAPOD.6. The
+        virtual Cartesian channels HEXAPOD.X through HEXAPOD.W do not expose
+        PositionerUserTravelLimitsGet.
         """
         name = str(positioner).strip()
         if not name or any(char in name for char in ",()"):
@@ -207,13 +281,31 @@ class HXPClient:
         )
         return self._float_list(response, 1)[0]
 
-    def move_absolute(self, pose: Pose6D, group: str = "HEXAPOD", coordinate_system: str = "Work") -> None:
-        args = ",".join(f"{v:.12g}" for v in pose.as_tuple())
-        self.control.request(f"HexapodMoveAbsolute({group},{coordinate_system},{args})")
+    def move_absolute(
+        self,
+        pose: Pose6D,
+        group: str = "HEXAPOD",
+        coordinate_system: str = "Work",
+    ) -> None:
+        values = self._finite_values("absolute pose", pose.as_tuple())
+        args = ",".join(f"{v:.12g}" for v in values)
+        self.control.request(
+            f"HexapodMoveAbsolute({group},{coordinate_system},{args})",
+            response_timeout_s=max(self.control.config.timeout_s, 180.0),
+        )
 
-    def move_incremental(self, delta: Pose6D, group: str = "HEXAPOD", coordinate_system: str = "Work") -> None:
-        args = ",".join(f"{v:.12g}" for v in delta.as_tuple())
-        self.control.request(f"HexapodMoveIncremental({group},{coordinate_system},{args})")
+    def move_incremental(
+        self,
+        delta: Pose6D,
+        group: str = "HEXAPOD",
+        coordinate_system: str = "Work",
+    ) -> None:
+        values = self._finite_values("incremental pose", delta.as_tuple())
+        args = ",".join(f"{v:.12g}" for v in values)
+        self.control.request(
+            f"HexapodMoveIncremental({group},{coordinate_system},{args})",
+            response_timeout_s=max(self.control.config.timeout_s, 180.0),
+        )
 
     def line_incremental_control_limits(
         self,
@@ -230,14 +322,30 @@ class HXPClient:
         ``HexapodMoveIncrementalControlLimitGet``. This is the authoritative
         controller-side feasibility check for real translation-only Line moves.
         """
+        dx, dy, dz = self._finite_values(
+            "Line displacement",
+            (dx_mm, dy_mm, dz_mm),
+        )
+        if max(abs(dx), abs(dy), abs(dz)) <= 1e-15:
+            raise ValueError("Line trajectory must have a non-zero displacement")
         _, response = self.poll.request(
             "HexapodMoveIncrementalControlLimitGet("
             f"{group},{coordinate_system},Line,"
-            f"{float(dx_mm):.12g},{float(dy_mm):.12g},"
-            f"{float(dz_mm):.12g},double *,double *)"
+            f"{dx:.12g},{dy:.12g},{dz:.12g},double *,double *)"
         )
-        maximum_velocity, trajectory_percent = self._float_list(response, 2)
-        return float(maximum_velocity), float(trajectory_percent)
+        maximum_velocity, trajectory_fraction = self._float_list(response, 2)
+        if maximum_velocity <= 0:
+            raise HXPProtocolError(
+                f"HXP returned invalid maximum Line velocity {maximum_velocity!r}"
+            )
+        if trajectory_fraction < -1e-9 or trajectory_fraction > 1.000001:
+            raise HXPProtocolError(
+                "HXP returned invalid executable-trajectory fraction "
+                f"{trajectory_fraction!r}; expected 0..1"
+            )
+        return float(maximum_velocity), float(
+            max(0.0, min(1.0, trajectory_fraction))
+        )
 
     def move_line_incremental_with_target_velocity(
         self,
@@ -255,24 +363,76 @@ class HXPClient:
         HexapodMoveIncrementalControlWithTargetVelocity
             HEXAPOD Work Line dX dY dZ velocity
         """
-        velocity = float(velocity_mm_s)
+        dx, dy, dz, velocity = self._finite_values(
+            "Line move",
+            (dx_mm, dy_mm, dz_mm, velocity_mm_s),
+        )
+        if max(abs(dx), abs(dy), abs(dz)) <= 1e-15:
+            raise ValueError("Line move must have a non-zero displacement")
         if velocity <= 0:
             raise ValueError("target velocity must be > 0 mm/s")
+        distance = math.sqrt(dx * dx + dy * dy + dz * dz)
+        expected_motion_s = distance / velocity
+        response_timeout = max(
+            self.control.config.timeout_s,
+            30.0 + 2.0 * expected_motion_s,
+        )
         self.control.request(
             "HexapodMoveIncrementalControlWithTargetVelocity("
             f"{group},{coordinate_system},Line,"
-            f"{float(dx_mm):.12g},{float(dy_mm):.12g},"
-            f"{float(dz_mm):.12g},{velocity:.12g})"
+            f"{dx:.12g},{dy:.12g},{dz:.12g},{velocity:.12g})",
+            response_timeout_s=response_timeout,
         )
 
     def abort(self, group: str = "HEXAPOD") -> None:
         self.io.request(f"GroupMoveAbort({group})")
 
     def initialize(self, group: str = "HEXAPOD") -> None:
-        self.control.request(f"GroupInitialize({group})")
+        self.control.request(
+            f"GroupInitialize({group})",
+            response_timeout_s=max(self.control.config.timeout_s, 60.0),
+        )
 
     def home(self, group: str = "HEXAPOD") -> None:
-        self.control.request(f"GroupHomeSearch({group})")
+        self.control.request(
+            f"GroupHomeSearch({group})",
+            response_timeout_s=max(self.control.config.timeout_s, 300.0),
+        )
+
+    def coordinate_system_get(
+        self,
+        coordinate_system: str,
+        group: str = "HEXAPOD",
+    ) -> Pose6D:
+        system = str(coordinate_system).strip()
+        if system not in {"Work", "Tool"}:
+            raise ValueError("coordinate system must be Work or Tool")
+        _, response = self.poll.request(
+            f"HexapodCoordinateSystemGet({group},{system},"
+            f"{self._outputs('double', 6)})"
+        )
+        return Pose6D.from_iterable(self._float_list(response, 6))
+
+    def require_ready_for_motion(
+        self,
+        group: str = "HEXAPOD",
+    ) -> tuple[int, str]:
+        """Require a referenced HXP group before issuing a normal move.
+
+        Newport documents states 11 (Ready state from homing) and 12 (Ready
+        state from motion) as the normal referenced ready states.
+        """
+        status = self.group_status(group)
+        try:
+            status_text = self.group_status_text(status)
+        except Exception:
+            status_text = f"status {status}"
+        if status not in (11, 12):
+            raise RuntimeError(
+                f"HXP group {group} is not ready for motion: "
+                f"{status} ({status_text})"
+            )
+        return status, status_text
 
     def digital_get(self, gpio_name: str) -> int:
         _, response = self.io.request(f"GPIODigitalGet({gpio_name},unsigned short *)")
@@ -289,7 +449,12 @@ class HXPClient:
         _, response = self.io.request(
             f"GPIOAnalogGet({gpio_name},double *)"
         )
-        return float(response.split(",", 1)[0].strip())
+        value = float(response.split(",", 1)[0].strip())
+        if not math.isfinite(value):
+            raise HXPProtocolError(
+                f"Non-finite analogue readback for {gpio_name}: {response!r}"
+            )
+        return value
 
     def analog_set(self, gpio_name: str, value: float) -> None:
         """Set an HXP analogue output.
@@ -297,8 +462,11 @@ class HXPClient:
         This exists because the legacy lab TCL uses GPIOAnalogSet for the
         power/attenuation path. No channel or calibration is assumed here.
         """
+        numeric = float(value)
+        if not math.isfinite(numeric):
+            raise ValueError("analogue output value must be finite")
         self.io.request(
-            f"GPIOAnalogSet({gpio_name},{float(value):.12g})"
+            f"GPIOAnalogSet({gpio_name},{numeric:.12g})"
         )
 
     def gathering_configure_cartesian_current(self, group: str = "HEXAPOD") -> None:
