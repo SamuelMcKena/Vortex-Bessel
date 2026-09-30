@@ -24,8 +24,7 @@ def test_preflight_clean_recipe_with_attenuator():
         steps=[
             RecipeStep.attenuator_set(25.0),
             RecipeStep.move_absolute(Pose6D(x=1)),
-            RecipeStep.pockels_cell(True),
-            RecipeStep.move_incremental(Pose6D(x=2)),
+            RecipeStep.write_line(2.0, 0.0, 0.0, 0.5),
             RecipeStep.pockels_cell(False),
         ]
     )
@@ -33,7 +32,7 @@ def test_preflight_clean_recipe_with_attenuator():
     assert not [issue for issue in issues if issue.severity == "error"]
 
 
-def test_preflight_warns_if_attenuator_changes_with_beam_open():
+def test_preflight_rejects_attenuator_change_with_beam_open():
     recipe = Recipe(
         steps=[
             RecipeStep.pockels_cell(True),
@@ -43,8 +42,8 @@ def test_preflight_warns_if_attenuator_changes_with_beam_open():
     )
     issues = preflight_recipe(recipe)
     assert any(
-        issue.severity == "warning"
-        and "attenuator is changed" in issue.message
+        issue.severity == "error"
+        and "attenuator changes" in issue.message
         for issue in issues
     )
 
@@ -118,4 +117,44 @@ def test_preflight_rejects_non_finite_loaded_line_velocity():
     assert any(
         issue.severity == "error" and "finite" in issue.message
         for issue in preflight_recipe(recipe)
+    )
+
+
+@pytest.mark.parametrize(
+    "step",
+    [
+        RecipeStep.move_absolute(Pose6D(x=1.0)),
+        RecipeStep.move_incremental(Pose6D(x=0.1)),
+        RecipeStep.move_line_velocity(0.1, 0.0, 0.0, 0.1),
+    ],
+)
+def test_preflight_rejects_ordinary_motion_with_beam_open(step):
+    recipe = Recipe(
+        steps=[
+            RecipeStep.pockels_cell(True),
+            step,
+            RecipeStep.pockels_cell(False),
+        ]
+    )
+    issues = preflight_recipe(recipe)
+    assert any(
+        issue.severity == "error"
+        and "Pockels cell is OPEN" in issue.message
+        for issue in issues
+    )
+
+
+def test_preflight_warns_about_open_beam_dwell():
+    recipe = Recipe(
+        steps=[
+            RecipeStep.pockels_cell(True),
+            RecipeStep.wait(0.25),
+            RecipeStep.pockels_cell(False),
+        ]
+    )
+    issues = preflight_recipe(recipe)
+    assert any(
+        issue.severity == "warning"
+        and "stationary exposure" in issue.message
+        for issue in issues
     )
