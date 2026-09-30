@@ -1,6 +1,7 @@
 @echo off
 setlocal EnableExtensions
 cd /d "%~dp0"
+set "QT_API=pyside6"
 
 if not exist ".venv\Scripts\python.exe" (
   echo Private environment is not installed yet.
