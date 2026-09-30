@@ -70,3 +70,14 @@ def test_virtual_target_velocity_line_move():
     assert stage.is_busy() is False
     assert abs(snap.actual.x - 3.0) < 1e-9
     assert abs(snap.actual.y - 4.0) < 1e-9
+
+
+def test_virtual_abort_recovers_to_idle_on_next_tick():
+    stage = VirtualHexapodProvider()
+    stage.connect()
+    stage.move_absolute(Pose6D(x=1.0))
+    stage.abort()
+    assert stage.snapshot().state == MotionState.ABORTED
+    stage.tick(0.01)
+    assert stage.snapshot().state == MotionState.IDLE
+    assert stage.is_busy() is False
