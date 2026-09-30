@@ -10,12 +10,12 @@
     "model_label": "Newport Motion Controller / Driver - Model HXP"
   },
   "pose_work": {
-    "X_mm": 0.0,
-    "Y_mm": 0.0,
+    "X_mm": 0,
+    "Y_mm": 0,
     "Z_mm": -13.999998,
-    "U_deg": -1e-06,
-    "V_deg": 0.0,
-    "W_deg": 0.0
+    "U_deg": -0.000001,
+    "V_deg": 0,
+    "W_deg": 0
   },
   "frames": {
     "Tool_in_Carriage": [
@@ -58,10 +58,10 @@
   },
   "attenuator": {
     "gpio": "GPIO2.DAC1",
-    "live_raw_example": 4.0,
-    "live_transmission_percent": 40.0,
-    "operator_confirmation": "4.00 = 40% transmission",
-    "implemented_mapping": "0-10 raw maps linearly to 0-100% transmission"
+    "live_raw_example": 4,
+    "live_transmission_percent": 60,
+    "operator_confirmation": "10.00 = 0% transmission; 0.00 = 100% transmission",
+    "implemented_mapping": "inverted linear: transmission_percent = 100 - 10 * raw"
   },
   "physical": {
     "PHAROS_LX13_populated": true,
