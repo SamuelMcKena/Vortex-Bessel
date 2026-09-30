@@ -2424,17 +2424,18 @@ class MainWindow(QtWidgets.QMainWindow):
         limit_buttons = QtWidgets.QHBoxLayout()
         apply_limits = QtWidgets.QPushButton("Apply limits")
         apply_limits.clicked.connect(self._apply_workspace_limits_from_ui)
-        read_limits = QtWidgets.QPushButton("Read controller limits from HXP")
+        read_limits = QtWidgets.QPushButton("Read actuator limits + load Cartesian reference")
         read_limits.clicked.connect(self._read_workspace_limits_from_hxp)
         limit_buttons.addWidget(apply_limits)
         limit_buttons.addWidget(read_limits)
         limits_layout.addLayout(limit_buttons)
         warning = QtWidgets.QLabel(
-            "The STEP strut fields are MOCK/DISPLAY geometry only. REAL LAB uses "
-            "Cartesian limits read from the HXP for general motion and the HXP's "
-            "native Line control-limit preflight for writing trajectories. "
-            "Controller actuator limits from the backup are reference data, not "
-            "converted through the decorative STEP."
+            "The HXP exposes live user-travel limits for the six physical "
+            "actuators (HEXAPOD.1…6), not for the virtual Cartesian channels "
+            "HEXAPOD.X…W. REAL translation Lines/jogs therefore use the HXP's "
+            "native HexapodMoveIncrementalControlLimitGet preflight. The Cartesian "
+            "boxes below are a nominal HXP100-family reference only and are NOT "
+            "automatically marked as a verified coupled workspace."
         )
         warning.setWordWrap(True)
         warning.setObjectName("muted")
@@ -2916,29 +2917,29 @@ class MainWindow(QtWidgets.QMainWindow):
             )
 
     def _read_workspace_limits_from_hxp(self) -> None:
+        """Read live physical actuator limits and load a Cartesian reference.
+
+        Newport's PositionerUserTravelLimitsGet applies to the six physical
+        positioners (HEXAPOD.1…6). The virtual Cartesian channels HEXAPOD.X…W
+        are valid for gathered/current Cartesian data but are not positioners
+        for that API on this controller. Translation moves are therefore
+        authorised with the HXP native Line control-limit preflight instead of
+        pretending a rectangular Cartesian envelope came from the controller.
+        """
         if self.real_stage is None or not self.real_stage.client.connected:
             QtWidgets.QMessageBox.warning(
                 self,
                 "HXP not connected",
-                "Connect the real HXP before reading controller limits.",
+                "Connect the real HXP before reading actuator limits.",
             )
             return
         try:
             QtWidgets.QApplication.setOverrideCursor(
                 QtCore.Qt.CursorShape.WaitCursor
             )
-            group = self.real_stage.config.group
-            axis_limits: dict[str, tuple[float, float]] = {}
-            for axis in AXES:
-                axis_limits[axis] = (
-                    self.real_stage.client.positioner_user_travel_limits(
-                        f"{group}.{axis}"
-                    )
-                )
-                self.limit_min_boxes[axis].setValue(axis_limits[axis][0])
-                self.limit_max_boxes[axis].setValue(axis_limits[axis][1])
 
             actuator_lines = []
+            live_actuator_limits: list[tuple[float, float]] = []
             for item in self.controller_profile.actuators:
                 try:
                     live_lo, live_hi = (
@@ -2949,45 +2950,72 @@ class MainWindow(QtWidgets.QMainWindow):
                     current = self.real_stage.client.positioner_current_position(
                         item.positioner
                     )
+                    live_actuator_limits.append((live_lo, live_hi))
                     actuator_lines.append(
                         f"{item.positioner}: {current:.6f} mm in "
                         f"[{live_lo:.6f}, {live_hi:.6f}] mm"
                     )
                 except Exception as exc:
+                    live_actuator_limits.append(
+                        (
+                            item.minimum_target_position_mm,
+                            item.maximum_target_position_mm,
+                        )
+                    )
                     actuator_lines.append(
                         f"{item.positioner}: live read failed ({exc}); backup "
                         f"[{item.minimum_target_position_mm:.6f}, "
                         f"{item.maximum_target_position_mm:.6f}] mm"
                     )
 
-            minimum = Pose6D(*(axis_limits[a][0] for a in AXES))
-            maximum = Pose6D(*(axis_limits[a][1] for a in AXES))
-            self.workspace_limits = replace(
-                self.workspace_limits,
-                minimum_pose=minimum,
-                maximum_pose=maximum,
-                source=(
-                    "LIVE HXP Cartesian PositionerUserTravelLimitsGet; "
-                    "real Line moves additionally use "
-                    "HexapodMoveIncrementalControlLimitGet"
-                ),
-                controller_verified=True,
+            # Reference travel from Newport HXP100-family specifications. These
+            # are independent nominal axis ranges, not a guaranteed rectangular
+            # coupled workspace. Keep controller_verified=False.
+            reference = {
+                "X": (-27.5, 27.5),
+                "Y": (-25.0, 25.0),
+                "Z": (-14.0, 14.0),
+                "U": (-11.5, 11.5),
+                "V": (-10.5, 10.5),
+                "W": (-19.0, 19.0),
+            }
+            for axis in AXES:
+                self.limit_min_boxes[axis].setValue(reference[axis][0])
+                self.limit_max_boxes[axis].setValue(reference[axis][1])
+
+            self.limits_verified.setChecked(False)
+            self._workspace_pending_source = (
+                "LIVE HXP physical actuator limits + Newport HXP100-family "
+                "nominal Cartesian reference; coupled workspace NOT verified"
             )
-            self._workspace_pending_source = self.workspace_limits.source
-            self._apply_workspace_limits_to_widgets()
             self.workspace_limit_status.setText(
-                "VERIFIED FROM LIVE HXP • Cartesian limits loaded; "
-                "writing Lines use native HXP coupled-trajectory preflight"
+                "LIVE ACTUATOR LIMITS READ • Cartesian values are NOMINAL "
+                "REFERENCE ONLY • translation Lines/jogs use native HXP preflight"
             )
-            self._diag("Controller Cartesian limits loaded from live HXP")
+            self._diag(
+                "Read physical actuator limits from live HXP; "
+                "HEXAPOD.X…W are virtual Cartesian channels and do not support "
+                "PositionerUserTravelLimitsGet on this controller"
+            )
             for line in actuator_lines:
                 self._diag(line)
+
+            QtWidgets.QMessageBox.information(
+                self,
+                "HXP limits read",
+                "Live limits were read for HEXAPOD.1…6.\n\n"
+                "The Cartesian boxes now show the nominal HXP100-family travel "
+                "reference, but they remain deliberately UNVERIFIED because the "
+                "real six-axis workspace is coupled.\n\n"
+                "For a first real motion test, use an X/Y/Z jog or MOVE LINE: "
+                "those are preflighted by the HXP controller itself.",
+            )
             self._update_recipe_preflight_view()
         except Exception as exc:
             self.limits_verified.setChecked(False)
             QtWidgets.QMessageBox.critical(
                 self,
-                "Could not read HXP limits",
+                "Could not read HXP actuator limits",
                 str(exc),
             )
         finally:
@@ -4435,6 +4463,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._diag(f"Attenuator readback unavailable: {exc}")
             if self.stage_mode.currentIndex() == 1:
                 self._last_stage_snapshot = self.real_stage.snapshot()
+                # Prevent a newly connected real stage from showing a stale
+                # zero target (e.g. Z=0 while the live stage is at Z=-14).
+                self._target_from_actual()
             self._diag(
                 f"Connected HXP {cfg.host}:{cfg.port}; "
                 f"group={cfg.group}, frame={cfg.coordinate_system}"
@@ -4496,8 +4527,43 @@ class MainWindow(QtWidgets.QMainWindow):
     def _move_absolute(self) -> None:
         try:
             target = self._target_pose()
+            stage = self._stage_provider()
+
+            if self.stage_mode.currentIndex() == 1:
+                current = self._planned_stage_pose()
+                rotation_unchanged = all(
+                    abs(a - b) <= 1e-9
+                    for a, b in zip(
+                        target.as_tuple()[3:],
+                        current.as_tuple()[3:],
+                    )
+                )
+                if rotation_unchanged:
+                    dx = target.x - current.x
+                    dy = target.y - current.y
+                    dz = target.z - current.z
+                    if max(abs(dx), abs(dy), abs(dz)) <= 1e-12:
+                        return
+                    velocity = 0.10
+                    self._require_requested_motion(
+                        target,
+                        velocity_mm_s=velocity,
+                    )
+                    stage.move_line_incremental_with_target_velocity(
+                        dx,
+                        dy,
+                        dz,
+                        velocity,
+                    )
+                    self.statusBar().showMessage(
+                        "Real XYZ target move sent as controller-preflighted "
+                        "Line at 0.10 mm/s",
+                        5000,
+                    )
+                    return
+
             self._require_requested_motion(target)
-            self._stage_provider().move_absolute(target)
+            stage.move_absolute(target)
         except Exception as exc:
             QtWidgets.QMessageBox.critical(
                 self,
@@ -4520,10 +4586,32 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         try:
             delta = Pose6D.from_iterable(values)
-            self._require_requested_motion(
-                self._planned_stage_pose().plus(delta)
-            )
-            self._stage_provider().move_incremental(delta)
+            target = self._planned_stage_pose().plus(delta)
+            stage = self._stage_provider()
+
+            if self.stage_mode.currentIndex() == 1 and axis in "XYZ":
+                # Commissioning-safe translation jog: ask the HXP whether the
+                # complete Line is executable before issuing the matching Line
+                # command. No fake Cartesian box or decorative STEP kinematics
+                # are used as safety authority.
+                velocity = 0.10
+                self._require_requested_motion(
+                    target,
+                    velocity_mm_s=velocity,
+                )
+                stage.move_line_incremental_with_target_velocity(
+                    delta.x,
+                    delta.y,
+                    delta.z,
+                    velocity,
+                )
+                return
+
+            # Virtual jogs and real rotational jogs keep the ordinary path.
+            # Real U/V/W therefore remain blocked until a coupled rotational
+            # workspace is deliberately commissioned.
+            self._require_requested_motion(target)
+            stage.move_incremental(delta)
         except Exception as exc:
             QtWidgets.QMessageBox.critical(
                 self,
