@@ -165,7 +165,14 @@ class VirtualHexapodProvider(HexapodProvider):
 
     def tick(self, dt_s: float) -> None:
         with self._lock:
-            if not self._connected or self._state != MotionState.MOVING:
+            if not self._connected:
+                return
+            if self._state == MotionState.ABORTED:
+                # Preserve ABORTED long enough for one snapshot/UI refresh, then
+                # return the virtual stage to an idle commandable state.
+                self._state = MotionState.IDLE
+                return
+            if self._state != MotionState.MOVING:
                 return
             self._elapsed += max(0.0, float(dt_s))
             f = min(1.0, self._elapsed / max(self._duration, 1e-9))
