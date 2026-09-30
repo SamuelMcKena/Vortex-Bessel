@@ -4415,8 +4415,19 @@ class MainWindow(QtWidgets.QMainWindow):
         ):
             try:
                 self._last_stage_snapshot = self.real_stage.snapshot()
-            except Exception:
-                pass
+                self._ensure_pose_widget_ranges_include(
+                    self._last_stage_snapshot.actual
+                )
+                self._target_from_actual()
+            except Exception as exc:
+                self._last_stage_snapshot = HexapodSnapshot(
+                    timestamp_s=time.time(),
+                    actual=self._last_stage_snapshot.actual,
+                    state=MotionState.FAULT,
+                    connected=True,
+                    provider="hxp-real",
+                    status_text=f"INITIAL POLL ERROR: {exc}",
+                )
         else:
             self._last_stage_snapshot = HexapodSnapshot(
                 timestamp_s=time.time(),
@@ -4885,6 +4896,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 cfg,
             )
             self.real_laser.connect()
+            self._beam_close_failed = False
             self._diag(
                 "Real LX13/Pockels provider armed; CLOSED state requested"
             )
@@ -6042,7 +6054,24 @@ class MainWindow(QtWidgets.QMainWindow):
             )
 
         laser = self._laser_snapshot()
-        if laser.pockels_open:
+        if (
+            self._beam_close_failed
+            and self.lab_mode.currentIndex() == 1
+            and self.real_laser is not None
+        ):
+            self.manual_beam_status.setText(
+                "BEAM STATE UNKNOWN • CLOSE COMMAND FAILED"
+            )
+            self._set_object_style(
+                self.manual_beam_status,
+                "laserOn",
+            )
+            self.beam_chip.setText("BEAM STATE UNKNOWN")
+            self._set_object_style(
+                self.beam_chip,
+                "chipWarn",
+            )
+        elif laser.pockels_open:
             self.manual_beam_status.setText(
                 "LASER ON • POCKELS OPEN"
                 + (
@@ -6111,25 +6140,62 @@ class MainWindow(QtWidgets.QMainWindow):
                 "chipWarn",
             )
 
-        if snap.connected and snap.state != MotionState.MOVING:
+        real_mode = self.stage_mode.currentIndex() == 1
+        readback_fresh = (
+            not real_mode
+            or (
+                snap.connected
+                and (time.time() - snap.timestamp_s) <= 1.0
+            )
+        )
+        frames_ok = (
+            not real_mode
+            or self._real_frames_match_profile
+        )
+        stage_ready = bool(
+            snap.connected
+            and snap.state == MotionState.IDLE
+            and readback_fresh
+            and frames_ok
+        )
+
+        if stage_ready:
             self._enforce_sample_bounds_are_reachable()
         self._update_sample_readouts(snap)
         self._update_script_readouts()
 
-        if snap.state == MotionState.MOVING:
+        if snap.state == MotionState.MOVING and readback_fresh:
             self.stage_chip.setText("STAGE MOVING")
             self._set_object_style(
                 self.stage_chip,
                 "chipLive",
             )
-        elif snap.connected:
+        elif not snap.connected:
+            self.stage_chip.setText("STAGE NOT CONNECTED")
+            self._set_object_style(
+                self.stage_chip,
+                "chipWarn",
+            )
+        elif not readback_fresh:
+            self.stage_chip.setText("STAGE READBACK STALE")
+            self._set_object_style(
+                self.stage_chip,
+                "chipWarn",
+            )
+        elif real_mode and not frames_ok:
+            self.stage_chip.setText("STAGE FRAME MISMATCH")
+            self._set_object_style(
+                self.stage_chip,
+                "chipWarn",
+            )
+        elif snap.state == MotionState.IDLE:
             self.stage_chip.setText("STAGE READY")
             self._set_object_style(
                 self.stage_chip,
                 "chipSafe",
             )
         else:
-            self.stage_chip.setText("STAGE NOT CONNECTED")
+            self.stage_chip.setText("STAGE NOT READY")
             self._set_object_style(
                 self.stage_chip,
                 "chipWarn",
@@ -6149,14 +6215,19 @@ class MainWindow(QtWidgets.QMainWindow):
             not self._recipe_running
             and not self._manual_write_line_active
         )
-        stage_ready = snap.connected
         motion_ready = stage_ready and operator_free
         self.move_abs_btn.setEnabled(motion_ready)
-        self.home_btn.setEnabled(motion_ready)
+        # HOME is state-aware itself: permit it on a fresh connected controller
+        # so an explicitly Not Referenced group can be homed.
+        self.home_btn.setEnabled(
+            snap.connected
+            and readback_fresh
+            and operator_free
+        )
         for button in self.jog_buttons:
             button.setEnabled(motion_ready)
 
-        laser_ready = laser.connected
+        laser_ready = laser.connected and not self._beam_close_failed
         real_manual_ok = (
             self.laser_mode.currentIndex() == 0
             or self.manual_beam_arm.isChecked()
@@ -6165,12 +6236,12 @@ class MainWindow(QtWidgets.QMainWindow):
             laser_ready and real_manual_ok and operator_free
         )
         # Closing the process beam remains available even while a script runs.
-        self.laser_off_btn.setEnabled(laser_ready)
+        self.laser_off_btn.setEnabled(laser.connected)
 
         quick_stage_ready = (
             stage_ready
             and not self._recipe_running
-            and snap.state != MotionState.MOVING
+            and not self._manual_write_line_active
         )
         self.quick_move_btn.setEnabled(quick_stage_ready)
         self.quick_return_btn.setEnabled(quick_stage_ready)
@@ -6185,18 +6256,16 @@ class MainWindow(QtWidgets.QMainWindow):
             att_ready and operator_free
         )
         self.capture_sample_btn.setEnabled(
-            stage_ready
-            and operator_free
-            and snap.state != MotionState.MOVING
+            stage_ready and operator_free
         )
 
-        # Do not allow provider switching while motion or a script is active.
+        # Do not allow provider switching/reconnection while motion or a script
+        # is active, or while the most recent real readback is not trustworthy.
         provider_switch_safe = (
             not self._recipe_running
+            and not self._manual_write_line_active
             and snap.state != MotionState.MOVING
         )
-        # Global MOCK/REAL mode owns provider selection. The subordinate
-        # provider boxes are read-only indicators in ordinary operation.
         self.lab_mode.setEnabled(provider_switch_safe)
         self.legacy_profile_combo.setEnabled(
             provider_switch_safe and self.lab_mode.currentIndex() == 0
@@ -6207,9 +6276,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.stage_mode.setEnabled(False)
         self.laser_mode.setEnabled(False)
         self.attenuator_mode.setEnabled(False)
-        self.connect_stage_btn.setEnabled(not self._recipe_running)
-        self.disconnect_stage_btn.setEnabled(not self._recipe_running)
-        self.real_script_arm.setEnabled(not self._recipe_running)
+        self.connect_stage_btn.setEnabled(provider_switch_safe)
+        self.disconnect_stage_btn.setEnabled(provider_switch_safe)
+        self.real_script_arm.setEnabled(
+            provider_switch_safe and stage_ready
+        )
 
     def _update_sample_readouts(self, snap: HexapodSnapshot) -> None:
         """Keep the sample chip and clearance text in step with the stage."""
