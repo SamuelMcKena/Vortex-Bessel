@@ -45,6 +45,9 @@ ASSETS_DIR = APP_ROOT / "assets"
 DEFAULT_PROFILE = ASSETS_DIR / "cad_profile.json"
 DEFAULT_CONFIG = APP_ROOT / "hardware_config.example.json"
 LEGACY_EVIDENCE = ASSETS_DIR / "legacy_hardware_evidence.json"
+CURRENT_LAB_OBSERVATIONS = (
+    ASSETS_DIR / "current_lab_observations_2026-09-30.json"
+)
 
 
 class RecipeList(QtWidgets.QListWidget):
@@ -78,6 +81,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.kinematics = RigKinematics(self.profile)
         self.legacy_profile: LegacyHardwareProfile = (
             load_legacy_hardware_profile(LEGACY_EVIDENCE)
+        )
+        self.current_lab_observations = (
+            json.loads(
+                CURRENT_LAB_OBSERVATIONS.read_text(encoding="utf-8")
+            )
+            if CURRENT_LAB_OBSERVATIONS.is_file()
+            else {}
         )
         self._selected_legacy_candidate_key = "labview_v3"
 
@@ -1105,8 +1115,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.raw_analog_value.setDecimals(3)
         self.raw_analog_value.setValue(1.0)
         self.raw_analog_value.setToolTip(
-            "The supplied TCL scripts only establish historical raw values "
-            "1 through 5. This is NOT calibrated transmission or pulse energy."
+            "The supplied TCL scripts used raw values 1 through 5. "
+            "A live 2026-09-30 HXP snapshot showed GPIO2.DAC1 = 10.0000, "
+            "so 1–5 is only a historical writing subset, NOT the full DAC "
+            "range and NOT calibrated transmission or pulse energy."
         )
         self.raw_analog_arm = QtWidgets.QCheckBox(
             "I confirm this GPIO is the present analogue power/attenuation path"
@@ -1117,7 +1129,7 @@ class MainWindow(QtWidgets.QMainWindow):
         raw_buttons = QtWidgets.QHBoxLayout()
         read_raw = QtWidgets.QPushButton("READ RAW")
         read_raw.clicked.connect(self._read_raw_analog)
-        write_raw = QtWidgets.QPushButton("WRITE RAW 1–5")
+        write_raw = QtWidgets.QPushButton("WRITE LEGACY RAW 1–5")
         write_raw.setObjectName("danger")
         write_raw.clicked.connect(self._write_raw_analog)
         raw_buttons.addWidget(read_raw)
@@ -1163,16 +1175,29 @@ class MainWindow(QtWidgets.QMainWindow):
         selftest_layout.addWidget(self.commission_log, 1)
         right_layout.addWidget(selftest_box, 1)
 
-        recovered = QtWidgets.QGroupBox("WHAT THE OLD FILES ESTABLISH")
+        recovered = QtWidgets.QGroupBox(
+            "LEGACY EVIDENCE + CURRENT LAB SNAPSHOT"
+        )
         recovered_layout = QtWidgets.QVBoxLayout(recovered)
         recovered_text = QtWidgets.QLabel(
-            "HXP 192.168.0.254:5001 • 10 s timeout • HEXAPOD • Work frame\n"
-            "LabVIEW v3 Pockels candidate: GPIO3.DO, mask 1, states 0/1 "
+            "CONFIRMED LIVE 2026-09-30:\n"
+            "• HXP 192.168.0.254:5001 reachable from lab PC 192.168.0.100\n"
+            "• Work pose snapshot: X=0, Y=0, Z=-13.999998 mm, "
+            "U=-1e-6°, V=0, W=0\n"
+            "• Tool/Carriage Z=25 mm • Base/World Z=25 mm • "
+            "Work/World Z=209 mm\n"
+            "• GPIO1.DO raw=4 • GPIO3.DO=0 • GPIO4.DO=0\n"
+            "• GPIO2.DAC1=10.0000\n"
+            "• PHAROS LX13 physically populated • HXP GPIO3 physically populated\n\n"
+            "LEGACY SOURCE EVIDENCE:\n"
+            "• LabVIEW-v3 Pockels candidate: GPIO3.DO, mask 1, states 0/1 "
             "(polarity unresolved)\n"
-            "TCL writing map: GPIO4.DO, mask 1, write=1, non-write=0\n"
-            "Gate/writing marker: GPIO1.DO, mask 4, states 0/4; "
+            "• TCL writing map: GPIO4.DO, mask 1, write=1, non-write=0\n"
+            "• Gate/writing marker: GPIO1.DO, mask 4, states 0/4; "
             "MotionStart/MotionEnd toggle\n"
-            "Power evidence: GPIO2.DAC1; v3 also references COM7"
+            "• Power path evidence: GPIO2.DAC1; v3 also references COM7\n\n"
+            "IMPORTANT: the photos do not yet prove that the populated HXP GPIO3 "
+            "cable is the exact cable arriving at PHAROS LX13."
         )
         recovered_text.setWordWrap(True)
         recovered_text.setObjectName("statusPill")
