@@ -1,0 +1,19 @@
+HEXAPOD + LASER LAB — CONTROLLER-BACKED BUILD (2026-09-30)
+
+1. Extract the entire ZIP to a normal local folder.
+2. Double-click INSTALL_AND_START.bat the first time.
+3. After setup, use START_HEXAPOD_LAB.bat for normal launches.
+4. Start in MOCK LAB and exercise the CAD, 2D map, jogs, WRITE LINE, scripts and sweeps.
+5. REAL LAB is configured for the recovered/live HXP endpoint 192.168.0.254:5001.
+
+CURRENT CONTROLLER-BACKED FACTS INCLUDED
+- Group: HEXAPOD; processing frame: Work.
+- Work Z=209 mm, Base Z=25 mm, Tool Z=25 mm.
+- Actual controller/actuator profile is stored under assets/.
+- Real motion safety does NOT use the STEP model as its authority.
+- Translation-only Line/Move-While-Write preflights through the HXP native control-limit query.
+- Real GPIO2.DAC1 attenuator mapping: raw 0–10 = 0–100 % transmission; 4.00 = 40 %.
+- Pockels/LX13 real opening stays commissioning-locked until the current physical GPIO route/polarity is verified.
+
+The included Stewart Platform.STEP in the downloadable package is the articulated visual model.
+The physical E-stop and laser interlock remain authoritative safety systems.
