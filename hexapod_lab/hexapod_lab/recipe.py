@@ -312,14 +312,35 @@ def preflight_recipe(recipe: Recipe) -> list[PreflightIssue]:
 
             elif step.kind == StepKind.MOVE_LINE_VELOCITY:
                 if pockels_open:
-                    issues.append(
-                        PreflightIssue(
-                            "error",
-                            "ordinary Line motion while the Pockels cell is OPEN is "
-                            "not allowed; use MOVE WHILE WRITE or close the beam first",
-                            i,
-                        )
+                    next_step = (
+                        recipe.steps[i + 1]
+                        if i + 1 < len(recipe.steps)
+                        else None
                     )
+                    explicitly_closed_next = bool(
+                        next_step is not None
+                        and next_step.kind == StepKind.POCKELS_CELL
+                        and not bool(next_step.payload.get("open"))
+                    )
+                    if explicitly_closed_next:
+                        issues.append(
+                            PreflightIssue(
+                                "warning",
+                                "legacy OPEN → LINE → CLOSED write pattern; "
+                                "MOVE WHILE WRITE is safer for new recipes",
+                                i,
+                            )
+                        )
+                    else:
+                        issues.append(
+                            PreflightIssue(
+                                "error",
+                                "Line motion while the Pockels cell is OPEN must "
+                                "be followed immediately by POCKELS CLOSED, or use "
+                                "MOVE WHILE WRITE",
+                                i,
+                            )
+                        )
                 delta = list(step.payload["delta_xyz_mm"])
                 if len(delta) != 3:
                     raise ValueError(
