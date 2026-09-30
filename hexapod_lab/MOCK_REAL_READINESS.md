@@ -11,7 +11,7 @@ This file is the practical status sheet for the standalone Hexapod + Laser Lab G
 | Manual WRITE LINE | Implemented | Implemented; real Pockels must be commissioned/armed |
 | Pockels OPEN/CLOSED | Logical virtual state | HXP GPIO provider + output-register readback |
 | Pockels hardware profile | LabVIEW-v3 and TCL mock profiles | Candidate preload only; physical verification required |
-| Attenuator % | Fully simulated | Deliberately unavailable until calibrated |
+| Attenuator % | Fully simulated | Implemented on `GPIO2.DAC1`; confirmed inverse mapping 0→100%, 10→0% with readback |
 | Legacy raw analogue 1–5 | Simulated/readable | Guarded commissioning read/write on chosen HXP analogue GPIO |
 | Raster / velocity sweep generation | Implemented | Same recipe engine; real-provider preflight applies |
 | Fault injection | Stage / Pockels / attenuator faults | N/A |
@@ -53,16 +53,27 @@ The code is intentionally waiting on physical confirmation for:
 - current Pockels OPEN/CLOSED polarity;
 - electrical compatibility of that interface;
 - identity/protocol of the COM7 device;
-- calibrated relation between raw power/attenuation command and measured optical
-  transmission / pulse energy;
+- pulse-energy calibration at the sample if the GUI is later asked to express the attenuator setting as pulse energy rather than transmission;
 - measured lab-to-sample beam-axis registration.
 
 Those are commissioning measurements, not missing GUI architecture.
 
 ## Controller-backed status (2026-09-30)
 
-**Ready now:** MOCK LAB, exact STEP visualisation, recipe development, native target-velocity Line simulation, live HXP connection/readback, controller-derived Cartesian-limit import, native HXP Line feasibility preflight, and real GPIO2.DAC1 attenuator read/write with the confirmed inverse endpoints `0 = 100 %` and `10 = 0 % transmission`.
+**Ready now:** MOCK LAB, exact STEP visualisation, recipe development, native target-velocity Line simulation, live HXP connection/readback, live six-actuator limit readback, live Work/Tool-frame verification, native HXP Line feasibility preflight, and real GPIO2.DAC1 attenuator read/write with the confirmed inverse endpoints `0 = 100 %` and `10 = 0 % transmission`.
 
 **Still intentionally locked:** real Pockels opening until the present GPIO-to-LX13 physical path and OPEN/CLOSED polarity are electrically confirmed.
 
 The controller backup, not the STEP, is the source of truth for the real stage configuration. The STEP is visual-only for real motion.
+
+
+## Live-controller safeguards added after first hardware connection
+
+- `PositionerUserTravelLimitsGet` is used only for physical `HEXAPOD.1`…`.6`.
+- XYZ Line/jog/XYZ-target motion uses the controller's coupled Line-limit preflight.
+- The Line executable amount is treated as a 0–1 fraction (`1.0 = 100%`).
+- Real motion is disabled on stale polling, non-ready group state, or Work/Tool frame mismatch.
+- Long synchronous HXP moves receive a motion-sized socket timeout rather than the ordinary 10 s network timeout.
+- Failed motion workers trigger a software abort and, if relevant, Pockels close.
+- Real beam OPEN is blocked unless controller state/readback/frames are healthy.
+- Pockels CLOSE failure is surfaced as **beam state unknown**.
