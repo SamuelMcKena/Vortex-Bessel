@@ -52,7 +52,6 @@ def build_step_mesh_cache(
     cache = root / digest[:16]
     cache.mkdir(parents=True, exist_ok=True)
     manifest_path = cache / "manifest.json"
-
     if manifest_path.is_file():
         try:
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))

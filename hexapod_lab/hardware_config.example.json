@@ -2,12 +2,63 @@
   "operating_mode": "mock",
   "legacy_profile_key": "labview_v3",
   "mock_time_scale": 1,
+  "workspace_limits": {
+    "source": "provisional CAD/HXP-manual envelope; replace with verified controller/manual values",
+    "controller_verified": false,
+    "axes": {
+      "X": [
+        -25.0,
+        25.0
+      ],
+      "Y": [
+        -25.0,
+        25.0
+      ],
+      "Z": [
+        0.0,
+        28.0
+      ],
+      "U": [
+        -8.0,
+        8.0
+      ],
+      "V": [
+        -8.0,
+        8.0
+      ],
+      "W": [
+        -10.0,
+        10.0
+      ]
+    },
+    "struts": {
+      "minimum_length_mm": [
+        334.315535,
+        334.315535,
+        334.315535,
+        334.315535,
+        334.315535,
+        334.315535
+      ],
+      "maximum_length_mm": [
+        434.315535,
+        434.315535,
+        434.315535,
+        434.315535,
+        434.315535,
+        434.315535
+      ],
+      "maximum_tilt_from_home_deg": 12.0
+    },
+    "maximum_line_velocity_mm_s": 2.1,
+    "path_samples": 25
+  },
   "hxp": {
     "host": "192.168.0.254",
     "port": 5001,
     "group": "HEXAPOD",
     "coordinate_system": "Work",
-    "timeout_s": 10
+    "timeout_s": 10.0
   },
   "pockels": {
     "connector": "PHAROS LX13",
@@ -19,8 +70,12 @@
     "wiring_verified": false
   },
   "attenuator": {
-    "provider": "virtual",
-    "model": "",
-    "transmission_percent": 0
+    "provider": "hxp_analog",
+    "model": "HXP GPIO2.DAC1",
+    "gpio_name": "GPIO2.DAC1",
+    "raw_min": 0.0,
+    "raw_max": 10.0,
+    "transmission_percent": 40.0,
+    "confirmed_point": "4.00 raw = 40% transmission"
   }
 }

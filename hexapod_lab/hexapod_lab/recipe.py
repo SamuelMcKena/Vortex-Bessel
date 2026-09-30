@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -13,9 +14,24 @@ class StepKind(str, Enum):
     MOVE_ABSOLUTE = "move_absolute"
     MOVE_INCREMENTAL = "move_incremental"
     MOVE_LINE_VELOCITY = "move_line_velocity"
+    WRITE_LINE = "write_line"
     POCKELS_CELL = "pockels_cell"
     ATTENUATOR_SET = "attenuator_set"
     WAIT = "wait"
+
+
+#: Steps that command stage motion.
+MOTION_KINDS = frozenset(
+    {
+        StepKind.MOVE_ABSOLUTE,
+        StepKind.MOVE_INCREMENTAL,
+        StepKind.MOVE_LINE_VELOCITY,
+        StepKind.WRITE_LINE,
+    }
+)
+
+#: Steps that command the Pockels cell.
+POCKELS_KINDS = frozenset({StepKind.POCKELS_CELL, StepKind.WRITE_LINE})
 
 
 @dataclass(slots=True)
@@ -26,6 +42,8 @@ class RecipeStep:
 
     @classmethod
     def move_absolute(cls, pose: Pose6D) -> "RecipeStep":
+        if not all(math.isfinite(v) for v in pose.as_tuple()):
+            raise ValueError("absolute pose values must be finite")
         return cls(
             StepKind.MOVE_ABSOLUTE,
             "Move absolute",
@@ -34,6 +52,8 @@ class RecipeStep:
 
     @classmethod
     def move_incremental(cls, delta: Pose6D) -> "RecipeStep":
+        if not all(math.isfinite(v) for v in delta.as_tuple()):
+            raise ValueError("incremental move values must be finite")
         return cls(
             StepKind.MOVE_INCREMENTAL,
             "Move incremental",
@@ -48,18 +68,49 @@ class RecipeStep:
         dz_mm: float,
         velocity_mm_s: float,
     ) -> "RecipeStep":
+        delta = [float(dx_mm), float(dy_mm), float(dz_mm)]
         velocity = float(velocity_mm_s)
+        if not all(math.isfinite(v) for v in [*delta, velocity]):
+            raise ValueError("line move values must be finite")
         if velocity <= 0:
             raise ValueError("line target velocity must be > 0 mm/s")
         return cls(
             StepKind.MOVE_LINE_VELOCITY,
             "Line move at target velocity",
             {
-                "delta_xyz_mm": [
-                    float(dx_mm),
-                    float(dy_mm),
-                    float(dz_mm),
-                ],
+                "delta_xyz_mm": delta,
+                "velocity_mm_s": velocity,
+            },
+        )
+
+    @classmethod
+    def write_line(
+        cls,
+        dx_mm: float,
+        dy_mm: float,
+        dz_mm: float,
+        velocity_mm_s: float,
+    ) -> "RecipeStep":
+        """Move while writing: Pockels OPEN for the move, CLOSED afterwards.
+
+        This mirrors the recovered LabVIEW ``LINE Move_While Write`` behaviour as
+        one indivisible block, so a sequence cannot be reordered into a state
+        where the beam is left open across a repositioning move.
+        """
+
+        delta = [float(dx_mm), float(dy_mm), float(dz_mm)]
+        velocity = float(velocity_mm_s)
+        if not all(math.isfinite(v) for v in [*delta, velocity]):
+            raise ValueError("write-line values must be finite")
+        if velocity <= 0:
+            raise ValueError("write-line target velocity must be > 0 mm/s")
+        if not any(abs(v) > 0 for v in delta):
+            raise ValueError("a write line needs a non-zero dX, dY or dZ")
+        return cls(
+            StepKind.WRITE_LINE,
+            "Move while write",
+            {
+                "delta_xyz_mm": delta,
                 "velocity_mm_s": velocity,
             },
         )
@@ -80,6 +131,8 @@ class RecipeStep:
     @classmethod
     def attenuator_set(cls, transmission_percent: float) -> "RecipeStep":
         value = float(transmission_percent)
+        if not math.isfinite(value):
+            raise ValueError("attenuator transmission must be finite")
         if not 0.0 <= value <= 100.0:
             raise ValueError("attenuator transmission must be between 0 and 100 %")
         return cls(
@@ -90,7 +143,10 @@ class RecipeStep:
 
     @classmethod
     def wait(cls, seconds: float) -> "RecipeStep":
-        seconds = max(0.0, float(seconds))
+        seconds = float(seconds)
+        if not math.isfinite(seconds):
+            raise ValueError("wait time must be finite")
+        seconds = max(0.0, seconds)
         return cls(
             StepKind.WAIT,
             f"Wait {seconds:g} s",
@@ -123,6 +179,21 @@ class RecipeStep:
                 "LINE  "
                 f"dX={delta[0]:.3f}  dY={delta[1]:.3f}  "
                 f"dZ={delta[2]:.3f}  @ {velocity:.3f} mm/s"
+            )
+        if self.kind == StepKind.WRITE_LINE:
+            delta = [
+                float(v)
+                for v in self.payload.get(
+                    "delta_xyz_mm",
+                    [0.0, 0.0, 0.0],
+                )
+            ]
+            velocity = float(self.payload.get("velocity_mm_s", 0.0))
+            return (
+                "WRITE  "
+                f"dX={delta[0]:.3f}  dY={delta[1]:.3f}  "
+                f"dZ={delta[2]:.3f}  @ {velocity:.3f} mm/s  "
+                "(beam OPEN during the move only)"
             )
         if self.kind == StepKind.POCKELS_CELL:
             return (
@@ -169,8 +240,10 @@ class Recipe:
     steps: list[RecipeStep] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
+        # v3 adds the combined write-line ("move while write") block. Earlier
+        # files remain loadable.
         return {
-            "version": 2,
+            "version": 3,
             "name": self.name,
             "steps": [step.to_dict() for step in self.steps],
         }
@@ -185,7 +258,7 @@ class Recipe:
     def load(cls, path: str | Path) -> "Recipe":
         data = json.loads(Path(path).read_text(encoding="utf-8"))
         version = int(data.get("version", 1))
-        if version not in (1, 2):
+        if version not in (1, 2, 3):
             raise ValueError(f"unsupported recipe version {version}")
         return cls(
             name=str(data.get("name", "Recipe")),
@@ -210,10 +283,14 @@ def preflight_recipe(recipe: Recipe) -> list[PreflightIssue]:
     for i, step in enumerate(recipe.steps):
         try:
             if step.kind == StepKind.MOVE_ABSOLUTE:
-                Pose6D.from_iterable(step.payload["pose"])
+                pose = Pose6D.from_iterable(step.payload["pose"])
+                if not all(math.isfinite(v) for v in pose.as_tuple()):
+                    raise ValueError("absolute pose values must be finite")
 
             elif step.kind == StepKind.MOVE_INCREMENTAL:
-                Pose6D.from_iterable(step.payload["delta"])
+                delta_pose = Pose6D.from_iterable(step.payload["delta"])
+                if not all(math.isfinite(v) for v in delta_pose.as_tuple()):
+                    raise ValueError("incremental move values must be finite")
 
             elif step.kind == StepKind.MOVE_LINE_VELOCITY:
                 delta = list(step.payload["delta_xyz_mm"])
@@ -221,8 +298,13 @@ def preflight_recipe(recipe: Recipe) -> list[PreflightIssue]:
                     raise ValueError(
                         "line move requires dX, dY and dZ"
                     )
-                [float(v) for v in delta]
+                numeric_delta = [float(v) for v in delta]
                 velocity = float(step.payload["velocity_mm_s"])
+                if not all(
+                    math.isfinite(v)
+                    for v in [*numeric_delta, velocity]
+                ):
+                    raise ValueError("line move values must be finite")
                 if velocity <= 0:
                     issues.append(
                         PreflightIssue(
@@ -231,6 +313,45 @@ def preflight_recipe(recipe: Recipe) -> list[PreflightIssue]:
                             i,
                         )
                     )
+
+            elif step.kind == StepKind.WRITE_LINE:
+                delta = list(step.payload["delta_xyz_mm"])
+                if len(delta) != 3:
+                    raise ValueError("write line requires dX, dY and dZ")
+                numeric_delta = [float(v) for v in delta]
+                velocity = float(step.payload["velocity_mm_s"])
+                if not all(
+                    math.isfinite(v)
+                    for v in [*numeric_delta, velocity]
+                ):
+                    raise ValueError("write-line values must be finite")
+                if velocity <= 0:
+                    issues.append(
+                        PreflightIssue(
+                            "error",
+                            "write-line target velocity must be > 0 mm/s",
+                            i,
+                        )
+                    )
+                if not any(abs(v) > 0 for v in numeric_delta):
+                    issues.append(
+                        PreflightIssue(
+                            "error",
+                            "write line has zero length",
+                            i,
+                        )
+                    )
+                if pockels_open:
+                    issues.append(
+                        PreflightIssue(
+                            "warning",
+                            "the Pockels cell is already OPEN; this write block "
+                            "closes it when the line finishes",
+                            i,
+                        )
+                    )
+                # The block opens the cell for the move and closes it again.
+                pockels_open = False
 
             elif step.kind == StepKind.POCKELS_CELL:
                 requested = bool(step.payload.get("open"))
@@ -247,6 +368,8 @@ def preflight_recipe(recipe: Recipe) -> list[PreflightIssue]:
 
             elif step.kind == StepKind.ATTENUATOR_SET:
                 value = float(step.payload["transmission_percent"])
+                if not math.isfinite(value):
+                    raise ValueError("attenuator transmission must be finite")
                 if not 0.0 <= value <= 100.0:
                     issues.append(
                         PreflightIssue(
@@ -265,7 +388,10 @@ def preflight_recipe(recipe: Recipe) -> list[PreflightIssue]:
                     )
 
             elif step.kind == StepKind.WAIT:
-                if float(step.payload.get("seconds", 0.0)) < 0:
+                seconds = float(step.payload.get("seconds", 0.0))
+                if not math.isfinite(seconds):
+                    raise ValueError("wait time must be finite")
+                if seconds < 0:
                     issues.append(
                         PreflightIssue(
                             "error",

@@ -11,7 +11,9 @@ def main() -> int:
     app.setApplicationName("Hexapod + Laser Lab")
     app.setOrganizationName("Heriot-Watt AOP")
     window = MainWindow()
-    window.show()
+    # A lab control screen wants the whole desktop: on a 1280x800 panel the
+    # four-column layout does not fit in a floating window.
+    window.showMaximized()
     return app.exec()
 
 

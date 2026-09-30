@@ -28,14 +28,21 @@ class Hexapod3DViewer(QtInteractor):
         self._pose = Pose6D()
         self._laser_on = False
         # Traces are stored in SAMPLE-LOCAL CAD coordinates so they stay
-        # attached to the sample when the carriage subsequently moves.
-        self._travel_points: list[np.ndarray] = []
-        self._process_points: list[np.ndarray] = []
-        self._last_travel_point: np.ndarray | None = None
-        self._last_process_point: np.ndarray | None = None
+        # attached to the sample when the carriage subsequently moves. They are
+        # kept as alternating beam-ON/beam-OFF runs so a repositioning move is
+        # never rendered as though it were written material.
+        self._segments: list[tuple[bool, list[np.ndarray]]] = []
         self._beam_hit_world: np.ndarray | None = None
         self._beam_hit_sample_xy: tuple[float, float] | None = None
+        self._show_travel = True
+        self._show_written = True
         self._status_cb = None
+        # A static scene does not need re-rendering 20 times a second; the
+        # twin only redraws when the pose, the beam state or a trace changes.
+        self._last_render_key: tuple | None = None
+        # Completed runs never change, so their point arrays are cached and
+        # only the run currently being written is re-serialised each frame.
+        self._run_arrays: dict[int, tuple[int, np.ndarray]] = {}
 
         self.set_background("#071018", top="#111a24")
         self.add_axes(line_width=2, color="#71808e")
@@ -149,21 +156,32 @@ class Hexapod3DViewer(QtInteractor):
         self._travel_mesh = self._make_line_poly(anchor)
         self._travel_actor = self.add_mesh(
             self._travel_mesh,
-            color="#60707d",
+            color="#7d8c99",
             line_width=2,
-            opacity=0.28,
+            opacity=0.35,
             name="travel-trace",
         )
         self._travel_actor.SetVisibility(False)
         self._process_mesh = self._make_line_poly(anchor.copy())
         self._process_actor = self.add_mesh(
             self._process_mesh,
-            color="#ffc45e",
-            line_width=6,
+            color="#ffb236",
+            line_width=7,
             render_lines_as_tubes=True,
             name="process-trace",
         )
         self._process_actor.SetVisibility(False)
+
+        # Calibrated sample outline, drawn on the moving sample surface.
+        self._sample_outline_mesh = self._make_line_poly(anchor.copy())
+        self._sample_outline_actor = self.add_mesh(
+            self._sample_outline_mesh,
+            color="#4fa8d8",
+            line_width=4,
+            render_lines_as_tubes=True,
+            name="sample-outline",
+        )
+        self._sample_outline_actor.SetVisibility(False)
 
         self.add_text(
             "LIVE DIGITAL TWIN  •  fixed beam / moving sample",
@@ -206,38 +224,158 @@ class Hexapod3DViewer(QtInteractor):
             return None, top_tf
         return self._beam_origin + ray_t * self._beam_direction, top_tf
 
+    def _invalidate(self) -> None:
+        self._last_render_key = None
+
     def clear_traces(self) -> None:
-        self._travel_points.clear(); self._process_points.clear()
-        self._last_travel_point = None; self._last_process_point = None
-        self._sync_trace_mesh(self._travel_mesh, self._travel_points, self._travel_actor)
-        self._sync_trace_mesh(self._process_mesh, self._process_points, self._process_actor)
+        self._invalidate()
+        self._run_arrays.clear()
+        self._segments.clear()
+        self._sync_traces()
+        self.render()
+
+    def set_trace_visibility(self, *, travel: bool | None = None, written: bool | None = None) -> None:
+        self._invalidate()
+        if travel is not None:
+            self._show_travel = bool(travel)
+        if written is not None:
+            self._show_written = bool(written)
+        self._sync_traces()
+        self.render()
+
+    def set_sample_outline(self, polygon_xy: Iterable[tuple[float, float]] | None) -> None:
+        """Draw the calibrated sample boundary on the sample surface.
+
+        ``polygon_xy`` is expressed in the same sample-local (X, Z) frame that
+        :attr:`beam_hit_sample_xy` reports, so the outline lines up exactly with
+        the captured edge points.
+        """
+
+        self._invalidate()
+        polygon = [] if polygon_xy is None else [tuple(p) for p in polygon_xy]
+        if len(polygon) < 3:
+            self._sample_outline_actor.SetVisibility(False)
+            self.render()
+            return
+        height = float(self._sample_surface_point_home[1]) + 0.15
+        loop = [*polygon, polygon[0]]
+        points = np.asarray(
+            [[float(x), height, float(z)] for x, z in loop],
+            dtype=float,
+        )
+        self._sample_outline_mesh.points = points
+        self._sample_outline_mesh.lines = np.hstack(
+            ([len(points)], np.arange(len(points), dtype=np.int64))
+        )
+        self._sample_outline_actor.SetVisibility(True)
+        self._set_actor_matrix(
+            self._sample_outline_actor,
+            self.kinematics.top_transform(self._pose),
+        )
+        self.render()
+
+    def set_view(self, name: str) -> None:
+        """Snap the camera to a named operator view."""
+        presets = {
+            "iso": [(850, 650, 850), (0, 220, 0), (0, 1, 0)],
+            "top": [(0, 1250, 0.1), (0, 220, 0), (0, 0, -1)],
+            "front": [(0, 330, 1250), (0, 220, 0), (0, 1, 0)],
+            "side": [(1250, 330, 0), (0, 220, 0), (0, 1, 0)],
+        }
+        self.camera_position = presets.get(str(name).lower(), presets["iso"])
         self.render()
 
     @staticmethod
-    def _sync_trace_mesh(mesh: pv.PolyData, points: list[np.ndarray], actor) -> None:
+    def _multi_cell_lines(runs: list[list[np.ndarray]]) -> tuple[np.ndarray, np.ndarray]:
+        points: list[np.ndarray] = []
+        cells: list[int] = []
+        for run in runs:
+            if len(run) < 2:
+                continue
+            start = len(points)
+            points.extend(run)
+            cells.append(len(run))
+            cells.extend(range(start, start + len(run)))
         if not points:
-            actor.SetVisibility(False)
-            return
-        arr = np.asarray(points, dtype=float)
-        mesh.points = arr
-        if len(arr) >= 2:
-            mesh.lines = np.hstack(
-                ([len(arr)], np.arange(len(arr), dtype=np.int64))
-            )
-            actor.SetVisibility(True)
-        else:
-            mesh.lines = np.empty(0, dtype=np.int64)
-            actor.SetVisibility(False)
+            return np.empty((0, 3), dtype=float), np.empty(0, dtype=np.int64)
+        return (
+            np.asarray(points, dtype=float),
+            np.asarray(cells, dtype=np.int64),
+        )
 
-    def _append_trace(self, points: list[np.ndarray], p: np.ndarray, *, threshold_mm: float, process: bool) -> None:
-        last = self._last_process_point if process else self._last_travel_point
-        if last is None or float(np.linalg.norm(p - last)) >= threshold_mm:
-            points.append(p.copy())
-            if process: self._last_process_point = p.copy()
-            else: self._last_travel_point = p.copy()
+    def _run_array(self, index: int, run: list[np.ndarray]) -> np.ndarray:
+        cached = self._run_arrays.get(index)
+        if cached is not None and cached[0] == len(run):
+            return cached[1]
+        array = np.asarray(run, dtype=float)
+        self._run_arrays[index] = (len(run), array)
+        return array
+
+    def _sync_traces(self) -> None:
+        for laser_on, mesh, actor, visible in (
+            (False, self._travel_mesh, self._travel_actor, self._show_travel),
+            (True, self._process_mesh, self._process_actor, self._show_written),
+        ):
+            arrays = [
+                self._run_array(index, run)
+                for index, (state, run) in enumerate(self._segments)
+                if state is laser_on and len(run) >= 2
+            ]
+            if not arrays or not visible:
+                actor.SetVisibility(False)
+                continue
+            points = np.concatenate(arrays)
+            counts = [len(array) for array in arrays]
+            cells = np.empty(sum(counts) + len(counts), dtype=np.int64)
+            position = 0
+            start = 0
+            for count in counts:
+                cells[position] = count
+                cells[position + 1 : position + 1 + count] = np.arange(
+                    start, start + count, dtype=np.int64
+                )
+                position += count + 1
+                start += count
+            mesh.points = points
+            mesh.lines = cells
+            actor.SetVisibility(True)
+
+    #: Cap on stored trace points, so an all-day session cannot grow the
+    #: polydata without bound. Oldest runs are dropped first.
+    MAX_TRACE_POINTS = 60_000
+
+    def _trim_segments(self) -> None:
+        total = sum(len(run) for _, run in self._segments)
+        dropped = False
+        while total > self.MAX_TRACE_POINTS and len(self._segments) > 1:
+            total -= len(self._segments[0][1])
+            self._segments.pop(0)
+            dropped = True
+        if dropped:
+            # Cache keys are positional, so they no longer line up.
+            self._run_arrays.clear()
+
+    def _append_trace(self, point: np.ndarray, *, laser_on: bool) -> None:
+        threshold = 0.05 if laser_on else 0.20
+        if not self._segments:
+            self._segments.append((laser_on, [point.copy()]))
+            return
+        state, run = self._segments[-1]
+        if state is not laser_on:
+            # Continue from the exact pose where the beam state changed.
+            self._segments.append((laser_on, [run[-1].copy(), point.copy()]))
+            return
+        if float(np.linalg.norm(point - run[-1])) >= threshold:
+            run.append(point.copy())
 
     def update_state(self, pose: Pose6D, laser_on: bool) -> None:
-        self._pose = pose; self._laser_on = bool(laser_on)
+        laser_on = bool(laser_on)
+        key = (pose.as_tuple(), laser_on, self._show_travel, self._show_written)
+        if key == self._last_render_key:
+            # Nothing the twin draws has moved since the last frame.
+            return
+        self._last_render_key = key
+        self._pose = pose; self._laser_on = laser_on
         top_tf = self.kinematics.top_transform(pose)
         top_joints = self.kinematics.top_joint_positions(pose)
         bottom = self.kinematics.bottom_joint_positions()
@@ -256,24 +394,27 @@ class Hexapod3DViewer(QtInteractor):
             # Laser graphic terminates exactly at the top surface of the sample.
             self._beam_mesh.points = np.vstack([self._beam_origin, hit])
             self._beam_actor.SetVisibility(True)
-            self._beam_actor.GetProperty().SetOpacity(
-                0.98 if laser_on else 0.16
+            beam_property = self._beam_actor.GetProperty()
+            # Colour, not only opacity, separates an armed beam from an idle one.
+            beam_property.SetColor(
+                (1.0, 0.31, 0.29) if laser_on else (0.36, 0.45, 0.52)
             )
-            self._beam_actor.GetProperty().SetLineWidth(
-                6.0 if laser_on else 2.5
-            )
+            beam_property.SetOpacity(0.98 if laser_on else 0.14)
+            beam_property.SetLineWidth(7.0 if laser_on else 2.0)
 
             sphere = pv.Sphere(
-                radius=5.5 if laser_on else 3.5,
+                radius=5.5 if laser_on else 3.0,
                 center=hit,
                 theta_resolution=28,
                 phi_resolution=20,
             )
             self._beam_hit_mesh.points = sphere.points
             self._beam_hit_actor.SetVisibility(True)
-            self._beam_hit_actor.GetProperty().SetOpacity(
-                0.95 if laser_on else 0.22
+            hit_property = self._beam_hit_actor.GetProperty()
+            hit_property.SetColor(
+                (1.0, 0.70, 0.21) if laser_on else (0.55, 0.62, 0.68)
             )
+            hit_property.SetOpacity(0.95 if laser_on else 0.18)
 
             inv_top = np.linalg.inv(top_tf)
             local_hit = transform_point(inv_top, hit)
@@ -281,37 +422,18 @@ class Hexapod3DViewer(QtInteractor):
                 float(local_hit[0]),
                 float(local_hit[2]),
             )
-            self._append_trace(
-                self._travel_points,
-                local_hit,
-                threshold_mm=0.20,
-                process=False,
-            )
-            if laser_on:
-                self._append_trace(
-                    self._process_points,
-                    local_hit,
-                    threshold_mm=0.05,
-                    process=True,
-                )
+            self._append_trace(local_hit, laser_on=laser_on)
+            self._trim_segments()
         else:
             self._beam_actor.SetVisibility(False)
             self._beam_hit_actor.SetVisibility(False)
 
-        self._sync_trace_mesh(
-            self._travel_mesh,
-            self._travel_points,
-            self._travel_actor,
-        )
-        self._sync_trace_mesh(
-            self._process_mesh,
-            self._process_points,
-            self._process_actor,
-        )
+        self._sync_traces()
         # The path is sample-local, so it moves with the sample instead of
         # hanging in laboratory space after the carriage moves.
         self._set_actor_matrix(self._travel_actor, top_tf)
         self._set_actor_matrix(self._process_actor, top_tf)
+        self._set_actor_matrix(self._sample_outline_actor, top_tf)
 
         if self._exact_cad:
             self._update_exact_cad(pose)
@@ -358,6 +480,7 @@ class Hexapod3DViewer(QtInteractor):
                 name=f"cad-{idx:02d}",
             )
         self._exact_cad=True
+        self._invalidate()
         self._base_actor.GetProperty().SetOpacity(0.05)
         self._top_actor.GetProperty().SetOpacity(0.05)
         self._leg_actor.GetProperty().SetOpacity(0.08)

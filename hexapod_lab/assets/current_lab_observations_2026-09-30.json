@@ -1,130 +1,77 @@
 {
   "observation_date": "2026-09-30",
-  "source": "User-supplied lab photographs and screenshots",
+  "source": "User-supplied live HXP web-interface screenshots and direct operator confirmation",
   "controller": {
-    "front_label": "Newport Motion Controller / Driver - Model HXP",
-    "historical_ip_confirmed": "192.168.0.254",
-    "tcp_port_confirmed": 5001,
-    "lab_pc_source_address": "192.168.0.100",
-    "tcp_test_succeeded": true
-  },
-  "work_coordinate_snapshot": {
+    "host": "192.168.0.254",
+    "port": 5001,
     "group": "HEXAPOD",
     "group_state": 12,
-    "actual_pose": {
-      "X_mm": 0,
-      "Y_mm": 0,
-      "Z_mm": -13.999998,
-      "U_deg": -0.000001,
-      "V_deg": 0,
-      "W_deg": 0
-    },
-    "coordinate_systems": {
-      "Tool_in_Carriage": [
-        0,
-        0,
-        25,
-        0,
-        0,
-        0
-      ],
-      "Base_in_World": [
-        0,
-        0,
-        25,
-        0,
-        0,
-        0
-      ],
-      "Work_in_World": [
-        0,
-        0,
-        209,
-        0,
-        0,
-        0
-      ]
-    }
+    "tcp_reachable_from_lab_pc": true,
+    "model_label": "Newport Motion Controller / Driver - Model HXP"
   },
-  "io_snapshot": {
-    "digital": {
-      "GPIO1.DO_bits_1_to_8": [
-        0,
-        0,
-        1,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "GPIO1.DO_raw_interpretation": 4,
-      "GPIO3.DO_bits_1_to_8": [
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "GPIO4.DO_bits_1_to_16": [
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ]
-    },
-    "analog": {
-      "GPIO2.ADC1": 0.0009,
-      "GPIO2.ADC2": 0.0025,
-      "GPIO2.ADC3": -0.0003,
-      "GPIO2.ADC4": 0.0062,
-      "GPIO2.DAC1": 10,
-      "GPIO2.DAC2": 0,
-      "GPIO2.DAC3": -0.0001,
-      "GPIO2.DAC4": 0.0003,
-      "GPIO2_DAC1_role": "attenuator_control",
-      "GPIO2_DAC1_confirmed_range": [
-        0,
-        10
-      ],
-      "GPIO2_DAC1_latest_observed": 0.999845,
-      "GPIO2_DAC1_range_source": "User-confirmed current lab behavior, 2026-09-30"
-    },
-    "interpretation": [
-      "GPIO1.DO is live at raw value 4, matching the legacy LabVIEW GPIO1.DO mask-4 state-marker evidence.",
-      "GPIO3.DO and GPIO4.DO were both low in this single snapshot; this does not establish Pockels polarity.",
-      "GPIO2.DAC1 is confirmed as the present attenuator-control output.",
-      "GPIO2.DAC1 operates over a confirmed 0-10 range in the current setup.",
-      "Observed live values include ~0.999845 and 10.0000; raw DAC value must still be calibrated against optical transmission/pulse energy."
+  "pose_work": {
+    "X_mm": 0.0,
+    "Y_mm": 0.0,
+    "Z_mm": -13.999998,
+    "U_deg": -1e-06,
+    "V_deg": 0.0,
+    "W_deg": 0.0
+  },
+  "frames": {
+    "Tool_in_Carriage": [
+      0,
+      0,
+      25,
+      0,
+      0,
+      0
+    ],
+    "Base_in_World": [
+      0,
+      0,
+      25,
+      0,
+      0,
+      0
+    ],
+    "Work_in_World": [
+      0,
+      0,
+      209,
+      0,
+      0,
+      0
     ]
   },
-  "physical_observations": {
-    "pharos_LX13_populated": true,
-    "hxp_GPIO3_physically_populated": true,
-    "hxp_controller_model_label": "HXP",
-    "mechanical_hexapod_model_identified": false,
-    "visible_actuator_serial_example": "S/N BF8 3700",
-    "emergency_stop_present": true,
-    "notes": [
-      "The LX13 connector is visibly populated on the PHAROS.",
-      "A D-sub cable is visibly plugged into HXP GPIO3, which is consistent with the later LabVIEW-v3 GPIO3.DO Pockels candidate.",
-      "The photographs do not provide an unambiguous continuous cable trace proving that the populated HXP GPIO3 cable is the same cable reaching PHAROS LX13.",
-      "The front label 'Model HXP' identifies the controller chassis, not the mechanical hexapod stage model."
-    ]
-  }
+  "actuator_positions_mm": [
+    -0.870704,
+    -0.870704,
+    -0.870704,
+    -0.870704,
+    -0.870707,
+    -0.870707
+  ],
+  "digital_io": {
+    "GPIO1.DO_raw": 4,
+    "GPIO3.DO_raw": 0,
+    "GPIO4.DO_raw": 0
+  },
+  "attenuator": {
+    "gpio": "GPIO2.DAC1",
+    "live_raw_example": 4.0,
+    "live_transmission_percent": 40.0,
+    "operator_confirmation": "4.00 = 40% transmission",
+    "implemented_mapping": "0-10 raw maps linearly to 0-100% transmission"
+  },
+  "physical": {
+    "PHAROS_LX13_populated": true,
+    "HXP_GPIO3_populated": true,
+    "physical_estop_present": true,
+    "pockels_cable_continuity_to_LX13_verified": false
+  },
+  "notes": [
+    "GPIO1.DO mask 4 matches the historical LabVIEW writing/gate marker.",
+    "GPIO3.DO and GPIO4.DO were low in the photographed idle snapshot; that does not identify which output currently drives LX13.",
+    "The STEP model is retained for visualization only. Real Line feasibility must come from the HXP controller."
+  ]
 }

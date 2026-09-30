@@ -1,3 +1,5 @@
+import pytest
+
 from hexapod_lab.recipe import Recipe, RecipeStep, preflight_recipe
 from hexapod_lab.types import Pose6D
 
@@ -87,3 +89,33 @@ def test_line_velocity_recipe_step():
         )
     )
     assert not [issue for issue in issues if issue.severity == "error"]
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), -float("inf")])
+def test_recipe_factories_reject_non_finite_values(value):
+    with pytest.raises(ValueError):
+        RecipeStep.move_line_velocity(1.0, 0.0, 0.0, value)
+    with pytest.raises(ValueError):
+        RecipeStep.attenuator_set(value)
+    with pytest.raises(ValueError):
+        RecipeStep.wait(value)
+
+
+def test_preflight_rejects_non_finite_loaded_line_velocity():
+    recipe = Recipe(
+        steps=[
+            RecipeStep.from_dict(
+                {
+                    "kind": "move_line_velocity",
+                    "payload": {
+                        "delta_xyz_mm": [1.0, 0.0, 0.0],
+                        "velocity_mm_s": float("nan"),
+                    },
+                }
+            )
+        ]
+    )
+    assert any(
+        issue.severity == "error" and "finite" in issue.message
+        for issue in preflight_recipe(recipe)
+    )

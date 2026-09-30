@@ -1,3 +1,5 @@
+import pytest
+
 from hexapod_lab.recipe import StepKind, preflight_recipe
 from hexapod_lab.sweeps import RasterSweepSpec, build_raster_sweep, numeric_range
 
@@ -61,3 +63,18 @@ def test_attenuator_sweep_generates_series():
         step.kind == StepKind.ATTENUATOR_SET
         for step in recipe.steps
     ) == 3
+
+
+def test_interactive_sweep_size_is_bounded():
+    with pytest.raises(ValueError, match="interactive builder limit"):
+        build_raster_sweep(
+            RasterSweepSpec(
+                velocity_start_mm_s=0.001,
+                velocity_stop_mm_s=100.0,
+                velocity_step_mm_s=0.001,
+                attenuation_start_percent=0.0,
+                attenuation_stop_percent=100.0,
+                attenuation_step_percent=0.01,
+                include_attenuator_steps=True,
+            )
+        )

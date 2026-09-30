@@ -175,6 +175,38 @@ class HXPClient:
         _, response = self.poll.request(f"GroupStatusStringGet({int(status_code)},char *)")
         return response
 
+    def positioner_user_travel_limits(
+        self,
+        positioner: str,
+    ) -> tuple[float, float]:
+        """Read the configured HXP user travel limits for one positioner.
+
+        This is deliberately read-only. Hexapod Cartesian positioners are
+        normally addressed as ``HEXAPOD.X`` through ``HEXAPOD.W``.
+        """
+        name = str(positioner).strip()
+        if not name or any(char in name for char in ",()"):
+            raise ValueError("invalid HXP positioner name")
+        _, response = self.poll.request(
+            f"PositionerUserTravelLimitsGet({name},double *,double *)"
+        )
+        minimum, maximum = self._float_list(response, 2)
+        if minimum >= maximum:
+            raise HXPProtocolError(
+                f"Invalid travel limits for {name}: {minimum}, {maximum}"
+            )
+        return minimum, maximum
+
+    def positioner_current_position(self, positioner: str) -> float:
+        """Read one actuator/strut position, e.g. ``HEXAPOD.1``."""
+        name = str(positioner).strip()
+        if not name or any(char in name for char in ",()"):
+            raise ValueError("invalid HXP positioner name")
+        _, response = self.poll.request(
+            f"GroupPositionCurrentGet({name},double *)"
+        )
+        return self._float_list(response, 1)[0]
+
     def move_absolute(self, pose: Pose6D, group: str = "HEXAPOD", coordinate_system: str = "Work") -> None:
         args = ",".join(f"{v:.12g}" for v in pose.as_tuple())
         self.control.request(f"HexapodMoveAbsolute({group},{coordinate_system},{args})")
@@ -182,6 +214,30 @@ class HXPClient:
     def move_incremental(self, delta: Pose6D, group: str = "HEXAPOD", coordinate_system: str = "Work") -> None:
         args = ",".join(f"{v:.12g}" for v in delta.as_tuple())
         self.control.request(f"HexapodMoveIncremental({group},{coordinate_system},{args})")
+
+    def line_incremental_control_limits(
+        self,
+        dx_mm: float,
+        dy_mm: float,
+        dz_mm: float,
+        *,
+        group: str = "HEXAPOD",
+        coordinate_system: str = "Work",
+    ) -> tuple[float, float]:
+        """Ask the HXP to preflight an incremental Line trajectory.
+
+        Returns ``(maximum_velocity_carriage_mm_s, trajectory_percent)`` from
+        ``HexapodMoveIncrementalControlLimitGet``. This is the authoritative
+        controller-side feasibility check for real translation-only Line moves.
+        """
+        _, response = self.poll.request(
+            "HexapodMoveIncrementalControlLimitGet("
+            f"{group},{coordinate_system},Line,"
+            f"{float(dx_mm):.12g},{float(dy_mm):.12g},"
+            f"{float(dz_mm):.12g},double *,double *)"
+        )
+        maximum_velocity, trajectory_percent = self._float_list(response, 2)
+        return float(maximum_velocity), float(trajectory_percent)
 
     def move_line_incremental_with_target_velocity(
         self,

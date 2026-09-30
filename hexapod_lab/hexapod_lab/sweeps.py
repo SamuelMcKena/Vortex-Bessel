@@ -1,15 +1,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 from typing import Iterable
 
 from .recipe import Recipe, RecipeStep
+
+
+MAX_SWEEP_RECIPE_STEPS = 20_000
 
 
 def numeric_range(start: float, stop: float, step: float) -> list[float]:
     start = float(start)
     stop = float(stop)
     step = float(step)
+    if not all(math.isfinite(v) for v in (start, stop, step)):
+        raise ValueError("sweep range values must be finite")
     if step == 0:
         raise ValueError("sweep step cannot be zero")
     if (stop - start) * step < 0:
@@ -43,6 +49,7 @@ class RasterSweepSpec:
     attenuation_step_percent: float = 1.0
     include_attenuator_steps: bool = False
     return_velocity_mm_s: float = 10.0
+    use_write_blocks: bool = False
 
     def velocities(self) -> list[float]:
         values = numeric_range(
@@ -90,6 +97,19 @@ def build_raster_sweep(spec: RasterSweepSpec) -> tuple[Recipe, RasterSweepSummar
     if spec.return_velocity_mm_s <= 0:
         raise ValueError("return velocity must be > 0")
 
+    steps_per_line = 2 if spec.use_write_blocks else 4
+    estimated_steps = (
+        len(velocities) * len(attenuations) * steps_per_line
+        + (len(attenuations) if spec.include_attenuator_steps else 0)
+    )
+    if estimated_steps > MAX_SWEEP_RECIPE_STEPS:
+        raise ValueError(
+            "sweep would create "
+            f"{estimated_steps:,} modules; the interactive builder limit is "
+            f"{MAX_SWEEP_RECIPE_STEPS:,}. Increase the step size or narrow "
+            "the velocity/attenuation range."
+        )
+
     steps: list[RecipeStep] = []
     motion_time = 0.0
 
@@ -101,16 +121,27 @@ def build_raster_sweep(spec: RasterSweepSpec) -> tuple[Recipe, RasterSweepSummar
             steps.append(RecipeStep.attenuator_set(attenuation))
 
         for line_index, velocity in enumerate(velocities):
-            steps.append(RecipeStep.pockels_cell(True))
-            steps.append(
-                RecipeStep.move_line_velocity(
-                    spec.write_dx_mm,
-                    0.0,
-                    0.0,
-                    velocity,
+            if spec.use_write_blocks:
+                # One indivisible "move while write" block per line.
+                steps.append(
+                    RecipeStep.write_line(
+                        spec.write_dx_mm,
+                        0.0,
+                        0.0,
+                        velocity,
+                    )
                 )
-            )
-            steps.append(RecipeStep.pockels_cell(False))
+            else:
+                steps.append(RecipeStep.pockels_cell(True))
+                steps.append(
+                    RecipeStep.move_line_velocity(
+                        spec.write_dx_mm,
+                        0.0,
+                        0.0,
+                        velocity,
+                    )
+                )
+                steps.append(RecipeStep.pockels_cell(False))
 
             # Return to the starting X while stepping to the next row.
             dy = spec.row_pitch_mm

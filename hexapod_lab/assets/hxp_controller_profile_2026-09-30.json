@@ -1,0 +1,208 @@
+{
+  "profile_date": "2026-09-30",
+  "source": "User-supplied HXP controller configuration backup + live HXP screenshots",
+  "network": {
+    "host": "192.168.0.254",
+    "port": 5001,
+    "timeout_s": 10.0,
+    "confirmed_reachable": true
+  },
+  "group": {
+    "name": "HEXAPOD",
+    "positioners": [
+      "HEXAPOD.1",
+      "HEXAPOD.2",
+      "HEXAPOD.3",
+      "HEXAPOD.4",
+      "HEXAPOD.5",
+      "HEXAPOD.6"
+    ],
+    "coordinate_system": "Work"
+  },
+  "frames": {
+    "work_in_world": [
+      0.0,
+      0.0,
+      209.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "base_in_world": [
+      0.0,
+      0.0,
+      25.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "tool_in_carriage": [
+      0.0,
+      0.0,
+      25.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "geometry": {
+    "file": "Geometry_RRPS.ini",
+    "hexapod_type": "RRPS",
+    "base_diameter_mm": 240.0,
+    "base_alpha_deg": 15.0,
+    "base_thickness_mm": 25.0,
+    "carriage_diameter_mm": 150.0,
+    "carriage_alpha_deg": 20.0,
+    "carriage_thickness_mm": 25.0,
+    "actuator_length_at_home_preset_mm": 167.5410634,
+    "correction_file": "HexapodMatrix.txt"
+  },
+  "actuators": [
+    {
+      "positioner": "HEXAPOD.1",
+      "stage_name": "LTA1@LTA-HX@XPS-DRV01",
+      "driver_name": "XPS-DRV01",
+      "encoder_resolution_mm": 5.9004e-06,
+      "backlash_mm": 0.008985,
+      "minimum_target_position_mm": -1.50406,
+      "maximum_target_position_mm": 24.25,
+      "home_preset_mm": -1.49406,
+      "maximum_velocity_mm_s": 1.0,
+      "maximum_acceleration_mm_s2": 5.0,
+      "home_search_maximum_velocity_mm_s": 0.5,
+      "home_search_maximum_acceleration_mm_s2": 1.0
+    },
+    {
+      "positioner": "HEXAPOD.2",
+      "stage_name": "LTA2@LTA-HX@XPS-DRV01",
+      "driver_name": "XPS-DRV01",
+      "encoder_resolution_mm": 5.9008e-06,
+      "backlash_mm": 0.012932,
+      "minimum_target_position_mm": -1.55806,
+      "maximum_target_position_mm": 24.25,
+      "home_preset_mm": -1.54806,
+      "maximum_velocity_mm_s": 1.0,
+      "maximum_acceleration_mm_s2": 5.0,
+      "home_search_maximum_velocity_mm_s": 0.5,
+      "home_search_maximum_acceleration_mm_s2": 1.0
+    },
+    {
+      "positioner": "HEXAPOD.3",
+      "stage_name": "LTA3@LTA-HX@XPS-DRV01",
+      "driver_name": "XPS-DRV01",
+      "encoder_resolution_mm": 5.902e-06,
+      "backlash_mm": 0.015618,
+      "minimum_target_position_mm": -1.43206,
+      "maximum_target_position_mm": 24.25,
+      "home_preset_mm": -1.42206,
+      "maximum_velocity_mm_s": 1.0,
+      "maximum_acceleration_mm_s2": 5.0,
+      "home_search_maximum_velocity_mm_s": 0.5,
+      "home_search_maximum_acceleration_mm_s2": 1.0
+    },
+    {
+      "positioner": "HEXAPOD.4",
+      "stage_name": "LTA4@LTA-HX@XPS-DRV01",
+      "driver_name": "XPS-DRV01",
+      "encoder_resolution_mm": 5.9018e-06,
+      "backlash_mm": 0.011789,
+      "minimum_target_position_mm": -1.56706,
+      "maximum_target_position_mm": 24.25,
+      "home_preset_mm": -1.55706,
+      "maximum_velocity_mm_s": 1.0,
+      "maximum_acceleration_mm_s2": 5.0,
+      "home_search_maximum_velocity_mm_s": 0.5,
+      "home_search_maximum_acceleration_mm_s2": 1.0
+    },
+    {
+      "positioner": "HEXAPOD.5",
+      "stage_name": "LTA5@LTA-HX@XPS-DRV01",
+      "driver_name": "XPS-DRV01",
+      "encoder_resolution_mm": 5.8999e-06,
+      "backlash_mm": 0.012034,
+      "minimum_target_position_mm": -1.60506,
+      "maximum_target_position_mm": 24.25,
+      "home_preset_mm": -1.59506,
+      "maximum_velocity_mm_s": 1.0,
+      "maximum_acceleration_mm_s2": 5.0,
+      "home_search_maximum_velocity_mm_s": 0.5,
+      "home_search_maximum_acceleration_mm_s2": 1.0
+    },
+    {
+      "positioner": "HEXAPOD.6",
+      "stage_name": "LTA6@LTA-HX@XPS-DRV01",
+      "driver_name": "XPS-DRV01",
+      "encoder_resolution_mm": 5.9015e-06,
+      "backlash_mm": 0.00881,
+      "minimum_target_position_mm": -1.53506,
+      "maximum_target_position_mm": 24.25,
+      "home_preset_mm": -1.52506,
+      "maximum_velocity_mm_s": 1.0,
+      "maximum_acceleration_mm_s2": 5.0,
+      "home_search_maximum_velocity_mm_s": 0.5,
+      "home_search_maximum_acceleration_mm_s2": 1.0
+    }
+  ],
+  "live_snapshot": {
+    "pose_work": [
+      0.0,
+      0.0,
+      -13.999998,
+      -1e-06,
+      0.0,
+      0.0
+    ],
+    "actuator_positions_mm": [
+      -0.870704,
+      -0.870704,
+      -0.870704,
+      -0.870704,
+      -0.870707,
+      -0.870707
+    ],
+    "group_state": 12,
+    "positioner_errors_ok": true
+  },
+  "io": {
+    "gate_marker": {
+      "gpio": "GPIO1.DO",
+      "mask": 4,
+      "live_raw": 4
+    },
+    "labview_pockels_candidate": {
+      "gpio": "GPIO3.DO",
+      "mask": 1,
+      "live_raw": 0,
+      "physical_gpio_connector_populated": true,
+      "verified_to_lx13": false
+    },
+    "tcl_pockels_candidate": {
+      "gpio": "GPIO4.DO",
+      "mask": 1,
+      "live_raw": 0,
+      "verified_to_lx13": false
+    },
+    "attenuator": {
+      "gpio": "GPIO2.DAC1",
+      "raw_min": 0.0,
+      "raw_max": 10.0,
+      "transmission_min_percent": 0.0,
+      "transmission_max_percent": 100.0,
+      "confirmed_calibration_points": [
+        {
+          "raw": 4.0,
+          "transmission_percent": 40.0
+        }
+      ],
+      "mapping": "linear_10_percent_per_raw_unit",
+      "operator_confirmed": true
+    }
+  },
+  "safety_authority": {
+    "step_model_is_visual_only": true,
+    "real_line_moves_use_hxp_control_limit_get": true,
+    "real_general_moves_require_verified_cartesian_envelope": true,
+    "physical_estop_present": true,
+    "pockels_remains_unverified": true
+  }
+}

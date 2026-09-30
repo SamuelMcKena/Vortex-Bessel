@@ -58,9 +58,16 @@ class HexapodProvider(ABC):
 class VirtualHexapodProvider(HexapodProvider):
     name = "virtual"
 
-    def __init__(self, *, linear_speed_mm_s: float = 8.0, angular_speed_deg_s: float = 8.0) -> None:
+    def __init__(
+        self,
+        *,
+        linear_speed_mm_s: float = 8.0,
+        angular_speed_deg_s: float = 8.0,
+        motion_validator: Callable[[Pose6D, Pose6D], None] | None = None,
+    ) -> None:
         self.linear_speed_mm_s = float(linear_speed_mm_s)
         self.angular_speed_deg_s = float(angular_speed_deg_s)
+        self._motion_validator = motion_validator
         self._connected = False
         self._actual = Pose6D()
         self._start = Pose6D()
@@ -83,6 +90,8 @@ class VirtualHexapodProvider(HexapodProvider):
     def _plan_to(self, target: Pose6D) -> None:
         if not self._connected:
             raise ConnectionError("virtual hexapod is not connected")
+        if self._motion_validator is not None:
+            self._motion_validator(self._actual, target)
         linear = max(abs(a - b) for a, b in zip(self._actual.as_tuple()[:3], target.as_tuple()[:3]))
         angular = max(abs(a - b) for a, b in zip(self._actual.as_tuple()[3:], target.as_tuple()[3:]))
         t_linear = linear / max(self.linear_speed_mm_s, 1e-9)
@@ -129,6 +138,8 @@ class VirtualHexapodProvider(HexapodProvider):
                 z=float(dz_mm),
             )
             target = base.plus(delta)
+            if self._motion_validator is not None:
+                self._motion_validator(self._actual, target)
             distance = math.sqrt(
                 float(dx_mm) ** 2
                 + float(dy_mm) ** 2
@@ -390,8 +401,7 @@ class VirtualLaserGate(LaserGateProvider):
 class HXPDigitalLaserConfig:
     gpio_name: str
     mask: int
-    enabled_value: int
-    disabled_value: int
+    enabled_value: int    disabled_value: int
     connector_name: str = "PHAROS LX13"
     wiring_verified: bool = False
 
@@ -552,6 +562,107 @@ class VirtualAttenuatorProvider(AttenuatorProvider):
             provider=self.name,
             readback_known=True,
             device_name="Virtual attenuator",
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class HXPAnalogAttenuatorConfig:
+    gpio_name: str = "GPIO2.DAC1"
+    raw_min: float = 0.0
+    raw_max: float = 10.0
+    transmission_min_percent: float = 0.0
+    transmission_max_percent: float = 100.0
+    readback_tolerance_raw: float = 0.05
+    device_name: str = "HXP GPIO2.DAC1 attenuator"
+
+
+class HXPAnalogAttenuatorProvider(AttenuatorProvider):
+    """Real attenuator path confirmed on the current lab HXP.
+
+    Current lab confirmation establishes ``GPIO2.DAC1`` as the attenuator
+    command and ``4.00 == 40 % transmission``. The configured 0–10 DAC span is
+    therefore represented as a linear 0–100 % transmission command.
+    """
+
+    name = "hxp-analog-attenuator"
+
+    def __init__(self, client: HXPClient, config: HXPAnalogAttenuatorConfig | None = None) -> None:
+        self.client = client
+        self.config = config or HXPAnalogAttenuatorConfig()
+        self._connected = False
+        self._transmission_percent = 0.0
+        self._raw_readback: float | None = None
+        self._readback_known = False
+
+    def _raw_to_percent(self, raw: float) -> float:
+        c = self.config
+        raw_span = c.raw_max - c.raw_min
+        pct_span = c.transmission_max_percent - c.transmission_min_percent
+        if raw_span <= 0 or pct_span <= 0:
+            raise ValueError("invalid attenuator calibration span")
+        pct = c.transmission_min_percent + ((float(raw) - c.raw_min) / raw_span) * pct_span
+        return max(c.transmission_min_percent, min(c.transmission_max_percent, pct))
+
+    def _percent_to_raw(self, percent: float) -> float:
+        c = self.config
+        percent = float(percent)
+        if not c.transmission_min_percent <= percent <= c.transmission_max_percent:
+            raise ValueError(
+                f"attenuator transmission must be between {c.transmission_min_percent:g} "
+                f"and {c.transmission_max_percent:g} %"
+            )
+        pct_span = c.transmission_max_percent - c.transmission_min_percent
+        return c.raw_min + ((percent - c.transmission_min_percent) / pct_span) * (c.raw_max - c.raw_min)
+
+    def connect(self) -> None:
+        if not self.client.connected:
+            raise ConnectionError("HXP must be connected before the real attenuator")
+        raw = float(self.client.analog_get(self.config.gpio_name))
+        self._raw_readback = raw
+        self._transmission_percent = self._raw_to_percent(raw)
+        self._readback_known = True
+        self._connected = True
+
+    def disconnect(self) -> None:
+        self._connected = False
+
+    def set_transmission_percent(self, value: float) -> None:
+        if not self._connected:
+            raise ConnectionError("real HXP attenuator is not connected")
+        raw = self._percent_to_raw(float(value))
+        self.client.analog_set(self.config.gpio_name, raw)
+        self._readback_known = False
+        try:
+            readback = float(self.client.analog_get(self.config.gpio_name))
+            self._raw_readback = readback
+            self._readback_known = True
+            if abs(readback - raw) > self.config.readback_tolerance_raw:
+                raise RuntimeError(
+                    f"attenuator DAC readback {readback:.4f} does not match "
+                    f"requested {raw:.4f}"
+                )
+            self._transmission_percent = self._raw_to_percent(readback)
+        except RuntimeError:
+            raise
+        except Exception:
+            self._raw_readback = raw
+            self._transmission_percent = float(value)
+
+    def snapshot(self) -> AttenuatorSnapshot:
+        return AttenuatorSnapshot(
+            timestamp_s=time.time(),
+            transmission_percent=self._transmission_percent,
+            connected=self._connected,
+            provider=self.name,
+            readback_known=self._readback_known,
+            device_name=self.config.device_name,
+            metadata={
+                "gpio_name": self.config.gpio_name,
+                "raw_readback": self._raw_readback,
+                "raw_min": self.config.raw_min,
+                "raw_max": self.config.raw_max,
+                "confirmed_point": "4.00 raw = 40 % transmission",
+            },
         )
 
 

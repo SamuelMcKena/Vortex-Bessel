@@ -20,7 +20,6 @@ def test_virtual_hexapod_reaches_target():
     assert abs(snap.actual.x - 2.0) < 1e-9
     assert abs(snap.actual.z - 1.0) < 1e-9
 
-
 def test_virtual_laser_fail_closed():
     gate = VirtualLaserGate()
     gate.connect()
