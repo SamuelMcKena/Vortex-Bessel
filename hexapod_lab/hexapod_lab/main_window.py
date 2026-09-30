@@ -189,7 +189,8 @@ class ModuleLibrary(QtWidgets.QListWidget):
             item.setSizeHint(QtCore.QSize(240, 52))
             self.addItem(item)
         # The palette already scrolls as a page; a nested scroll area here only
-        # makes the modules harder to reach.        self.setFixedHeight(self.count() * 58 + 8)
+        # makes the modules harder to reach.
+        self.setFixedHeight(self.count() * 58 + 8)
 
     def _drag_pixmap(self, item: QtWidgets.QListWidgetItem) -> QtGui.QPixmap:
         color = QtGui.QColor(str(item.data(QtCore.Qt.ItemDataRole.UserRole + 1)))
@@ -1188,7 +1189,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "workflow using native HXP Line + target velocity."
         )
         quick_note.setObjectName("muted")
-        quick_note.setWordWrap(True)        quick_layout.addWidget(quick_note)
+        quick_note.setWordWrap(True)
+        quick_layout.addWidget(quick_note)
 
         quick_form = QtWidgets.QFormLayout()
         self.quick_dx = QtWidgets.QDoubleSpinBox()
@@ -2187,7 +2189,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Beam safely intercepted for commissioning",
             "Physical interlock and hardware E-stop are active",
         ):
-            cb = QtWidgets.QCheckBox(label)            self.commission_checks.append(cb)
+            cb = QtWidgets.QCheckBox(label)
+            self.commission_checks.append(cb)
             verify_layout.addWidget(cb)
 
         verify_note = QtWidgets.QLabel(
