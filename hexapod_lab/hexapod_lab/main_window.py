@@ -5187,7 +5187,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     sample_issues = self.sample_calibration.path_violations(current, target)
                     if sample_issues:
                         issues.append(RecipeWorkspaceIssue(index, sample_issues[0]))
-                    current = target            except Exception as exc:
+                    current = target
+            except Exception as exc:
                 issues.append(RecipeWorkspaceIssue(index, str(exc)))
         return issues
 
