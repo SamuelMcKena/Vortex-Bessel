@@ -401,7 +401,8 @@ class VirtualLaserGate(LaserGateProvider):
 class HXPDigitalLaserConfig:
     gpio_name: str
     mask: int
-    enabled_value: int    disabled_value: int
+    enabled_value: int
+    disabled_value: int
     connector_name: str = "PHAROS LX13"
     wiring_verified: bool = False
 
