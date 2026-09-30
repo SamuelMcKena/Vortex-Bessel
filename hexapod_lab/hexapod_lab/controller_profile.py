@@ -36,6 +36,7 @@ class HXPControllerProfile:
     attenuator_raw_max: float
     attenuator_transmission_min_percent: float
     attenuator_transmission_max_percent: float
+    attenuator_inverted: bool
     pockels_candidates: tuple[dict[str, Any], ...]
 
     def raw_to_transmission_percent(self, raw: float) -> float:
@@ -44,7 +45,11 @@ class HXPControllerProfile:
         span_pct = self.attenuator_transmission_max_percent - self.attenuator_transmission_min_percent
         if span_raw <= 0:
             raise ValueError("invalid attenuator raw calibration span")
-        pct = self.attenuator_transmission_min_percent + ((raw - self.attenuator_raw_min) / span_raw) * span_pct
+        fraction = (raw - self.attenuator_raw_min) / span_raw
+        if self.attenuator_inverted:
+            pct = self.attenuator_transmission_max_percent - fraction * span_pct
+        else:
+            pct = self.attenuator_transmission_min_percent + fraction * span_pct
         return max(self.attenuator_transmission_min_percent, min(self.attenuator_transmission_max_percent, pct))
 
     def transmission_percent_to_raw(self, percent: float) -> float:
@@ -56,7 +61,8 @@ class HXPControllerProfile:
         span_pct = hi - lo
         if span_pct <= 0:
             raise ValueError("invalid attenuator transmission calibration span")
-        return self.attenuator_raw_min + ((percent - lo) / span_pct) * (self.attenuator_raw_max - self.attenuator_raw_min)
+        fraction = ((hi - percent) / span_pct) if self.attenuator_inverted else ((percent - lo) / span_pct)
+        return self.attenuator_raw_min + fraction * (self.attenuator_raw_max - self.attenuator_raw_min)
 
 
 def load_hxp_controller_profile(path: str | Path) -> HXPControllerProfile:
@@ -72,4 +78,4 @@ def load_hxp_controller_profile(path: str | Path) -> HXPControllerProfile:
         if len(vals) != 6:
             raise ValueError(f"{key} must contain six values")
         return vals  # type: ignore[return-value]
-    return HXPControllerProfile(host=str(network["host"]), port=int(network["port"]), timeout_s=float(network["timeout_s"]), group=str(group["name"]), coordinate_system=str(group["coordinate_system"]), work_in_world=six("work_in_world"), base_in_world=six("base_in_world"), tool_in_carriage=six("tool_in_carriage"), geometry=dict(data["geometry"]), actuators=actuators, attenuator_gpio=str(att["gpio"]), attenuator_raw_min=float(att["raw_min"]), attenuator_raw_max=float(att["raw_max"]), attenuator_transmission_min_percent=float(att["transmission_min_percent"]), attenuator_transmission_max_percent=float(att["transmission_max_percent"]), pockels_candidates=tuple(dict(v) for v in candidates))
+    return HXPControllerProfile(host=str(network["host"]), port=int(network["port"]), timeout_s=float(network["timeout_s"]), group=str(group["name"]), coordinate_system=str(group["coordinate_system"]), work_in_world=six("work_in_world"), base_in_world=six("base_in_world"), tool_in_carriage=six("tool_in_carriage"), geometry=dict(data["geometry"]), actuators=actuators, attenuator_gpio=str(att["gpio"]), attenuator_raw_min=float(att["raw_min"]), attenuator_raw_max=float(att["raw_max"]), attenuator_transmission_min_percent=float(att["transmission_min_percent"]), attenuator_transmission_max_percent=float(att["transmission_max_percent"]), attenuator_inverted=bool(att.get("inverted", False)), pockels_candidates=tuple(dict(v) for v in candidates))
