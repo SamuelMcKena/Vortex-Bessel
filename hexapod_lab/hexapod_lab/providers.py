@@ -309,7 +309,14 @@ class HXPProvider(HexapodProvider):
     def abort(self) -> None:
         with self._lock:
             self._abort_requested = True
-        self.client.abort(self.config.group)
+        try:
+            self.client.abort(self.config.group)
+        finally:
+            # STOP/abort is also the acknowledgement path for a failed GUI
+            # motion worker; retain the failure in logs/UI before this point,
+            # but do not leave the provider permanently latched.
+            with self._lock:
+                self._move_error = None
 
     def initialize(self) -> None:
         self._start_blocking_call(
@@ -363,22 +370,23 @@ class HXPProvider(HexapodProvider):
             self._move_thread is not None
             and self._move_thread.is_alive()
         )
+        with self._lock:
+            pending_error = self._move_error
+
         if moving_thread:
             state = MotionState.MOVING
+        elif pending_error is not None:
+            state = MotionState.FAULT
+            status_text = (
+                f"{status_text} • last GUI motion failed: "
+                f"{type(pending_error).__name__}: {pending_error}"
+            )
         elif status in (11, 12):
             state = MotionState.IDLE
         else:
             # A connected controller is not automatically motion-ready.
             # Treat unreferenced, disabled and error states as non-ready.
             state = MotionState.FAULT
-
-        with self._lock:
-            pending_error = self._move_error
-        if pending_error is not None and not moving_thread:
-            status_text = (
-                f"{status_text} • last GUI motion failed: "
-                f"{type(pending_error).__name__}: {pending_error}"
-            )
 
         snap = HexapodSnapshot(
             timestamp_s=time.time(),
