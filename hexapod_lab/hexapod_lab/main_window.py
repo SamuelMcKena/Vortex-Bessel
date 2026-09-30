@@ -2251,7 +2251,7 @@ class MainWindow(QtWidgets.QMainWindow):
         analog_layout.addRow(raw_buttons)
         raw_note = QtWidgets.QLabel(
             "Raw commissioning access mirrors the same GPIO2.DAC1 path used by "
-            "the normal REAL LAB attenuator. 4.00 = 40 % transmission is confirmed."
+            "the normal REAL LAB attenuator. Current mapping: 0 = 100 %, 10 = 0 % transmission."
         )
         raw_note.setWordWrap(True)
         raw_note.setObjectName("muted")
@@ -2296,8 +2296,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "TCL writing map: GPIO4.DO, mask 1, write=1, non-write=0\n"
             "Gate/writing marker: GPIO1.DO, mask 4, states 0/4; "
             "MotionStart/MotionEnd toggle\n"
-            "Power/attenuator: GPIO2.DAC1 • CURRENT LAB 4.00 = 40 % transmission; "
-            "0–10 DAC represented as 0–100 % transmission\n"
+            "Power/attenuator: GPIO2.DAC1 • CURRENT LAB 0 = 100 %, 10 = 0 % transmission; "
+            "inverted linear DAC mapping\n"
             "Controller backup: RRPS geometry, Work Z=209 mm, Base/Tool Z=25 mm; "
             "six LTA-HX actuator limits loaded as reference\n"
             "STEP CAD is VISUAL ONLY in REAL LAB; HXP native Line-limit preflight "
@@ -2494,8 +2494,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Enter make/model/controller when known"
         )
         self.attenuator_driver_status = QtWidgets.QLabel(
-            "Current lab mapping: HXP GPIO2.DAC1, raw 0–10 → transmission 0–100 %. "
-            "Operator-confirmed calibration point: 4.00 = 40 % transmission."
+            "Current lab mapping: HXP GPIO2.DAC1, raw 0–10 is inverted. "
+            "Operator-confirmed endpoints: 0 = 100 % transmission; 10 = 0 % transmission."
         )
         self.attenuator_driver_status.setWordWrap(True)
         self.attenuator_driver_status.setObjectName("muted")
@@ -4420,6 +4420,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     transmission_max_percent=(
                         self.controller_profile.attenuator_transmission_max_percent
                     ),
+                    inverted=self.controller_profile.attenuator_inverted,
                 ),
             )
             try:
