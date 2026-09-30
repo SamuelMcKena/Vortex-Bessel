@@ -83,10 +83,24 @@ if errorlevel 1 (
   echo.
 )
 
-echo Checking GUI imports with QT_API=%QT_API%...
-".venv\Scripts\python.exe" -c "import os; assert os.environ.get('QT_API')=='pyside6'; import numpy, PySide6, pyvista, pyvistaqt; from qtpy import QtCore; print('GUI dependencies OK - PySide6 / QtPy / PyVistaQt')"
+echo Checking PySide6 QtCore directly...
+".venv\Scripts\python.exe" -c "from PySide6 import QtCore; import PySide6; print('PySide6', PySide6.__version__, 'Qt', QtCore.__version__)"
+if errorlevel 1 goto :repair_qt
+
+echo Checking QtPy / PyVistaQt with QT_API=%QT_API%...
+".venv\Scripts\python.exe" -c "import os; assert os.environ.get('QT_API')=='pyside6'; import qtpy; from qtpy import QtCore; import pyvista, pyvistaqt; print('GUI dependencies OK -', qtpy.API_NAME, qtpy.QT_VERSION)"
+if errorlevel 1 goto :repair_qt
+goto :qt_ok
+
+:repair_qt
+echo.
+echo Qt binding check failed. Reinstalling the tested Python 3.13 Qt stack...
+".venv\Scripts\python.exe" -m pip install --no-cache-dir --force-reinstall "PySide6==6.8.3" "QtPy==2.4.3"
+if errorlevel 1 goto :failed
+".venv\Scripts\python.exe" -c "from PySide6 import QtCore; import PySide6, qtpy, pyvistaqt; print('Qt repair OK - PySide6', PySide6.__version__, 'Qt', QtCore.__version__, 'QtPy', qtpy.__version__)"
 if errorlevel 1 goto :failed
 
+:qt_ok
 echo Running source compile check...
 ".venv\Scripts\python.exe" -m compileall -q hexapod_lab run_hexapod_lab.py
 if errorlevel 1 goto :failed
