@@ -27,9 +27,12 @@ def test_controller_backup_profile_matches_live_configuration():
     assert all(a.maximum_target_position_mm == 24.25 for a in p.actuators)
 
 
-def test_attenuator_mapping_uses_confirmed_four_equals_forty():
+def test_attenuator_mapping_uses_confirmed_inverse_endpoints():
     p = profile()
     assert p.attenuator_gpio == "GPIO2.DAC1"
-    assert p.raw_to_transmission_percent(4.0) == 40.0
-    assert p.transmission_percent_to_raw(40.0) == 4.0
-    assert p.transmission_percent_to_raw(100.0) == 10.0
+    assert p.raw_to_transmission_percent(0.0) == 100.0
+    assert p.raw_to_transmission_percent(10.0) == 0.0
+    assert p.raw_to_transmission_percent(4.0) == 60.0
+    assert p.transmission_percent_to_raw(60.0) == 4.0
+    assert p.transmission_percent_to_raw(100.0) == 0.0
+    assert p.transmission_percent_to_raw(0.0) == 10.0
