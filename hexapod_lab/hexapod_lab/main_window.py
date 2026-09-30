@@ -1111,14 +1111,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.legacy_profile.analog_monitor_gpio
         )
         self.raw_analog_value = QtWidgets.QDoubleSpinBox()
-        self.raw_analog_value.setRange(1.0, 5.0)
+        self.raw_analog_value.setRange(0.0, 10.0)
         self.raw_analog_value.setDecimals(3)
         self.raw_analog_value.setValue(1.0)
         self.raw_analog_value.setToolTip(
-            "The supplied TCL scripts used raw values 1 through 5. "
-            "A live 2026-09-30 HXP snapshot showed GPIO2.DAC1 = 10.0000, "
-            "so 1–5 is only a historical writing subset, NOT the full DAC "
-            "range and NOT calibrated transmission or pulse energy."
+            "Current lab confirmation: GPIO2.DAC1 is the attenuator-control "
+            "output and operates over a 0–10 raw range. This raw value is "
+            "NOT yet calibrated transmission or pulse energy."
         )
         self.raw_analog_arm = QtWidgets.QCheckBox(
             "I confirm this GPIO is the present analogue power/attenuation path"
@@ -1129,17 +1128,17 @@ class MainWindow(QtWidgets.QMainWindow):
         raw_buttons = QtWidgets.QHBoxLayout()
         read_raw = QtWidgets.QPushButton("READ RAW")
         read_raw.clicked.connect(self._read_raw_analog)
-        write_raw = QtWidgets.QPushButton("WRITE LEGACY RAW 1–5")
+        write_raw = QtWidgets.QPushButton("WRITE RAW DAC 0–10")
         write_raw.setObjectName("danger")
         write_raw.clicked.connect(self._write_raw_analog)
         raw_buttons.addWidget(read_raw)
         raw_buttons.addWidget(write_raw)
         analog_layout.addRow(raw_buttons)
         raw_note = QtWidgets.QLabel(
-            "This commissioning control intentionally stays in RAW units. "
-            "The normal Control-tab attenuator remains disabled in REAL LAB "
-            "until a measured mapping from raw command to optical transmission "
-            "or pulse energy is supplied."
+            "This commissioning control intentionally stays in RAW DAC units "
+            "(0–10). The normal Control-tab attenuator remains disabled in "
+            "REAL LAB until a measured mapping from DAC command to optical "
+            "transmission or pulse energy is supplied."
         )
         raw_note.setWordWrap(True)
         raw_note.setObjectName("muted")
@@ -1187,7 +1186,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "• Tool/Carriage Z=25 mm • Base/World Z=25 mm • "
             "Work/World Z=209 mm\n"
             "• GPIO1.DO raw=4 • GPIO3.DO=0 • GPIO4.DO=0\n"
-            "• GPIO2.DAC1=10.0000\n"
+            "• GPIO2.DAC1 = attenuator control, confirmed 0–10 range; "
+            "observed ~0.999845 and 10.0000\n"
             "• PHAROS LX13 physically populated • HXP GPIO3 physically populated\n\n"
             "LEGACY SOURCE EVIDENCE:\n"
             "• LabVIEW-v3 Pockels candidate: GPIO3.DO, mask 1, states 0/1 "
