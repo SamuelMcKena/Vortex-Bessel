@@ -5973,6 +5973,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._last_stage_snapshot = snap
                 self._real_poll_failures = 0
                 self._ensure_pose_widget_ranges_include(snap.actual)
+                if (
+                    snap.state == MotionState.FAULT
+                    and "last GUI motion failed:" in snap.status_text
+                ):
+                    self.statusBar().showMessage(
+                        snap.status_text,
+                        10000,
+                    )
+                    self._abort_all()
             except Exception as exc:
                 self._real_poll_failures += 1
                 connected = bool(
