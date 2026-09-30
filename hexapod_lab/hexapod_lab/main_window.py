@@ -4468,8 +4468,15 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.real_laser is not None:
                 try:
                     self.real_laser.disconnect()
+                    self._beam_close_failed = False
                 except Exception as exc:
-                    self._diag(f"Pockels close/disconnect warning: {exc}")
+                    self._beam_close_failed = True
+                    self._diag(f"Pockels close/disconnect FAILED: {exc}")
+                    self.real_laser = None
+                    raise RuntimeError(
+                        "Existing real Pockels provider could not confirm CLOSED. "
+                        "Use the physical laser interlock/shutter before reconnecting."
+                    ) from exc
                 self.real_laser = None
 
             if self.real_stage is not None:
@@ -4860,18 +4867,43 @@ class MainWindow(QtWidgets.QMainWindow):
         self._manual_write_line_started = False
         self._recipe_write_block_open = False
         self._close_all_pockels()
-        try:
-            self._stage_provider().abort()
-        except Exception as exc:
-            self.statusBar().showMessage(
-                f"Motion-abort warning: {exc}",
-                7000,
-            )
+
+        abort_warnings: list[str] = []
+        # STOP is global: try every stage provider that might have been touched,
+        # not just the provider currently selected in the UI.
+        for stage in (self.virtual_stage, self.real_stage):
+            if stage is None:
+                continue
+            try:
+                if stage is self.real_stage:
+                    if not (
+                        self.real_stage is not None
+                        and self.real_stage.client.connected
+                    ):
+                        continue
+                stage.abort()
+            except Exception as exc:
+                abort_warnings.append(
+                    f"{getattr(stage, 'name', 'stage')}: {exc}"
+                )
+
         self._recipe_running = False
         if hasattr(self, "recipe_list"):
             self.recipe_list.setEnabled(True)
         if hasattr(self, "module_library"):
             self.module_library.setEnabled(True)
+
+        if abort_warnings:
+            for warning in abort_warnings:
+                self.log_internal_error(
+                    "software STOP warning",
+                    RuntimeError(warning),
+                )
+            self.statusBar().showMessage(
+                "STOP issued with warning: " + abort_warnings[0],
+                10000,
+            )
+
         self.recipe_progress.setText(
             "STOPPED — "
             + (
@@ -4880,6 +4912,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 else "close-beam command issued"
             )
         )
+
 
     # ------------------------------------------------------ Pockels / laser
     def _laser_mode_changed(self, _index: int) -> None:
@@ -6095,7 +6128,6 @@ class MainWindow(QtWidgets.QMainWindow):
         laser = self._laser_snapshot()
         if (
             self._beam_close_failed
-            and self.lab_mode.currentIndex() == 1
             and self.real_laser is not None
         ):
             self.manual_beam_status.setText(
