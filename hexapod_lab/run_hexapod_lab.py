@@ -11,11 +11,18 @@ from __future__ import annotations
 
 import datetime as _datetime
 import faulthandler
+import os
 import sys
 import traceback
 from pathlib import Path
 
 LOG_PATH = Path(__file__).resolve().parent / "hexapod_lab_crash.log"
+
+# This app is built against PySide6. Spyder/Anaconda commonly exports
+# QT_API=pyqt5 into child terminals, which makes qtpy ignore the installed
+# PySide6 binding and raises "No Qt bindings could be found". Force the binding
+# before pyvistaqt/qtpy are imported.
+os.environ["QT_API"] = "pyside6"
 
 
 def _timestamp() -> str:
