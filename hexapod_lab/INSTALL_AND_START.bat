@@ -1,6 +1,7 @@
 @echo off
 setlocal EnableExtensions
 cd /d "%~dp0"
+set "QT_API=pyside6"
 
 echo ==============================================
 echo   Hexapod + Laser Lab - first-time setup
@@ -82,8 +83,8 @@ if errorlevel 1 (
   echo.
 )
 
-echo Checking GUI imports...
-".venv\Scripts\python.exe" -c "import numpy, PySide6, pyvista, pyvistaqt; print('GUI dependencies OK')"
+echo Checking GUI imports with QT_API=%QT_API%...
+".venv\Scripts\python.exe" -c "import os; assert os.environ.get('QT_API')=='pyside6'; import numpy, PySide6, pyvista, pyvistaqt; from qtpy import QtCore; print('GUI dependencies OK - PySide6 / QtPy / PyVistaQt')"
 if errorlevel 1 goto :failed
 
 echo Running source compile check...
