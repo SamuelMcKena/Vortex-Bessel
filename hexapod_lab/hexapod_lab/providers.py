@@ -207,41 +207,77 @@ class HXPProvider(HexapodProvider):
 
     def __init__(self, config: HXPProviderConfig) -> None:
         self.config = config
-        self.client = HXPClient(config.host, config.port, config.timeout_s)
+        self.client = HXPClient(
+            config.host,
+            config.port,
+            config.timeout_s,
+        )
         self._connected = False
         self._move_thread: threading.Thread | None = None
         self._move_error: BaseException | None = None
+        self._abort_requested = False
         self._last_snapshot: HexapodSnapshot | None = None
         self._lock = threading.RLock()
 
     def connect(self) -> None:
-        self.client.connect()
-        self._connected = True
-        self._last_snapshot = self.snapshot()
+        try:
+            self.client.connect()
+            self._connected = True
+            self._move_error = None
+            self._abort_requested = False
+            self._last_snapshot = self.snapshot()
+        except Exception:
+            self._connected = False
+            self.client.close()
+            raise
 
     def disconnect(self) -> None:
-        self._connected = False
-        self.client.close()
-
-    def _start_blocking_call(self, fn: Callable[[], None]) -> None:
         with self._lock:
-            if not self._connected:
+            self._connected = False
+            self._abort_requested = True
+            self.client.close()
+
+    def _start_blocking_call(
+        self,
+        fn: Callable[[], None],
+        *,
+        require_ready: bool = True,
+    ) -> None:
+        with self._lock:
+            if not self._connected or not self.client.connected:
                 raise ConnectionError("HXP is not connected")
             if self._move_thread is not None and self._move_thread.is_alive():
-                raise RuntimeError("a blocking HXP motion command is already in progress")
+                raise RuntimeError(
+                    "a blocking HXP motion command is already in progress"
+                )
+            if require_ready:
+                self.client.require_ready_for_motion(self.config.group)
             self._move_error = None
+            self._abort_requested = False
 
             def worker() -> None:
                 try:
                     fn()
                 except BaseException as exc:
-                    self._move_error = exc
+                    with self._lock:
+                        if not self._abort_requested:
+                            self._move_error = exc
 
-            self._move_thread = threading.Thread(target=worker, name="hxp-motion", daemon=True)
+            self._move_thread = threading.Thread(
+                target=worker,
+                name="hxp-motion",
+                daemon=True,
+            )
             self._move_thread.start()
 
     def move_absolute(self, pose: Pose6D) -> None:
-        self._start_blocking_call(lambda: self.client.move_absolute(pose, self.config.group, self.config.coordinate_system))
+        self._start_blocking_call(
+            lambda: self.client.move_absolute(
+                pose,
+                self.config.group,
+                self.config.coordinate_system,
+            )
+        )
 
     def move_incremental(self, delta: Pose6D) -> None:
         self._start_blocking_call(
@@ -271,23 +307,49 @@ class HXPProvider(HexapodProvider):
         )
 
     def abort(self) -> None:
+        with self._lock:
+            self._abort_requested = True
         self.client.abort(self.config.group)
 
     def initialize(self) -> None:
-        self._start_blocking_call(lambda: self.client.initialize(self.config.group))
+        self._start_blocking_call(
+            lambda: self.client.initialize(self.config.group),
+            require_ready=False,
+        )
 
     def home(self) -> None:
-        self._start_blocking_call(lambda: self.client.home(self.config.group))
+        self._start_blocking_call(
+            lambda: self.client.home(self.config.group),
+            require_ready=False,
+        )
 
     def is_busy(self) -> bool:
-        return self._move_thread is not None and self._move_thread.is_alive()
+        with self._lock:
+            if self._move_error is not None:
+                exc, self._move_error = self._move_error, None
+                raise RuntimeError("HXP motion command failed") from exc
+            if self._move_thread is not None and self._move_thread.is_alive():
+                return True
+            return bool(
+                self._last_snapshot is not None
+                and self._last_snapshot.state == MotionState.MOVING
+            )
 
     def snapshot(self) -> HexapodSnapshot:
-        if not self._connected:
-            return HexapodSnapshot(timestamp_s=time.time(), actual=Pose6D(), state=MotionState.DISCONNECTED, connected=False, provider=self.name)
-        if self._move_error is not None:
-            exc, self._move_error = self._move_error, None
-            raise RuntimeError("HXP motion worker failed") from exc
+        if not self._connected or not self.client.connected:
+            return HexapodSnapshot(
+                timestamp_s=time.time(),
+                actual=(
+                    self._last_snapshot.actual
+                    if self._last_snapshot is not None
+                    else Pose6D()
+                ),
+                state=MotionState.DISCONNECTED,
+                connected=False,
+                provider=self.name,
+                status_text="DISCONNECTED",
+            )
+
         actual = self.client.current_pose(self.config.group)
         setpoint = self.client.setpoint_pose(self.config.group)
         target = self.client.target_pose(self.config.group)
@@ -296,9 +358,39 @@ class HXPProvider(HexapodProvider):
             status_text = self.client.group_status_text(status)
         except Exception:
             status_text = f"status {status}"
-        moving = self._move_thread is not None and self._move_thread.is_alive()
-        state = MotionState.MOVING if moving else MotionState.IDLE
-        snap = HexapodSnapshot(timestamp_s=time.time(), actual=actual, setpoint=setpoint, target=target, state=state, status_code=status, status_text=status_text, connected=True, provider=self.name)
+
+        moving_thread = (
+            self._move_thread is not None
+            and self._move_thread.is_alive()
+        )
+        if moving_thread:
+            state = MotionState.MOVING
+        elif status in (11, 12):
+            state = MotionState.IDLE
+        else:
+            # A connected controller is not automatically motion-ready.
+            # Treat unreferenced, disabled and error states as non-ready.
+            state = MotionState.FAULT
+
+        with self._lock:
+            pending_error = self._move_error
+        if pending_error is not None and not moving_thread:
+            status_text = (
+                f"{status_text} • last GUI motion failed: "
+                f"{type(pending_error).__name__}: {pending_error}"
+            )
+
+        snap = HexapodSnapshot(
+            timestamp_s=time.time(),
+            actual=actual,
+            setpoint=setpoint,
+            target=target,
+            state=state,
+            status_code=status,
+            status_text=status_text,
+            connected=True,
+            provider=self.name,
+        )
         self._last_snapshot = snap
         return snap
 
@@ -319,10 +411,8 @@ class LaserGateProvider(ABC):
     def snapshot(self) -> LaserSnapshot: ...
 
     def safe_off(self) -> None:
-        try:
-            self.set_gate(False)
-        except Exception:
-            pass
+        """Request the safe/CLOSED state and surface any failure to the caller."""
+        self.set_gate(False)
 
 
 class VirtualLaserGate(LaserGateProvider):
@@ -447,8 +537,11 @@ class HXPDigitalLaserGate(LaserGateProvider):
             raise
 
     def disconnect(self) -> None:
-        self.safe_off()
-        self._connected = False
+        try:
+            if self._connected:
+                self.safe_off()
+        finally:
+            self._connected = False
 
     def set_gate(self, enabled: bool) -> None:
         if not self._connected:
@@ -600,18 +693,33 @@ class HXPAnalogAttenuatorProvider(AttenuatorProvider):
         c = self.config
         raw_span = c.raw_max - c.raw_min
         pct_span = c.transmission_max_percent - c.transmission_min_percent
+        raw = float(raw)
+        if not math.isfinite(raw):
+            raise ValueError("attenuator readback must be finite")
         if raw_span <= 0 or pct_span <= 0:
             raise ValueError("invalid attenuator calibration span")
-        fraction = (float(raw) - c.raw_min) / raw_span
+        tolerance = max(0.0, float(c.readback_tolerance_raw))
+        if raw < c.raw_min - tolerance or raw > c.raw_max + tolerance:
+            raise RuntimeError(
+                f"attenuator raw readback {raw:.4f} is outside calibrated "
+                f"range [{c.raw_min:.4f}, {c.raw_max:.4f}]"
+            )
+        raw = max(c.raw_min, min(c.raw_max, raw))
+        fraction = (raw - c.raw_min) / raw_span
         if c.inverted:
             pct = c.transmission_max_percent - fraction * pct_span
         else:
             pct = c.transmission_min_percent + fraction * pct_span
-        return max(c.transmission_min_percent, min(c.transmission_max_percent, pct))
+        return max(
+            c.transmission_min_percent,
+            min(c.transmission_max_percent, pct),
+        )
 
     def _percent_to_raw(self, percent: float) -> float:
         c = self.config
         percent = float(percent)
+        if not math.isfinite(percent):
+            raise ValueError("attenuator transmission must be finite")
         if not c.transmission_min_percent <= percent <= c.transmission_max_percent:
             raise ValueError(
                 f"attenuator transmission must be between {c.transmission_min_percent:g} "
