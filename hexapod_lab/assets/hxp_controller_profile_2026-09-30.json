@@ -4,7 +4,7 @@
   "network": {
     "host": "192.168.0.254",
     "port": 5001,
-    "timeout_s": 10.0,
+    "timeout_s": 10,
     "confirmed_reachable": true
   },
   "group": {
@@ -21,39 +21,39 @@
   },
   "frames": {
     "work_in_world": [
-      0.0,
-      0.0,
-      209.0,
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      209,
+      0,
+      0,
+      0
     ],
     "base_in_world": [
-      0.0,
-      0.0,
-      25.0,
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      25,
+      0,
+      0,
+      0
     ],
     "tool_in_carriage": [
-      0.0,
-      0.0,
-      25.0,
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      25,
+      0,
+      0,
+      0
     ]
   },
   "geometry": {
     "file": "Geometry_RRPS.ini",
     "hexapod_type": "RRPS",
-    "base_diameter_mm": 240.0,
-    "base_alpha_deg": 15.0,
-    "base_thickness_mm": 25.0,
-    "carriage_diameter_mm": 150.0,
-    "carriage_alpha_deg": 20.0,
-    "carriage_thickness_mm": 25.0,
+    "base_diameter_mm": 240,
+    "base_alpha_deg": 15,
+    "base_thickness_mm": 25,
+    "carriage_diameter_mm": 150,
+    "carriage_alpha_deg": 20,
+    "carriage_thickness_mm": 25,
     "actuator_length_at_home_preset_mm": 167.5410634,
     "correction_file": "HexapodMatrix.txt"
   },
@@ -62,95 +62,95 @@
       "positioner": "HEXAPOD.1",
       "stage_name": "LTA1@LTA-HX@XPS-DRV01",
       "driver_name": "XPS-DRV01",
-      "encoder_resolution_mm": 5.9004e-06,
+      "encoder_resolution_mm": 0.0000059004,
       "backlash_mm": 0.008985,
       "minimum_target_position_mm": -1.50406,
       "maximum_target_position_mm": 24.25,
       "home_preset_mm": -1.49406,
-      "maximum_velocity_mm_s": 1.0,
-      "maximum_acceleration_mm_s2": 5.0,
+      "maximum_velocity_mm_s": 1,
+      "maximum_acceleration_mm_s2": 5,
       "home_search_maximum_velocity_mm_s": 0.5,
-      "home_search_maximum_acceleration_mm_s2": 1.0
+      "home_search_maximum_acceleration_mm_s2": 1
     },
     {
       "positioner": "HEXAPOD.2",
       "stage_name": "LTA2@LTA-HX@XPS-DRV01",
       "driver_name": "XPS-DRV01",
-      "encoder_resolution_mm": 5.9008e-06,
+      "encoder_resolution_mm": 0.0000059008,
       "backlash_mm": 0.012932,
       "minimum_target_position_mm": -1.55806,
       "maximum_target_position_mm": 24.25,
       "home_preset_mm": -1.54806,
-      "maximum_velocity_mm_s": 1.0,
-      "maximum_acceleration_mm_s2": 5.0,
+      "maximum_velocity_mm_s": 1,
+      "maximum_acceleration_mm_s2": 5,
       "home_search_maximum_velocity_mm_s": 0.5,
-      "home_search_maximum_acceleration_mm_s2": 1.0
+      "home_search_maximum_acceleration_mm_s2": 1
     },
     {
       "positioner": "HEXAPOD.3",
       "stage_name": "LTA3@LTA-HX@XPS-DRV01",
       "driver_name": "XPS-DRV01",
-      "encoder_resolution_mm": 5.902e-06,
+      "encoder_resolution_mm": 0.000005902,
       "backlash_mm": 0.015618,
       "minimum_target_position_mm": -1.43206,
       "maximum_target_position_mm": 24.25,
       "home_preset_mm": -1.42206,
-      "maximum_velocity_mm_s": 1.0,
-      "maximum_acceleration_mm_s2": 5.0,
+      "maximum_velocity_mm_s": 1,
+      "maximum_acceleration_mm_s2": 5,
       "home_search_maximum_velocity_mm_s": 0.5,
-      "home_search_maximum_acceleration_mm_s2": 1.0
+      "home_search_maximum_acceleration_mm_s2": 1
     },
     {
       "positioner": "HEXAPOD.4",
       "stage_name": "LTA4@LTA-HX@XPS-DRV01",
       "driver_name": "XPS-DRV01",
-      "encoder_resolution_mm": 5.9018e-06,
+      "encoder_resolution_mm": 0.0000059018,
       "backlash_mm": 0.011789,
       "minimum_target_position_mm": -1.56706,
       "maximum_target_position_mm": 24.25,
       "home_preset_mm": -1.55706,
-      "maximum_velocity_mm_s": 1.0,
-      "maximum_acceleration_mm_s2": 5.0,
+      "maximum_velocity_mm_s": 1,
+      "maximum_acceleration_mm_s2": 5,
       "home_search_maximum_velocity_mm_s": 0.5,
-      "home_search_maximum_acceleration_mm_s2": 1.0
+      "home_search_maximum_acceleration_mm_s2": 1
     },
     {
       "positioner": "HEXAPOD.5",
       "stage_name": "LTA5@LTA-HX@XPS-DRV01",
       "driver_name": "XPS-DRV01",
-      "encoder_resolution_mm": 5.8999e-06,
+      "encoder_resolution_mm": 0.0000058999,
       "backlash_mm": 0.012034,
       "minimum_target_position_mm": -1.60506,
       "maximum_target_position_mm": 24.25,
       "home_preset_mm": -1.59506,
-      "maximum_velocity_mm_s": 1.0,
-      "maximum_acceleration_mm_s2": 5.0,
+      "maximum_velocity_mm_s": 1,
+      "maximum_acceleration_mm_s2": 5,
       "home_search_maximum_velocity_mm_s": 0.5,
-      "home_search_maximum_acceleration_mm_s2": 1.0
+      "home_search_maximum_acceleration_mm_s2": 1
     },
     {
       "positioner": "HEXAPOD.6",
       "stage_name": "LTA6@LTA-HX@XPS-DRV01",
       "driver_name": "XPS-DRV01",
-      "encoder_resolution_mm": 5.9015e-06,
+      "encoder_resolution_mm": 0.0000059015,
       "backlash_mm": 0.00881,
       "minimum_target_position_mm": -1.53506,
       "maximum_target_position_mm": 24.25,
       "home_preset_mm": -1.52506,
-      "maximum_velocity_mm_s": 1.0,
-      "maximum_acceleration_mm_s2": 5.0,
+      "maximum_velocity_mm_s": 1,
+      "maximum_acceleration_mm_s2": 5,
       "home_search_maximum_velocity_mm_s": 0.5,
-      "home_search_maximum_acceleration_mm_s2": 1.0
+      "home_search_maximum_acceleration_mm_s2": 1
     }
   ],
   "live_snapshot": {
     "pose_work": [
-      0.0,
-      0.0,
+      0,
+      0,
       -13.999998,
-      -1e-06,
-      0.0,
-      0.0
+      -0.000001,
+      0,
+      0
     ],
     "actuator_positions_mm": [
       -0.870704,
@@ -184,18 +184,23 @@
     },
     "attenuator": {
       "gpio": "GPIO2.DAC1",
-      "raw_min": 0.0,
-      "raw_max": 10.0,
-      "transmission_min_percent": 0.0,
-      "transmission_max_percent": 100.0,
+      "raw_min": 0,
+      "raw_max": 10,
+      "transmission_min_percent": 0,
+      "transmission_max_percent": 100,
       "confirmed_calibration_points": [
         {
-          "raw": 4.0,
-          "transmission_percent": 40.0
+          "raw": 0,
+          "transmission_percent": 100
+        },
+        {
+          "raw": 10,
+          "transmission_percent": 0
         }
       ],
-      "mapping": "linear_10_percent_per_raw_unit",
-      "operator_confirmed": true
+      "mapping": "inverted_linear: transmission_percent = 100 - 10 * raw",
+      "operator_confirmed": true,
+      "inverted": true
     }
   },
   "safety_authority": {
