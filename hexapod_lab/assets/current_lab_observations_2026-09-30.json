@@ -12,40 +12,105 @@
     "group": "HEXAPOD",
     "group_state": 12,
     "actual_pose": {
-      "X_mm": 0.0,
-      "Y_mm": 0.0,
+      "X_mm": 0,
+      "Y_mm": 0,
       "Z_mm": -13.999998,
       "U_deg": -0.000001,
-      "V_deg": 0.0,
-      "W_deg": 0.0
+      "V_deg": 0,
+      "W_deg": 0
     },
     "coordinate_systems": {
-      "Tool_in_Carriage": [0.0, 0.0, 25.0, 0.0, 0.0, 0.0],
-      "Base_in_World": [0.0, 0.0, 25.0, 0.0, 0.0, 0.0],
-      "Work_in_World": [0.0, 0.0, 209.0, 0.0, 0.0, 0.0]
+      "Tool_in_Carriage": [
+        0,
+        0,
+        25,
+        0,
+        0,
+        0
+      ],
+      "Base_in_World": [
+        0,
+        0,
+        25,
+        0,
+        0,
+        0
+      ],
+      "Work_in_World": [
+        0,
+        0,
+        209,
+        0,
+        0,
+        0
+      ]
     }
   },
   "io_snapshot": {
     "digital": {
-      "GPIO1.DO_bits_1_to_8": [0, 0, 1, 0, 0, 0, 0, 0],
+      "GPIO1.DO_bits_1_to_8": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
       "GPIO1.DO_raw_interpretation": 4,
-      "GPIO3.DO_bits_1_to_8": [0, 0, 0, 0, 0, 0, 0, 0],
-      "GPIO4.DO_bits_1_to_16": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      "GPIO3.DO_bits_1_to_8": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "GPIO4.DO_bits_1_to_16": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
     },
     "analog": {
       "GPIO2.ADC1": 0.0009,
       "GPIO2.ADC2": 0.0025,
       "GPIO2.ADC3": -0.0003,
       "GPIO2.ADC4": 0.0062,
-      "GPIO2.DAC1": 10.0,
-      "GPIO2.DAC2": 0.0,
+      "GPIO2.DAC1": 10,
+      "GPIO2.DAC2": 0,
       "GPIO2.DAC3": -0.0001,
-      "GPIO2.DAC4": 0.0003
+      "GPIO2.DAC4": 0.0003,
+      "GPIO2_DAC1_role": "attenuator_control",
+      "GPIO2_DAC1_confirmed_range": [
+        0,
+        10
+      ],
+      "GPIO2_DAC1_latest_observed": 0.999845,
+      "GPIO2_DAC1_range_source": "User-confirmed current lab behavior, 2026-09-30"
     },
     "interpretation": [
       "GPIO1.DO is live at raw value 4, matching the legacy LabVIEW GPIO1.DO mask-4 state-marker evidence.",
       "GPIO3.DO and GPIO4.DO were both low in this single snapshot; this does not establish Pockels polarity.",
-      "GPIO2.DAC1 was 10.0000 in the live controller snapshot, so the old TCL 1-5 values must not be treated as the complete present-day analogue output range or as calibrated optical power."
+      "GPIO2.DAC1 is confirmed as the present attenuator-control output.",
+      "GPIO2.DAC1 operates over a confirmed 0-10 range in the current setup.",
+      "Observed live values include ~0.999845 and 10.0000; raw DAC value must still be calibrated against optical transmission/pulse energy."
     ]
   },
   "physical_observations": {
