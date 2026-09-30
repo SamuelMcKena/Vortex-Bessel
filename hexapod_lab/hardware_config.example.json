@@ -7,28 +7,28 @@
     "controller_verified": false,
     "axes": {
       "X": [
-        -25.0,
-        25.0
+        -25,
+        25
       ],
       "Y": [
-        -25.0,
-        25.0
+        -25,
+        25
       ],
       "Z": [
-        0.0,
-        28.0
+        0,
+        28
       ],
       "U": [
-        -8.0,
-        8.0
+        -8,
+        8
       ],
       "V": [
-        -8.0,
-        8.0
+        -8,
+        8
       ],
       "W": [
-        -10.0,
-        10.0
+        -10,
+        10
       ]
     },
     "struts": {
@@ -48,7 +48,7 @@
         434.315535,
         434.315535
       ],
-      "maximum_tilt_from_home_deg": 12.0
+      "maximum_tilt_from_home_deg": 12
     },
     "maximum_line_velocity_mm_s": 2.1,
     "path_samples": 25
@@ -58,7 +58,7 @@
     "port": 5001,
     "group": "HEXAPOD",
     "coordinate_system": "Work",
-    "timeout_s": 10.0
+    "timeout_s": 10
   },
   "pockels": {
     "connector": "PHAROS LX13",
@@ -73,9 +73,10 @@
     "provider": "hxp_analog",
     "model": "HXP GPIO2.DAC1",
     "gpio_name": "GPIO2.DAC1",
-    "raw_min": 0.0,
-    "raw_max": 10.0,
-    "transmission_percent": 40.0,
-    "confirmed_point": "4.00 raw = 40% transmission"
+    "raw_min": 0,
+    "raw_max": 10,
+    "transmission_percent": 60,
+    "confirmed_point": "0 raw = 100% transmission; 10 raw = 0% transmission",
+    "inverted": true
   }
 }
