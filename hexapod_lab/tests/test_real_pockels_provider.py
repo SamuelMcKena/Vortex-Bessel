@@ -58,3 +58,22 @@ def test_real_pockels_provider_rejects_readback_mismatch():
         assert gate.snapshot().pockels_open is False
     else:
         raise AssertionError("readback mismatch was not rejected")
+
+
+class UnreadableClient(FakeHXPClient):
+    def digital_get(self, gpio_name):
+        raise OSError("simulated readback failure")
+
+
+def test_real_pockels_provider_refuses_open_without_readback_and_requests_closed():
+    client = UnreadableClient()
+    gate = HXPDigitalLaserGate(client, config())
+    try:
+        gate.connect()
+    except RuntimeError as exc:
+        # Even CLOSED must be confirmable before the real provider is armed.
+        assert "cannot be confirmed" in str(exc)
+        assert gate.snapshot().connected is False
+        assert client.writes[-1] == ("GPIO4.DO", 1, 0)
+    else:
+        raise AssertionError("provider armed without digital output readback")
