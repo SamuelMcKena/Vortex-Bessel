@@ -724,6 +724,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self._poll_future: Future | None = None
         self._selftest_future: Future | None = None
+        self._feasibility_future: Future | None = None
         self._last_real_poll = 0.0
         self._real_poll_failures = 0
         self._real_frames_match_profile = False
@@ -2284,6 +2285,28 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         selftest_layout.addWidget(run_selftest)
 
+        probe_row = QtWidgets.QHBoxLayout()
+        self.feasibility_probe_step = QtWidgets.QDoubleSpinBox()
+        self.feasibility_probe_step.setRange(0.001, 1.0)
+        self.feasibility_probe_step.setDecimals(3)
+        self.feasibility_probe_step.setSingleStep(0.01)
+        self.feasibility_probe_step.setValue(0.05)
+        self.feasibility_probe_step.setSuffix(" mm")
+        self.feasibility_probe_step.setToolTip(
+            "Controller-only feasibility query. No physical move is issued."
+        )
+        probe = QtWidgets.QPushButton(
+            "PROBE ±XYZ FEASIBILITY — NO MOTION"
+        )
+        probe.setToolTip(
+            "Calls HexapodMoveIncrementalControlLimitGet for ±X, ±Y and ±Z "
+            "from the current pose. This does not execute a move."
+        )
+        probe.clicked.connect(self._run_xyz_feasibility_probe)
+        probe_row.addWidget(self.feasibility_probe_step)
+        probe_row.addWidget(probe, 1)
+        selftest_layout.addLayout(probe_row)
+
         self.commission_log = QtWidgets.QPlainTextEdit()
         self.commission_log.setReadOnly(True)
         self.commission_log.setMinimumHeight(420)
@@ -2726,7 +2749,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 dx = target.x - start.x
                 dy = target.y - start.y
                 dz = target.z - start.z
-                max_velocity, trajectory_percent = (
+                max_velocity, trajectory_fraction = (
                     self.real_stage.client.line_incremental_control_limits(
                         dx,
                         dy,
@@ -2735,13 +2758,47 @@ class MainWindow(QtWidgets.QMainWindow):
                         coordinate_system=self.real_stage.config.coordinate_system,
                     )
                 )
+                frame = self.real_stage.config.coordinate_system
+                self._diag(
+                    "HXP Line preflight • "
+                    f"frame={frame} • "
+                    f"start=({start.x:+.6f},{start.y:+.6f},{start.z:+.6f}) mm • "
+                    f"target=({target.x:+.6f},{target.y:+.6f},{target.z:+.6f}) mm • "
+                    f"delta=({dx:+.6f},{dy:+.6f},{dz:+.6f}) mm • "
+                    f"fraction={trajectory_fraction:.9f} • "
+                    f"vmax={max_velocity:.6f} mm/s"
+                )
                 # HXP reports the executable trajectory as a FRACTION
                 # in [0, 1], not a percentage in [0, 100]. Newport's own
                 # examples use 1.0 for a fully executable trajectory.
-                if trajectory_percent < 0.999999:
+                if trajectory_fraction < 0.999999:
+                    executable_dx = dx * trajectory_fraction
+                    executable_dy = dy * trajectory_fraction
+                    executable_dz = dz * trajectory_fraction
+                    if trajectory_fraction <= 1e-9:
+                        detail = (
+                            "The HXP reports that no distance along this exact "
+                            "requested vector is executable from the current pose."
+                        )
+                    else:
+                        detail = (
+                            "Approximate executable part of this same vector: "
+                            f"dX={executable_dx:+.6f}, "
+                            f"dY={executable_dy:+.6f}, "
+                            f"dZ={executable_dz:+.6f} mm."
+                        )
                     raise RuntimeError(
-                        "HXP rejected the complete Line trajectory: "
-                        f"only {trajectory_percent * 100.0:.3f}% is executable"
+                        "HXP controller preflight BLOCKED this Line; NO MOVE was sent.\n\n"
+                        f"Executable fraction: {trajectory_fraction * 100.0:.3f}%\n"
+                        f"Current XYZ ({frame}): "
+                        f"({start.x:+.6f}, {start.y:+.6f}, {start.z:+.6f}) mm\n"
+                        f"Requested XYZ target: "
+                        f"({target.x:+.6f}, {target.y:+.6f}, {target.z:+.6f}) mm\n"
+                        f"Requested delta: "
+                        f"({dx:+.6f}, {dy:+.6f}, {dz:+.6f}) mm\n"
+                        f"{detail}\n\n"
+                        "Use Setup + Diagnostics → PROBE ±XYZ FEASIBILITY — NO MOTION "
+                        "to see which tiny directions the controller currently permits."
                     )
                 if float(velocity_mm_s) > max_velocity + 1e-9:
                     raise RuntimeError(
@@ -3850,6 +3907,83 @@ class MainWindow(QtWidgets.QMainWindow):
                 "the LabVIEW-v3 0/1 states. Confirm physical polarity first."
             )
 
+    def _run_xyz_feasibility_probe(self) -> None:
+        """Query tiny ±XYZ controller Lines without executing any motion."""
+        if (
+            self._feasibility_future is not None
+            and not self._feasibility_future.done()
+        ):
+            return
+        if self.lab_mode.currentIndex() == 0:
+            self.commission_log.appendPlainText(
+                "\nXYZ feasibility probe is intended for REAL LAB."
+            )
+            return
+        if self.real_stage is None or not self.real_stage.client.connected:
+            self.commission_log.appendPlainText(
+                "\nXYZ FEASIBILITY: FAIL — real HXP is not connected"
+            )
+            return
+
+        step = float(self.feasibility_probe_step.value())
+        client = self.real_stage.client
+        group = self.real_stage.config.group
+        frame = self.real_stage.config.coordinate_system
+        pose = self._last_stage_snapshot.actual
+        self.commission_log.appendPlainText(
+            "\n=== XYZ FEASIBILITY PROBE — NO MOTION ===\n"
+            f"Current pose: X={pose.x:+.6f}, Y={pose.y:+.6f}, "
+            f"Z={pose.z:+.6f}, U={pose.u:+.6f}, "
+            f"V={pose.v:+.6f}, W={pose.w:+.6f}\n"
+            f"Frame: {frame} • probe step: {step:.3f} mm"
+        )
+
+        def worker() -> list[str]:
+            client.require_ready_for_motion(group)
+            rows: list[str] = []
+            for axis_index, axis in enumerate("XYZ"):
+                for sign, sign_text in ((1.0, "+"), (-1.0, "-")):
+                    delta = [0.0, 0.0, 0.0]
+                    delta[axis_index] = sign * step
+                    try:
+                        vmax, fraction = client.line_incremental_control_limits(
+                            *delta,
+                            group=group,
+                            coordinate_system=frame,
+                        )
+                        rows.append(
+                            f"{sign_text}{axis} {step:.3f} mm: "
+                            f"executable={100.0 * fraction:.3f}% • "
+                            f"vmax={vmax:.4f} mm/s"
+                        )
+                    except Exception as exc:
+                        rows.append(
+                            f"{sign_text}{axis} {step:.3f} mm: "
+                            f"QUERY FAILED ({type(exc).__name__}: {exc})"
+                        )
+            rows.append(
+                "RESULT: controller feasibility queried only; NO MOVE was sent"
+            )
+            return rows
+
+        self._feasibility_future = self._poll_pool.submit(worker)
+
+    def _commission_feasibility_tick(self) -> None:
+        future = self._feasibility_future
+        if future is None or not future.done():
+            return
+        self._feasibility_future = None
+        try:
+            rows = future.result()
+        except Exception as exc:
+            self.commission_log.appendPlainText(
+                "XYZ FEASIBILITY: FAIL — "
+                f"{type(exc).__name__}: {exc}"
+            )
+            return
+        for row in rows:
+            self.commission_log.appendPlainText(row)
+
     def _mock_scenario_changed(self, index: int) -> None:
         if not hasattr(self, "lab_mode") or self.lab_mode.currentIndex() != 0:
             return
@@ -4748,7 +4882,7 @@ class MainWindow(QtWidgets.QMainWindow):
         except Exception as exc:
             QtWidgets.QMessageBox.critical(
                 self,
-                "Move failed",
+                "Move blocked / failed",
                 str(exc),
             )
 
@@ -4795,7 +4929,7 @@ class MainWindow(QtWidgets.QMainWindow):
         except Exception as exc:
             QtWidgets.QMessageBox.critical(
                 self,
-                "Jog failed",
+                "Jog blocked / failed",
                 str(exc),
             )
 
@@ -6541,6 +6675,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._manual_write_line_tick()
         self._recipe_tick()
         self._commission_selftest_tick()
+        self._commission_feasibility_tick()
         self._update_readouts()
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
