@@ -1,0 +1,30 @@
+HEXAPOD + LASER LAB — CONTROLLER-BACKED BUILD (2026-09-30)
+
+1. Extract the entire ZIP to a normal local folder.
+2. Double-click INSTALL_AND_START.bat the first time. It does NOT require the Windows `py` launcher and will use `python`, Anaconda/Miniconda, or an existing .venv.
+3. After setup, use START_HEXAPOD_LAB.bat for normal launches.
+4. SPYDER: open SPYDER_LAUNCH.py and press Run. It launches the GUI using the private .venv, so Spyder's own environment does not need the GUI dependencies.
+5. If the normal launcher hides an error, use START_HEXAPOD_LAB_DEBUG.bat.
+6. Start in MOCK LAB and exercise the CAD, 2D map, jogs, WRITE LINE, scripts and sweeps.
+7. REAL LAB is configured for the recovered/live HXP endpoint 192.168.0.254:5001.
+
+CURRENT CONTROLLER-BACKED FACTS INCLUDED
+- Group: HEXAPOD; processing frame: Work.
+- Work Z=209 mm, Base Z=25 mm, Tool Z=25 mm.
+- Actual controller/actuator profile is stored under assets/.
+- Real motion safety does NOT use the STEP model as its authority.
+- Translation-only Line/Move-While-Write, XYZ jogs and XYZ-only target moves preflight through the HXP native control-limit query (`1.0 = the complete trajectory is executable`).
+- Real GPIO2.DAC1 attenuator mapping is inverted: raw 0 = 100 % transmission, raw 10 = 0 %, so raw 4.00 = 60 %.
+- Pockels/LX13 real opening stays commissioning-locked until the current physical GPIO route/polarity is verified.
+
+The included Stewart Platform.STEP in the downloadable package is the articulated visual model.
+The physical E-stop and laser interlock remain authoritative safety systems.
+
+
+FIRST REAL-HARDWARE CHECK
+- Keep the process beam physically blocked and leave the real Pockels provider unarmed.
+- Connect HXP and confirm the header says STAGE READY, not STALE / FRAME MISMATCH / NOT READY.
+- Run the read-only hardware self-test.
+- Use "Read actuator limits + load Cartesian reference" for HEXAPOD.1…6; it does not fake Cartesian travel limits.
+- Start with an XYZ Line/jog around 0.05 mm at 0.10 mm/s.
+- U/V/W general motion remains deliberately commissioning-locked.

@@ -1,0 +1,77 @@
+{
+  "observation_date": "2026-09-30",
+  "source": "User-supplied live HXP web-interface screenshots and direct operator confirmation",
+  "controller": {
+    "host": "192.168.0.254",
+    "port": 5001,
+    "group": "HEXAPOD",
+    "group_state": 12,
+    "tcp_reachable_from_lab_pc": true,
+    "model_label": "Newport Motion Controller / Driver - Model HXP"
+  },
+  "pose_work": {
+    "X_mm": 0,
+    "Y_mm": 0,
+    "Z_mm": -13.999998,
+    "U_deg": -0.000001,
+    "V_deg": 0,
+    "W_deg": 0
+  },
+  "frames": {
+    "Tool_in_Carriage": [
+      0,
+      0,
+      25,
+      0,
+      0,
+      0
+    ],
+    "Base_in_World": [
+      0,
+      0,
+      25,
+      0,
+      0,
+      0
+    ],
+    "Work_in_World": [
+      0,
+      0,
+      209,
+      0,
+      0,
+      0
+    ]
+  },
+  "actuator_positions_mm": [
+    -0.870704,
+    -0.870704,
+    -0.870704,
+    -0.870704,
+    -0.870707,
+    -0.870707
+  ],
+  "digital_io": {
+    "GPIO1.DO_raw": 4,
+    "GPIO3.DO_raw": 0,
+    "GPIO4.DO_raw": 0
+  },
+  "attenuator": {
+    "gpio": "GPIO2.DAC1",
+    "live_raw_example": 4,
+    "live_transmission_percent": 60,
+    "operator_confirmation": "10.00 = 0% transmission; 0.00 = 100% transmission",
+    "implemented_mapping": "inverted linear: transmission_percent = 100 - 10 * raw"
+  },
+  "physical": {
+    "PHAROS_LX13_populated": true,
+    "HXP_GPIO3_populated": true,
+    "physical_estop_present": true,
+    "pockels_cable_continuity_to_LX13_verified": false
+  },
+  "notes": [
+    "GPIO1.DO mask 4 matches the historical LabVIEW writing/gate marker.",
+    "GPIO3.DO and GPIO4.DO were low in the photographed idle snapshot; that does not identify which output currently drives LX13.",
+    "The STEP model is retained for visualization only. Real Line feasibility must come from the HXP controller."
+  ]
+}
