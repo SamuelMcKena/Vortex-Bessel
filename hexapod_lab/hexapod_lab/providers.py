@@ -590,10 +590,31 @@ class HXPDigitalLaserGate(LaserGateProvider):
                 )
         except RuntimeError:
             raise
-        except Exception:
-            # Some installations may not expose useful DO readback. The command
-            # state remains available but is labelled as such in the GUI.
+        except Exception as exc:
+            # For the real process beam, an OPEN command without confirming the
+            # HXP output register is not acceptable. Fail closed. Likewise, if a
+            # CLOSED command cannot be read back, surface an unknown beam state
+            # instead of silently presenting it as safely closed.
             self._readback_known = False
+            self._last_raw_readback = None
+            if enabled:
+                try:
+                    self.client.digital_set(
+                        self.config.gpio_name,
+                        self.config.mask,
+                        self.config.disabled_value,
+                    )
+                finally:
+                    self._enabled = False
+                raise RuntimeError(
+                    "Pockels OPEN output readback is unavailable; CLOSED was "
+                    "requested immediately and OPEN was not accepted"
+                ) from exc
+            self._enabled = False
+            raise RuntimeError(
+                "Pockels CLOSED command was sent but output readback is "
+                "unavailable; physical beam state cannot be confirmed"
+            ) from exc
 
         self._enabled = bool(enabled)
 
