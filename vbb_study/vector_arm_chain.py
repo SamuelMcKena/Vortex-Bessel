@@ -152,20 +152,22 @@ def synthesise_psi2(
 def hwp45_matrix(retardance_error_rad: float = 0.0) -> np.ndarray:
     """Return the zero-order HWP-at-45 matrix in the lab H/V basis."""
 
-    err = float(retardance_error_rad)
-    if abs(err) <= EPS:
-        return np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
-    return np.array([[0.0, np.exp(0.5j * err)], [np.exp(-0.5j * err), 0.0]], dtype=complex)
+    # i times the retarder with delta=pi+error preserves the historical
+    # zero-error swap (a physically irrelevant global phase is fixed).
+    half = 0.5 * float(retardance_error_rad)
+    return np.array([[1j*np.sin(half), np.cos(half)],
+                     [np.cos(half), 1j*np.sin(half)]], dtype=complex)
 
 
 def qwp45_matrix(retardance_error_rad: float = 0.0) -> np.ndarray:
-    """Return the QWP-at-45 matrix pinned to the radial-beam orientation test."""
+    """Unitary QWP at the project's signed 45-degree convention.
 
-    err = float(retardance_error_rad)
-    if abs(err) <= EPS:
-        return (1.0 / np.sqrt(2.0)) * np.array([[1.0, 1.0j], [1.0j, 1.0]], dtype=complex)
-    phase = 1.0j * np.exp(1.0j * err)
-    return (1.0 / np.sqrt(2.0)) * np.array([[1.0, phase], [phase, 1.0]], dtype=complex)
+    Retardance error changes both diagonal and converted amplitudes;
+    changing only the off-diagonal phase is not a lossless retarder.
+    """
+    half = 0.5 * (0.5*np.pi + float(retardance_error_rad))
+    return np.array([[np.cos(half), 1j*np.sin(half)],
+                     [1j*np.sin(half), np.cos(half)]], dtype=complex)
 
 
 def _apply_matrix(ex: np.ndarray, ey: np.ndarray, matrix: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
