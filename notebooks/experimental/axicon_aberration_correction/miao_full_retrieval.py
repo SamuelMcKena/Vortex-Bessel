@@ -258,10 +258,17 @@ def resolve_conjugate_branch(angular_fields, reference_intensity_rows=None,
     ref = np.asarray(reference_intensity_rows, float)
     if ref.shape != direct.shape:
         raise ValueError("reference intensity rows must match angular field shape")
+    if direct.ndim != 2 or direct.shape[1] % 2:
+        raise ValueError("branch resolution requires an even uniform angular grid")
+    if (not np.isfinite(direct).all() or not np.isfinite(ref).all()
+            or np.any(ref < 0) or np.std(direct) <= EPS or np.std(ref) <= EPS):
+        return "unresolved", None, None
     conjugate = np.roll(direct, direct.shape[1]//2, axis=1)
     def corr(a, b):
         return float(np.corrcoef(a.ravel(), b.ravel())[0, 1])
     sd, sc = corr(direct, ref), corr(conjugate, ref)
+    if not np.isfinite(sd) or not np.isfinite(sc):
+        return "unresolved", None, None
     if abs(sd-sc) < min_score_margin:
         return "unresolved", sd, sc
     return ("direct" if sd > sc else "conjugate"), sd, sc
@@ -288,7 +295,14 @@ def assemble_full_aperture(retrievals, z_absolute_m, wavelength_m,
     radial_gradient = nominal-kp
     radial_phase = _integrate_radial_phase(rho, radial_gradient)
     angular_phase = remove_row_piston(fields)
-    branch, sd, sc = resolve_conjugate_branch(fields, reference_intensity_rows)
+    # Reference rows are supplied in the same acquisition order as retrievals.
+    reference = None
+    if reference_intensity_rows is not None:
+        reference = np.asarray(reference_intensity_rows, float)
+        if reference.shape != fields.shape:
+            raise ValueError("reference intensity rows must match angular field shape")
+        reference = reference[order]
+    branch, sd, sc = resolve_conjugate_branch(fields, reference)
     if branch == "conjugate":
         half = angular_phase.shape[1]//2
         angular_phase = -np.roll(angular_phase, half, axis=1)
