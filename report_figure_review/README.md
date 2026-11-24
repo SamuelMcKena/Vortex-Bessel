@@ -1,6 +1,6 @@
 # Research figure repair — Claude handoff
 
-**Status: UNAPPROVED / REPAIR NEEDED.** This is a working branch for research-figure triage, NOT a validated optical bench release. Main production model and hardware controls are unchanged.
+**Bench-hardware update 2026-11-24:** The installed physical axicon angle is **measured 10°**, not the previous assumed 20°. Read [CONFIRMED_10DEG_AXICON_UPDATE.md](CONFIRMED_10DEG_AXICON_UPDATE.md) and [the hardware profile](../configs/hardware/confirmed_physical_axicon_2026-11-24.json) first. The previous 20° figures are invalid as bench predictions; no numerical re-run is claimed.\n\n**Status: UNAPPROVED / REPAIR NEEDED.** This is a working branch for research-figure triage, NOT a validated optical bench release. Main production model and hardware controls are unchanged.
 
 ## First read
 1. [FIGURE_QA_INDEX.md](FIGURE_QA_INDEX.md) — a 34-item figure-by-figure defect log.
