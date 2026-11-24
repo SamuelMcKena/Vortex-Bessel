@@ -1,4 +1,4 @@
-# Figure-by-figure visual and scientific QA — 23 November 2026
+> **UPDATE 24 Nov 2026: installed axicon measured at physical angle 10°. The previously presumed 20° geometry is not bench geometry. All figures using 20° for the installed system are automatically BLOCKED as bench comparisons until independently regenerated with 10° input. Camera/periscope two f=300 mm lenses imply nominal |M|=1; previous fitted 2.33× assumption is invalid. See `CONFIRMED_10DEG_AXICON_UPDATE.md`.**\n\n# Figure-by-figure visual and scientific QA — 23 November 2026
 
 **ALL PREVIOUS OUTPUTS UNAPPROVED.** Status describes the *previous* 34-figure package, not an accepted final product. Do not insert BLOCK figures in report. Many REVISE figures remain model-only and may be omitted entirely. All 34 were visually inspected as previews. Numeric/physics contracts were checked against available manifests and repository docs, not independently fully recalculated for every figure.
 
