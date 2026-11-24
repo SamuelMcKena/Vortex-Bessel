@@ -1,0 +1,52 @@
+{
+  "profile_name": "confirmed_physical_axicon_2026-11-24",
+  "status": "user_measured_bench_hardware",
+  "recorded_date": "2026-11-24",
+  "measurement_provenance": "Researcher measured installed optic and explicitly confirmed its physical axicon angle is 10 degrees in the PhD Code project conversation.",
+  "physical_base_angle_deg": {
+    "value": 10,
+    "status": "measured_user_confirmed",
+    "measurement_uncertainty_deg": null,
+    "measurement_method": "not yet documented"
+  },
+  "manufacturer_part_number": {
+    "value": null,
+    "status": "unverified"
+  },
+  "optical_material": {
+    "value": "fused_silica",
+    "status": "assumed_from_prior_bench_description_not_independently_verified"
+  },
+  "wavelength_m": {
+    "value": 0.000001029,
+    "status": "nominal_from_current_first_year_report"
+  },
+  "refractive_index_at_wavelength": {
+    "value": 1.4501,
+    "status": "model_assumption"
+  },
+  "reference_cone_half_angle_deg": {
+    "value": 4.58,
+    "status": "calculated_from_snell_with_assumed_index"
+  },
+  "reference_l20_ring_radius_um": {
+    "value": 45.5,
+    "status": "predicted_ideal_scalar_J20_peak"
+  },
+  "measured_camera_ring_radius_um": {
+    "range": [
+      46,
+      52
+    ],
+    "status": "previous_quality_screened_camera_scan; revisit selection and saturation"
+  },
+  "camera_4f": {
+    "f1_mm": 300,
+    "f2_mm": 300,
+    "transverse_magnification_absolute": 1,
+    "status": "user_confirmed_lenses; paraxial_calculation",
+    "caveat": "Confirm no additional magnifying optics"
+  },
+  "invalidation_notice": "All prior 20-degree benchtarget numerical figures and model-fit claims are superseded for the installed optic; retain as historical 20-degree comparison only. Recompute downstream propagation and error studies, not just labels.",
+  "model_integration_status": "reference_profile_created_not_yet_wired_into_production_config_or_simulation_code"
+}
