@@ -1,4 +1,4 @@
-# Claude: replace the defective first-year PhD figure pack
+> **MANDATORY BENCH UPDATE (24 Nov 2026): the physical axicon angle has been MEASURED as 10°. Old 20° bench scenarios are superseded and must be re-run, not relabelled. Camera relay has two f=300 mm lenses and nominal |M|=1. Read `CONFIRMED_10DEG_AXICON_UPDATE.md` and `../configs/hardware/confirmed_physical_axicon_2026-11-24.json` before any calculations.**\n\n# Claude: replace the defective first-year PhD figure pack
 
 This is an implementation/reconstruction task. Do NOT simply polish an existing unvalidated 34-figure package. It has ten BLOCK figure failures and 21 further figures needing revision; only three explanatory schematics are pass-with-caption. See the register and draft captions in this branch.
 
@@ -9,7 +9,7 @@ This is an implementation/reconstruction task. Do NOT simply polish an existing 
 **Scientific modelling:**
 - Intended bench architecture: SLM1 correction + propagation → SLM2 selectable vortex/carrier → first-order 4f filter → physical axicon → camera/sample. Historical split-charge studies must be identified as such.
 - Lens spacing is 600 mm, central Fourier pinhole midway, 300 mm from each lens. Other SLM/relay positions remain nominal if unmeasured.
-- Axicon angle is unresolved; the measured charge-20 ring 46–50 µm is NOT a part-number calibration. Do not tune angle or pixel scale to force agreement.
+- Physical axicon base angle is researcher-measured **10°** (part number unknown). Use Snell-calculated θ≈4.58° for assumed fused silica, and recalculate all radial/axial predictions. Nominal camera/periscope relay is **1:1** (300 mm + 300 mm); discard 2.33× inferred magnification. The 46–52 µm measured ℓ=20 annulus is a consistency check, not complete model validation. Do not relabel old 20° simulation outputs.
 - A 0.75 **mrad** pointing case is not the same as 0.75 degrees. The plotted oblique-axicon ray model is not a propagated field; compare properly against Thaning/Hu papers.
 - Separate scalar analytical references, simplified wave-optics models, measured BMG data, retrieved modal inference, and PHAROS electrical detector traces.
 
